@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+.update_staging/
+.update_runtime/
+.DS_Store
+Thumbs.db
+*.swp
+*~
+dist/

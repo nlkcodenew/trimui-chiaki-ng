@@ -1,0 +1,134 @@
+{
+  "version": "0.1.0",
+  "app": "trimui-chiaki-ng",
+  "python": "3.10+",
+  "built": "2026-09-19T11:36:54+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/main",
+  "note": {
+    "vi": "Phien ban 0.1.0 - cap nhat tu dong.",
+    "en": "Version 0.1.0 - auto-update."
+  },
+  "files": [
+    {
+      "path": "app.py",
+      "sha256": "afed7b63046528688a073ac3ee64927776a2219f57b529f97d17e4367e2d70ae",
+      "size": 2567
+    },
+    {
+      "path": "config.json",
+      "sha256": "3bc874b170bccf4e8329c5b3239b047577cdeccdcf1304276a2b1b05f55998df",
+      "size": 108
+    },
+    {
+      "path": "launch.sh",
+      "sha256": "a1c47892f506eefa12bdb1e8dfcfa8e22dd010e0a9f2f96bc227d396c6ee4d39",
+      "size": 2703
+    },
+    {
+      "path": "settings.json",
+      "sha256": "f88677b5e1bec8d0e9d8b9e4a7ac7b04295c3cb48660b4307ff68deae96675d7",
+      "size": 443
+    },
+    {
+      "path": "rh/chiaki.py",
+      "sha256": "0c99269e7d773e85f0f3cefc77421bf5a761ccc40e71a96e291e7dc3a55098da",
+      "size": 7819
+    },
+    {
+      "path": "rh/engine.py",
+      "sha256": "d35d5407f0a5c2d3b95abc2b19a129f822aba8e94bf0c47081277aca9a951ec3",
+      "size": 10153
+    },
+    {
+      "path": "rh/fonts.py",
+      "sha256": "24bcde1f9d660baabbb4b90f078aa42f3510f6075da9c25f6ea251406c7e406d",
+      "size": 767
+    },
+    {
+      "path": "rh/i18n.py",
+      "sha256": "bc8a782e9a993bad1cd8ce7142cf53ce85fde52b9373a860aed9969c3dba3225",
+      "size": 2983
+    },
+    {
+      "path": "rh/inputs.py",
+      "sha256": "9998a339572dd0b63fae2cb8d1fd019982bd6d653af46fa5000e860b33c6e1ba",
+      "size": 5269
+    },
+    {
+      "path": "rh/logger.py",
+      "sha256": "bf991087b7d97578ac6bc1d1bfef8c7f23a33b0c9caa733a6b982afce1212b8b",
+      "size": 755
+    },
+    {
+      "path": "rh/paths.py",
+      "sha256": "8ee294f617a7077590b5c8c9113054686237efa5a0911990a7117ddaf22ef719",
+      "size": 1013
+    },
+    {
+      "path": "rh/state.py",
+      "sha256": "93ff3de02be2c864cad8d95f7f921a749a35b6b7039949e6083b6055363fcdd9",
+      "size": 3899
+    },
+    {
+      "path": "rh/updater.py",
+      "sha256": "7c3d15d6da94bd6983092b394795d73e3622e89b77cd2cf7f880ff36eecebd23",
+      "size": 10271
+    },
+    {
+      "path": "rh/version.py",
+      "sha256": "5a023d5c1171f802a008e65582bd33389f06162c281e2b2984ab0fcb5ca68783",
+      "size": 402
+    },
+    {
+      "path": "rh/modals/__init__.py",
+      "sha256": "ca6868299e8da32f61933fd55eb3b43de32ebd7e1ac4de2b9033fbf7e290d0d6",
+      "size": 147
+    },
+    {
+      "path": "rh/modals/base.py",
+      "sha256": "24863d088978564d19af92ccdc78ddc604e533c2dbd8d19d747f2eadc7a3960c",
+      "size": 519
+    },
+    {
+      "path": "rh/modals/common.py",
+      "sha256": "cc16d2cb8aa8ed76e064e052d2506b65a7faf64fa0d6f33a9882f05ce11cc953",
+      "size": 4305
+    },
+    {
+      "path": "rh/modals/update.py",
+      "sha256": "ef2c14c808af299ede2654c3069ca2d5e5a0ccb176d4794540a15bc7a47b1c77",
+      "size": 5956
+    },
+    {
+      "path": "rh/screens/__init__.py",
+      "sha256": "66dbbd3f922ba923d1c71494f6efd69095774b076b4990c5eb12d4240dc79169",
+      "size": 118
+    },
+    {
+      "path": "rh/screens/base.py",
+      "sha256": "f87f8dc731cb495c7203f326e499e93351f3e7ad887102cbd10e23dae6cba82a",
+      "size": 475
+    },
+    {
+      "path": "rh/screens/home.py",
+      "sha256": "60211e4e85616de7842a7ede2f071985810da13518bdb2403e445f9741ab2a79",
+      "size": 5982
+    },
+    {
+      "path": "rh/screens/settings.py",
+      "sha256": "73e346f23b4aaf238d04ac289a6aa52e4b76b0bc00b85d13fbe8a1ee656462d4",
+      "size": 2529
+    },
+    {
+      "path": "rh/ui/__init__.py",
+      "sha256": "152d91325c8fa8efcc16f4cdea1183142195cbf746c76aa865d2d7cb28e02856",
+      "size": 65
+    },
+    {
+      "path": "rh/ui/primitives.py",
+      "sha256": "6a442959f8f295c0b7ecfd460c66567573314c32929c300a6c61b693fed127f1",
+      "size": 2407
+    }
+  ],
+  "remove": []
+}

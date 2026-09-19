@@ -1,0 +1,20 @@
+{
+  "language": "VI",
+  "video_resolution": "720p",
+  "video_fps": 30,
+  "video_bitrate": 8000,
+  "audio_volume": 80,
+  "wifi_awake": true,
+  "auto_update": true,
+  "enable_logging": false,
+  "device_id": "CHI-BEA1",
+  "skipped_versions": [],
+  "update_url": "",
+  "pending_update": "",
+  "pending_catalog_notice": "",
+  "host_name": "",
+  "host_addr": "",
+  "psn_account_id": "",
+  "psn_online_id": "",
+  "regist_key": ""
+}

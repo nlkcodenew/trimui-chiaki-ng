@@ -1,0 +1,53 @@
+name: Build & Release
+
+# Tao release khi push tag v* hoac chay thu cong.
+# Buoc 1: Verify tag khop APP_VERSION.
+# Buoc 2: tools/make_release.py scan files/, ghi sha256 vao manifest.json.
+# Buoc 3: Commit manifest.json + README vao main.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify tag matches files/rh/version.py
+        run: |
+          V=$(python -c "import re;print(re.search(r'APP_VERSION\s*=\s*[\"\\']([^\"\\']+)',open('files/rh/version.py',encoding='utf-8').read()).group(1).lstrip('v'))")
+          echo "version.py = $V"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${GITHUB_REF_NAME#v}"
+            if [ "$TAG" != "$V" ]; then
+              echo "::error::tag $TAG does not match APP_VERSION $V"
+              exit 1
+            fi
+          fi
+
+      - name: Build manifest.json
+        run: |
+          python tools/make_release.py
+
+      - name: Commit manifest back to main
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          if git diff --cached --quiet; then
+            echo "no manifest changes"
+          else
+            git commit -m "chore(release): sync manifest for ${GITHUB_REF_NAME:-manual}"
+            git push origin HEAD:main
+          fi
