@@ -9,9 +9,11 @@ import threading
 from .. import state
 from ..i18n import tr
 from ..paths import APP_DIR
+from ..version import is_newer, APP_VERSION
 from ..updater import (
     apply_update, check_for_update, download_update, release_note,
     request_restart, skip_version,
+    SETTINGS_REL,
 )
 from .base import BaseModal
 
@@ -35,7 +37,17 @@ class UpdateModal(BaseModal):
     def open(self, data=None):
         super().open(data or {})
         self.manifest = (self.data or {}).get("manifest")
-        self.files = (self.data or {}).get("files") or []
+        raw_files = (self.data or {}).get("files") or []
+        # settings.json KHONG bao gio nam trong pending_files (updater da lo).
+        # Loc lai o day de phong nguon ngoai (API, test) dua file nay vao.
+        self.files = [f for f in raw_files if f.get("path") != SETTINGS_REL]
+        self.cat_only = False
+        self.rt_only = False
+        # Cat-only: version khong moi, khong co file code pending.
+        if (self.manifest
+                and not is_newer(self.manifest.get("version", ""), APP_VERSION)
+                and not self.files):
+            self.cat_only = True
         self.selected_opt = 0
         self.busy = False
         self.failed = False

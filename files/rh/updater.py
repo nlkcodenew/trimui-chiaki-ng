@@ -39,6 +39,14 @@ CDN_BASE_URL = "https://cdn.jsdelivr.net/gh/%s@%s" % (DEFAULT_REPO, DEFAULT_BRAN
 UA = "trimui-chiaki-ng/%s" % APP_VERSION
 TIMEOUT = 15
 MAX_MANIFEST_BYTES = 512 * 1024
+
+# settings.json la file cua nguoi dung, bao gio cung khong nam trong OTA.
+# Neu de no trong manifest, khi state.py random device_id roi ghi lai,
+# hash se lech hang chu, lam pending_files() khong bao gio rong, gay vong
+# lap update vong v. Exclude o ca make_release.py va pending_files() de
+# phong 2 lop.
+SETTINGS_REL = "settings.json"
+
 MAX_FILE_BYTES = 16 * 1024 * 1024
 
 STAGING_DIR = os.path.join(APP_DIR, ".update_staging")
@@ -162,6 +170,11 @@ def fetch_manifest():
 def pending_files(manifest):
     out = []
     for f in manifest.get("files", []):
+        # settings.json luon duoc loai: state.py tu sinh device_id ngau nhien
+        # o lan chay dau va luu xuong, hash se khac manifest vinh vien. De no
+        # trong pending thi app se bat popup update mai mai.
+        if f.get("path") == SETTINGS_REL:
+            continue
         local = os.path.join(APP_DIR, f["path"])
         if sha256_of(local) != f["sha256"]:
             out.append(f)
@@ -171,7 +184,13 @@ def pending_files(manifest):
 def check_for_update(force=False):
     """Tra ve (manifest, files) neu co ban moi, None neu khong.
 
-    Lay settings.skipped_versions lam filter (tru khi force=True).
+    Quy tac:
+        - Neu remote version moi hon APP_VERSION (is_newer=True) va user BO QUA
+          -> return None, khong hoi lai.
+        - Neu chi con file pending (catalog-only/runtime-only chua dong bo),
+          KHONG ap dung skipped_versions, de user van duoc nhan nhac fix catalog
+          sau khi skip.
+        - Neu khong co gi moi -> return None.
     """
     try:
         m = fetch_manifest()
@@ -181,9 +200,13 @@ def check_for_update(force=False):
     if not m:
         return None
     files = pending_files(m)
-    if not is_newer(m["version"], APP_VERSION) and not files:
+    is_new_version = is_newer(m["version"], APP_VERSION)
+    if not is_new_version and not files:
         return None
-    if not force and m["version"] in (state.skipped_versions or []):
+    # Skipped_versions chi chan popup version-moi that su, khong chan catalog-only.
+    if (not force
+            and is_new_version
+            and m["version"] in (state.skipped_versions or [])):
         return None
     return m, files
 
@@ -231,19 +254,16 @@ def apply_update(manifest, files):
     """Move staged files vao APP_DIR. version.py duoc doi cuoi cung.
 
     os.replace dam bao shell dang chay launch.sh khong bi mat inode giua chung.
-    settings.json KHONG duoc doi neu da ton tai, de bao toan cau hinh nguoi dung.
+    settings.json luon duoc bo qua, de bao toan cau hinh nguoi dung. Neu loi
+    manifest tinh ghi no len, cung khong thanh cong (defense in depth).
     """
-    ordered = sorted(files, key=lambda f: f["path"] == "rh/version.py")
+    # Loai settings.json o 2 lop: khoi staged (neu co) va khoi ordered list.
+    cleaned = [f for f in files if f.get("path") != SETTINGS_REL]
+    ordered = sorted(cleaned, key=lambda f: f["path"] == "rh/version.py")
     moved = 0
     for f in ordered:
         src = os.path.join(STAGING_DIR, f["path"])
         dst = os.path.join(APP_DIR, f["path"])
-        if f["path"] == "settings.json" and os.path.exists(dst):
-            try:
-                os.remove(src)
-            except OSError:
-                pass
-            continue
         try:
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             os.replace(src, dst)

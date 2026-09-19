@@ -1,18 +1,23 @@
 {
-  "version": "0.2.0",
+  "version": "0.2.1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-19T11:43:41+07:00",
+  "built": "2026-09-19T11:54:52+07:00",
   "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/main",
   "note": {
-    "vi": "Phien ban 0.2.0 - cap nhat tu dong.",
-    "en": "Version 0.2.0 - auto-update."
+    "vi": "Phien ban 0.2.1 - cap nhat tu dong.",
+    "en": "Version 0.2.1 - auto-update."
   },
   "files": [
     {
       "path": "app.py",
       "sha256": "7366c243e8a73084c0010c258bb6bbdcd2ec5d6efad720a7746b3f89b1188a8c",
       "size": 3446
+    },
+    {
+      "path": "chiaki.png",
+      "sha256": "e0a370bf1a6667f6b0c97d11d9388abaaae7c3941bb9b8fae46179c2f538ac5d",
+      "size": 19478
     },
     {
       "path": "config.json",
@@ -23,11 +28,6 @@
       "path": "launch.sh",
       "sha256": "a1c47892f506eefa12bdb1e8dfcfa8e22dd010e0a9f2f96bc227d396c6ee4d39",
       "size": 2703
-    },
-    {
-      "path": "settings.json",
-      "sha256": "c5fbc88e6e4f397948c1991503541c6daec3be825c084736d4fd7950b2c26a2c",
-      "size": 403
     },
     {
       "path": "rh/chiaki.py",
@@ -56,8 +56,8 @@
     },
     {
       "path": "rh/logger.py",
-      "sha256": "aeaae9526ce0023606a57be071609d6905fab60f11eb3be88f39c6a4f69155dd",
-      "size": 6623
+      "sha256": "0a89b67398b16e17961a110ca3679f3c17a9534beb608386eb94c4809282c657",
+      "size": 7226
     },
     {
       "path": "rh/paths.py",
@@ -71,13 +71,13 @@
     },
     {
       "path": "rh/updater.py",
-      "sha256": "7c3d15d6da94bd6983092b394795d73e3622e89b77cd2cf7f880ff36eecebd23",
-      "size": 10271
+      "sha256": "4982e75a9058f3d23d44174a1fee1c5f8c73fb58dd0b7eb6adac8d39b0a3ae56",
+      "size": 11380
     },
     {
       "path": "rh/version.py",
-      "sha256": "3951178f25f71b635e2fb7c9ba594a5fb0a1c42686a16ee6d7ff4655f5ba7fb0",
-      "size": 402
+      "sha256": "af858516b6d5a115d22c46297e3016c54935f21c53d12a64090cfe765bbc2153",
+      "size": 404
     },
     {
       "path": "rh/modals/__init__.py",
@@ -96,8 +96,8 @@
     },
     {
       "path": "rh/modals/update.py",
-      "sha256": "ef2c14c808af299ede2654c3069ca2d5e5a0ccb176d4794540a15bc7a47b1c77",
-      "size": 5956
+      "sha256": "6be3d259316429bd83f4689f0a07c6e814e94050d83991385bd46930be6f762f",
+      "size": 6725
     },
     {
       "path": "rh/screens/__init__.py",

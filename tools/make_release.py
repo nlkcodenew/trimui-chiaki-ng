@@ -22,6 +22,10 @@ BRANCH = "main"
 
 EXCLUDE_NAMES = {"__pycache__", ".update_staging", ".update_runtime"}
 EXCLUDE_FILES = {"desktop.ini", ".DS_Store"}
+# settings.json la file cau hinh nguoi dung (device_id random + tuy chinh).
+# Dua no vao manifest se lam pending_files luon co no vi hash luon lech sau
+# lan chay dau, gay vong lap popup. Exclude ngay tu be build.
+EXCLUDE_USER_FILES = {"settings.json"}
 
 
 def app_version():
@@ -44,7 +48,7 @@ def main():
     for root, dirs, names in os.walk(FILES_DIR):
         dirs[:] = [d for d in dirs if d not in EXCLUDE_NAMES]
         for fn in sorted(names):
-            if fn in EXCLUDE_FILES or fn.startswith(".") or fn.endswith(".pyc"):
+            if fn in EXCLUDE_FILES or fn in EXCLUDE_USER_FILES or fn.startswith(".") or fn.endswith(".pyc"):
                 continue
             fp = os.path.join(root, fn)
             rel = os.path.relpath(fp, FILES_DIR).replace(os.sep, "/")
