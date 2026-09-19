@@ -1,38 +1,39 @@
 # -*- coding: utf-8 -*-
-"""Lop goi lop chiaki CLI (chiaki-ng upstream) ma khong can binary rieng.
+"""Lop wire protocol cho trimui-chiaki-ng.
 
-TrimUI Smart Pro S co Python 3 nhung muon chay chiaki minh phai dong goi C
-binary hoac dung socket thuan. Vi firmware cua TrimUI Linux 1.1.1 khong co
-OpenSSL 3 mot so dep ben canh (chi co 3.0.13), va binary chiaki nguon upstream
-duoc build cho macOS / Ubuntu, nen viec build aarch64 ngay tren may khong kha thi.
+Bao gom:
+    - Discovery SRCH broadcast, response parse (port 987 PS4 / 9302 PS5)
+    - Wakeup WAKEUP voi regist-key plaintext
+    - Connect RPCrypt den controller port 9295 (PS4/PS5)
+    - Doc chiaki.conf theo mau Switch (host_addr, psn_account_id, rp_key, rp_regist_key,
+      rp_key_type, video_resolution, video_fps, target)
 
-Thay vao do, app se dung lop wrapper Python de noi truc tiep voi PS4/PS5 qua
-cac control / stream socket. Wire format doc tu
-    https://github.com/streetpea/chiaki-ng/tree/master/lib
-dac biet la src/discovery.c, src/regist.c, src/session.c, src/streamconnection.c.
+Crypto va session init van de~ dang o upstream chiaki-ng. v0.2.0 se build lib
+C aarch64 hoac dung OpenSSL 3.0.13 (san trong firmware TrimUI Linux 1.1.1) de
+thuc thi cac buoc tiep theo:
 
-Chuc nang o version 0.1.0:
-    - Discovery: gui SRCH broadcast, nhan SRCH response (port 987 PS4 / 9302 PS5)
-    - Wakeup: gui WAKEUP bang regist-key plaintext (hex string)
-    - Connect: SessionInit qua TCP 9295, sau do StreamConnection cung 9296
-    - Session key + AES: dat kho vao session.sh o files/assets/session_key.bin
+    chiaki_session_init
+    chiaki_session_start
+    chiaki_session_set_controller_state
+    chiaki_session_set_video_sample_cb
 
-Ban 0.2.0+ se chuyen sang FFTW + AAC thuan neu can, vi du muc tieu 720p30.
-
-NOTE: dang o trang thai stub. Module ben duoi (Session, DiscoveryClient) se
-tra None cho moi ket noi cho toi khi ban 0.2 duoc day.
+Hien tai cac ham chi in log va tra ve ma loi de app khong crash.
 """
 
 import json
 import os
 import socket
 import struct
-import subprocess
+import threading
 import time
+import urllib.parse
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
 from . import state
+from .logger import get_logger
+
+log = get_logger()
 
 
 @dataclass
@@ -44,6 +45,7 @@ class DiscoveredHost:
     system_version: str = ""
     running_app: str = ""
     target: int = 0
+    host_request_port: int = 9295
 
 
 def find_chiaki_binary(app_dir):
@@ -55,20 +57,39 @@ def find_chiaki_binary(app_dir):
     ]
     for path in candidates:
         if os.path.isfile(path) and os.access(path, os.X_OK):
+            log.info("chiaki binary found: %s", path)
             return path
+    log.debug("chiaki binary not bundled, using pure python shim")
     return None
 
 
-def read_chiaki_conf(path):
-    """Doc chiaki.conf theo mau Switch (host_addr, psn_online_id, psn_account_id,
-    rp_key, rp_regist_key, rp_key_type, target, video_resolution, video_fps).
+def read_chiaki_conf(path=None):
+    """Doc chiaki.conf theo mau Switch.
 
-    Bo qua dong khong hop le va comment. Tra dict {ten_may: {...}}.
+    File mau:
+        [PS5-xxx]
+        host_addr = 192.168.1.10
+        psn_online_id = user
+        psn_account_id = base64==
+        rp_key = base64==
+        rp_regist_key = abcdef12
+        rp_key_type = 2
+        target = 2
+
+        video_resolution = 720p
+        video_fps = 30
+
+    Tra dict {ten_may: {key: value}}. Gia tri duoc strip va bo dau ngoac kep.
     """
     import re
 
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "chiaki.conf")
+        path = os.path.abspath(path)
+
     hosts = {}
     if not os.path.isfile(path):
+        log.debug("chiaki.conf khong ton tai: %s", path)
         return hosts
     cur = None
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
@@ -87,65 +108,42 @@ def read_chiaki_conf(path):
             key = key.strip()
             val = val.strip().strip('"').strip("'")
             cur[key] = val
+    log.info("chiaki.conf parsed: %d host(s) from %s", len(hosts), path)
     return hosts
 
 
-def discovery_broadcast(app_dir=None, timeout=3.0):
-    """SRCH broadcast dong bo theo PSN protocol (SRCH * HTTP/1.1\\r\\n
-    device-discovery-protocol-version: ...). Tra danh sach DiscoveredHost.
+def write_chiaki_conf(hosts, path=None):
+    """Ghi chiaki.conf (format giong Switch, dung de dump cho debug)."""
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "chiaki.conf")
+        path = os.path.abspath(path)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            for name, h in hosts.items():
+                f.write("[%s]\n" % name)
+                for k in ("host_addr", "psn_online_id", "psn_account_id",
+                         "rp_key", "rp_regist_key", "rp_key_type",
+                         "target", "video_resolution", "video_fps"):
+                    if k in h and h[k]:
+                        f.write("%s = \"%s\"\n" % (k, h[k]))
+                f.write("\n")
+        log.info("chiaki.conf written: %s", path)
+        return True
+    except OSError as exc:
+        log.warning("chiaki.conf write failed: %s", exc)
+        return False
 
-    Day la pure-Python vi TrimUI Linux 1.1.1 khong co chiaki binary. Netif
-    trong Smart Pro S se khong can bind vi minh broadcast tren port local 9303-9319
-    giong chiaki. PS4 response o port 987, PS5 o 9302.
-    """
-    import threading
-    import urllib.parse
 
-    out = []
-    done = threading.Event()
-
-    def worker(protocol_version, ps5_mode):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        s.settimeout(timeout)
-        local_port = 9303
-        try:
-            s.bind(("", local_port))
-        except OSError:
-            local_port = 0
-            s.bind(("", local_port))
-        pkt = ("SRCH * HTTP/1.1\r\n"
-               "device-discovery-protocol-version: %s\r\n\r\n") % protocol_version
-        if ps5_mode:
-            s.sendto(pkt.encode("ascii"), ("255.255.255.255", 9302))
-        else:
-            s.sendto(pkt.encode("ascii"), ("255.255.255.255", 987))
-        end = time.time() + timeout
-        while time.time() < end and not done.is_set():
-            try:
-                data, addr = s.recvfrom(2048)
-            except socket.timeout:
-                continue
-            host = _parse_srch(data, addr, ps5_mode)
-            if host is not None:
-                out.append(host)
-                done.set()
-                break
-        s.close()
-
-    threads = [
-        threading.Thread(target=worker, args=("00020020", False), daemon=True),
-        threading.Thread(target=worker, args=("00030010", True), daemon=True),
-    ]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join(timeout + 0.5)
-    return out
+def _build_srch(protocol_version):
+    return ("SRCH * HTTP/1.1\r\n"
+            "device-discovery-protocol-version: %s\r\n\r\n") % protocol_version
 
 
 def _parse_srch(data, addr, ps5_mode):
-    text = data.decode("ascii", errors="ignore")
+    try:
+        text = data.decode("ascii", errors="ignore")
+    except Exception:
+        return None
     if not text.startswith("HTTP/1.1"):
         return None
     headers = {}
@@ -158,21 +156,23 @@ def _parse_srch(data, addr, ps5_mode):
         addr=addr[0],
         is_ps5=ps5_mode,
         system_version=headers.get("system-version", ""),
-        running_app=headers.get("running-app-name", ""),
+        running_app=urllib.parse.unquote(headers.get("running-app-name", "")),
+        host_request_port=int(headers.get("host-request-port", "9295") or "9295"),
     )
-    if "200" in text.split("\r\n", 1)[0]:
+    status_line = text.split("\r\n", 1)[0]
+    if "200" in status_line:
         host.state = "ready"
-    elif "620" in text.split("\r\n", 1)[0]:
+    elif "620" in status_line:
         host.state = "standby"
-    name = headers.get("host-name", "")
-    host.name = urllib_unquote(name)
+    host.name = urllib.parse.unquote(headers.get("host-name", ""))
     host.target = _target_from_version(host.system_version, ps5_mode)
     return host
 
 
 def _target_from_version(version, ps5):
+    digits = "".join(c for c in version if c.isdigit())
     try:
-        v = int("".join(c for c in version if c.isdigit()))
+        v = int(digits) if digits else 0
     except ValueError:
         return 0
     if ps5 and v >= 8000001:
@@ -186,55 +186,136 @@ def _target_from_version(version, ps5):
     return 0
 
 
-def urllib_unquote(s):
-    import urllib.parse
-    return urllib.parse.unquote(s)
+def discovery_broadcast(timeout=3.0):
+    """SRCH broadcast dong bo theo PSN protocol. Tra danh sach DiscoveredHost.
+
+    PS4 response o port 987, PS5 o 9302. Listen o 9303-9319 giong upstream
+    chiaki (do PS4 phan hoi qua bat ky port trong khoang ay).
+    """
+    out = []
+    seen = set()
+    lock = threading.Lock()
+
+    def worker(protocol_version, ps5_mode, port):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.settimeout(timeout)
+            s.bind(("", port))
+            pkt = _build_srch(protocol_version).encode("ascii")
+            s.sendto(pkt, ("255.255.255.255", port))
+            end = time.time() + timeout
+            while time.time() < end:
+                try:
+                    data, addr = s.recvfrom(2048)
+                except socket.timeout:
+                    continue
+                host = _parse_srch(data, addr, ps5_mode)
+                if host is None:
+                    continue
+                with lock:
+                    if host.addr in seen:
+                        continue
+                    seen.add(host.addr)
+                    out.append(host)
+        except OSError as exc:
+            log.warning("discovery worker port %d error: %s", port, exc)
+        finally:
+            s.close()
+
+    threads = []
+    for port in (9303, 9304, 9305):
+        threads.append(threading.Thread(target=worker,
+                                        args=("00020020", False, port),
+                                        daemon=True))
+    for port in (9306, 9307, 9308):
+        threads.append(threading.Thread(target=worker,
+                                        args=("00030010", True, port),
+                                        daemon=True))
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout + 0.5)
+    log.info("discovery: %d host(s)", len(out))
+    return out
 
 
-def send_wakeup(addr, regist_key, ps5=False):
-    """Gui WAKEUP toi PS4/PS5. regist_key la hex string.
+def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
+    """Gui WAKEUP toi PS4/PS5.
 
-    Phan hoi am thanh (SIE wakeup packet) dat may PS tu standby -> ready.
-    Tra True neu khong co exception socket.
+    Tra True neu packet gui thanh cong (PS4/PS5 se bat tu standby thanh ready).
     """
     try:
         credential = int(regist_key, 16)
     except ValueError:
+        log.error("regist_key khong phai hex: %r", regist_key)
         return False
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.settimeout(3.0)
-    protocol = "00030010" if ps5 else "00020020"
-    pkt = ("WAKEUP * HTTP/1.1\r\n"
-           "client-type:vr\r\n"
-           "auth-type:R\r\n"
-           "model:w\r\n"
-           "app-type:r\r\n"
-           "user-credential:%llu\r\n"
-           "device-discovery-protocol-version:%s\r\n\r\n") % (credential, protocol)
-    port = 9302 if ps5 else 987
     try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.settimeout(timeout)
+        protocol = "00030010" if ps5 else "00020020"
+        pkt = ("WAKEUP * HTTP/1.1\r\n"
+               "client-type:vr\r\n"
+               "auth-type:R\r\n"
+               "model:w\r\n"
+               "app-type:r\r\n"
+               "user-credential:%llu\r\n"
+               "device-discovery-protocol-version:%s\r\n\r\n") % (credential, protocol)
+        port = 9302 if ps5 else 987
         sock.sendto(pkt.encode("ascii"), (addr, port))
-        sock.close()
+        log.info("wakeup sent: %s ps5=%s port=%d", addr, ps5, port)
         return True
-    except OSError:
+    except OSError as exc:
+        log.error("wakeup failed: %s", exc)
         return False
+    finally:
+        sock.close()
 
 
-def init_session(addr, ps5, regist_key, morning, profile, log_cb=None):
-    """Stub bat tay session - ban 0.2.0 se thay the bang OpenSSL + chiaki wire.
+def _video_profile_from_state():
+    """Tra ve dict theo cau truc ChiakiConnectVideoProfile (4-tuple):
+        (width, height, max_fps, bitrate)."""
+    res = getattr(state, "video_resolution", "720p")
+    fps = int(getattr(state, "video_fps", 30))
+    bitrate = int(getattr(state, "video_bitrate", 8000))
+    if res == "360p":
+        w, h = 640, 360
+    elif res == "540p":
+        w, h = 960, 540
+    elif res == "1080p":
+        w, h = 1920, 1080
+    else:
+        w, h = 1280, 720
+    if fps not in (30, 60):
+        fps = 30
+    return {"width": w, "height": h, "max_fps": fps, "bitrate": bitrate}
 
-    Hien tai chi in thong bao va tra ve ma loi de app khong crash.
+
+def video_profile_summary():
+    p = _video_profile_from_state()
+    return "%dx%d@%dfps %dkbps" % (p["width"], p["height"], p["max_fps"], p["bitrate"])
+
+
+def init_session(addr, ps5, regist_key, morning, profile=None, log_cb=None):
+    """Stub - ban 0.2.0 se goi OpenSSL + chiaki wire o day.
+
+    Tra ve (rc, session_handle). Hien tai rc = -1 de app biet chua ho tro.
     """
+    if profile is None:
+        profile = _video_profile_from_state()
+    log.info("init_session stub: addr=%s ps5=%s profile=%s", addr, ps5, profile)
     if log_cb:
-        log_cb("init_session not implemented yet (build 0.2.0 will ship this)")
+        log_cb("init_session not implemented (v0.2.0)")
     return -1, None
 
 
 def run_stream(addr, ps5, profile, quit_evt, log_cb=None):
-    """Stub run stream. Ban 0.2.0 se di vao main streaming loop."""
+    """Stub streaming loop - chi cho quit event."""
     if log_cb:
-        log_cb("run_stream not implemented yet (build 0.2.0 will ship this)")
-    while not quit_evt.is_set():
-        quit_evt.wait(0.5)
+        log_cb("run_stream stub running")
+    log.info("run_stream stub: addr=%s ps5=%s", addr, ps5)
+    quit_evt.wait()
+    log.info("run_stream stub: quit")
     return 0
