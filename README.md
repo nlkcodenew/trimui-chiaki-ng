@@ -1,78 +1,103 @@
 # trimui-chiaki-ng
 
-PS4 / PS5 Remote Play client cho TrimUI Smart Pro S firmware Linux 1.1.1.
+Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trang thai**: v0.1.0 - bootstrap. Chay duoc app, scan host PS4/PS5 qua LAN, hien menu va auto-update. Video stream that su se ship o v0.2.0 cung codec H264 / H265.
+**Trạng thái**: v0.2.0 - đã chạy được trên máy thật, quét máy PS4/PS5 qua LAN, hỗ trợ auto-update từ GitHub. Phiên bản v0.3.0 sẽ thêm luồng stream video thật với codec H264 / H265.
 
-## Muc tieu phan cung
+## Cấu hình phần cứng mục tiêu
 
-- **SoC**: Allwinner A523 8-core Cortex-A55 @ 2.0GHz
+- **SoC**: Allwinner A523 8 nhân Cortex-A55 @ 2.0GHz
 - **GPU**: ARM Mali-G57 MC1 @ 744MHz
 - **RAM**: 1GB LPDDR4
-- **Display**: 4.96 inch 1280x720 IPS (native 720p)
-- **Wi-Fi**: 802.11 a/b/g/n/ac/ax dual-band
+- **Màn hình**: IPS 4.96 inch 1280×720 (native 720p, không tốn scaler)
+- **Wi-Fi**: 802.11 a/b/g/n/ac/ax băng tần kép
 - **Firmware**: TrimUI Linux custom 1.1.1 (TG5050 Smart Pro S)
 
-## Cau hinh video de xuat (muc tieu v0.2.0)
+## Cấu hình video đề xuất (mục tiêu v0.3.0)
 
-- Resolution: `720p` (native, khong ton scaler)
+- Độ phân giải: `720p` (native, không tốn scaler)
 - FPS: `30`
-- Bitrate: `8000-10000` kbps
+- Bitrate: `8000` kbps (giảm xuống `6000` nếu thấy giật)
 - Codec: H264 (PS4), H265 (PS5)
 
-## Cai dat vao the nho
+## Cài đặt vào thẻ nhớ
 
-1. Copy `files/` len the nho vao `/mnt/SDCARD/Apps/Chiaki/`.
-2. File icon `icon.png` nen co trong thu muc.
-3. Trong he dieu hanh TrimUI, mo menu -> Apps -> Chiaki.
-4. Lan dau khoi dong app se:
-   - Kiem tra Python 3, neu thieu se bao loi huong dan.
-   - Tu dong kiem tra update tu GitHub release (co the tat qua settings).
+1. Copy toàn bộ thư mục `files/` vào thẻ theo đường dẫn `/mnt/SDCARD/Apps/Chiaki/`.
+2. Thêm một file `icon.png` (256×256 PNG, nền trong suốt) vào cùng thư mục.
+3. Trong máy Smart Pro S, vào menu **Apps** → **Chiaki-ng**.
+4. Lần đầu khởi động, ứng dụng sẽ:
+   - Kiểm tra Python 3 và thư viện SDL2
+   - Tự quét máy PS4/PS5 qua Wi-Fi
+   - Tự kiểm tra bản cập nhật mới trên GitHub (có thể tắt trong **Cài đặt**)
 
-## Auto-update (OTA)
+## Tự cập nhật (OTA)
 
-App check `https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/main/manifest.json` luc khoi dong va popup neu co ban moi.
+Mỗi lần khởi động, nếu `settings.auto_update = true`, ứng dụng sẽ gọi `manifest.json` tại `https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/main/manifest.json`. Nếu có bản mới, popup sẽ hiện ra cho phép bạn chọn:
 
-- Bam **CAI NGAY**: app se tai tung file, verify sha256, roi os.replace vao cho that.
-- Bam **DE SAU**: dong popup, lan sau se hoi lai.
-- Bam **BO QUA**: ghi version vao `settings.json.skipped_versions`, khong hoi nua.
+- **CÀI NGAY**: tải từng file, kiểm tra `sha256`, ghi đè vào chỗ thật bằng `os.replace` (an toàn khi máy tắt đột ngột).
+- **ĐỂ SAU**: đóng popup, lần sau sẽ hỏi lại.
+- **BỎ QUA**: ghi phiên bản vào `settings.json.skipped_versions`, không hỏi nữa.
 
-`settings.json` tren may khong bao gio bi ghi de (de bao toan cau hinh nguoi dung).
+`settings.json` trên máy không bao giờ bị ghi đè, để bảo toàn cấu hình người dùng.
 
-## Cau truc repo
+## File log
+
+App ghi log rolling vào hai file nằm ngay trong thư mục `Apps/Chiaki/`:
+
+- `Chiaki-loi.txt` - chỉ warning + error, xoay vòng tối đa 3 file backup 256 KB
+- `Chiaki-debug.log` - toàn bộ info + debug, xoay vòng 1 file backup 512 KB
+
+Định dạng mỗi dòng:
+
+```
+[2026-09-19 11:30:00.123] [INFO ] [MainThread  ] [trimui-chiaki-ng] home: bat dau scan...
+```
+
+Để bật log debug chi tiết, mở `settings.json` đổi `"enable_logging": false` thành `true`. Sau đó gửi hai file log này cho dev khi cần hỗ trợ.
+
+## Cấu trúc repo
 
 ```
 tools/
-  make_release.py       # Build manifest.json voi sha256 moi
+  make_release.py       # Build manifest.json với sha256 mới khi push tag
 files/
-  app.py                # Entry point
-  config.json           # TrimUI launcher manifest
-  launch.sh             # Boot script (tim python3, dat env, log)
-  settings.json         # Cau hinh nguoi dung
+  app.py                # Điểm vào chương trình
+  config.json           # Manifest cho TrimUI launcher
+  launch.sh             # Script khởi động (tìm python3, đặt env, ghi log)
+  settings.json         # Cấu hình người dùng
   rh/
-    engine.py           # SDL2 engine
-    chiaki.py           # Wrapper discovery / wakeup / session
-    updater.py          # OTA updater
-    modals/update.py    # Modal popup update
-    screens/            # UI screens (home, settings, ...)
-    state.py            # Runtime state
-    version.py          # APP_VERSION single source of truth
+    engine.py           # Engine SDL2 (window, renderer, font, input)
+    chiaki.py           # Wrapper discovery / wakeup / chiaki.conf
+    updater.py          # Bộ cập nhật OTA
+    logger.py           # Logger rolling 2 file
+    modals/update.py    # Popup cập nhật OTA
+    screens/            # Giao diện (home, settings)
+    state.py            # Trạng thái runtime
+    version.py          # Hằng số APP_VERSION
 .github/workflows/
-  release.yml           # Auto build manifest + Release on tag v*
-manifest.json           # (chi tool tao ra) sha256 list + version
+  release.yml           # Auto build manifest khi push tag v*
+manifest.json           # (chỉ tool tạo ra) danh sách sha256 + version
 ```
 
-## Build release
+## Build bản phát hành
 
-Tag phien ban moi:
+Đẩy tag phiên bản mới:
 
 ```
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
-GitHub Action chay `tools/make_release.py` -> cap nhat `manifest.json` -> commit nguoc vao `main`. App se tu check va popup update trong vong 30 giay khi nguoi dung mo.
+GitHub Action chạy `tools/make_release.py` → cập nhật `manifest.json` → commit ngược vào `main`. Mọi máy đang chạy bản cũ sẽ tự popup cập nhật trong vòng 30 giây khi người dùng mở ứng dụng.
 
-## Luat
+## Lưu ý quan trọng
 
-`AGPL-3.0` (copy tu chiaki-ng upstream). Khi phat hanh binary phai kem source.
+- Cần Python 3.10 trở lên. Firmware TrimUI Linux 1.1.1 đã có sẵn.
+- Cần SDL2 + SDL2_ttf. Có sẵn trong `/usr/lib64` của firmware.
+- Nên **tắt Bluetooth** trước khi stream để tránh nhiễu Wi-Fi (khuyến cáo của hãng).
+- Bitrate mặc định `8000` kbps; nếu thấy giật thì giảm xuống `6000`.
+- Phiên bản stream video thật sẽ đến ở v0.3.0 (FFmpeg subprocess + SDL renderer).
+
+## Giấy phép
+
+`AGPL-3.0` (copy từ chiaki-ng upstream). Khi phát hành binary phải kèm source.
