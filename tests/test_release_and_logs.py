@@ -23,6 +23,7 @@ class LogUploaderTests(unittest.TestCase):
         cls.uploader = importlib.import_module("rh.log_uploader")
         cls.updater = importlib.import_module("rh.updater")
         cls.inputs = importlib.import_module("rh.inputs")
+        cls.settings_module = importlib.import_module("rh.screens.settings")
 
     @classmethod
     def tearDownClass(cls):
@@ -145,6 +146,45 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(i18n.TEXTS["VI"]["settings"], "CÀI ĐẶT")
         self.assertEqual(i18n.TEXTS["VI"]["update"], "CẬP NHẬT")
         self.assertIn("Không", i18n.TEXTS["VI"]["scan_none"])
+
+    def test_every_settings_row_has_a_runtime_state_value(self):
+        screen = self.settings_module.SettingsScreen()
+        for key, _, _ in screen.rows:
+            self.assertTrue(hasattr(self.settings_module.state, key), key)
+
+    def test_settings_language_row_updates_current_lang(self):
+        screen = self.settings_module.SettingsScreen()
+        screen.selected = next(
+            index for index, row in enumerate(screen.rows)
+            if row[0] == "current_lang"
+        )
+        original = self.settings_module.state.current_lang
+        try:
+            screen._change(1)
+            self.assertIn(self.settings_module.state.current_lang, ("VI", "EN"))
+            self.assertNotEqual(self.settings_module.state.current_lang, original)
+        finally:
+            self.settings_module.state.current_lang = original
+
+    def test_settings_screen_renders_every_scroll_position(self):
+        screen = self.settings_module.SettingsScreen()
+
+        class FakeEngine:
+            screen_w = 1280
+            screen_h = 720
+            font_title = object()
+            font_sub = object()
+
+            def fill_rect(self, *args, **kwargs):
+                return None
+
+            def draw_text(self, *args, **kwargs):
+                return None
+
+        engine = FakeEngine()
+        for index in range(len(screen.rows)):
+            screen.selected = index
+            screen.render(engine)
 
 
 if __name__ == "__main__":

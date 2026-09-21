@@ -1,19 +1,19 @@
 {
-  "version": "0.2.4",
+  "version": "0.2.5",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-21T09:04:35+07:00",
+  "built": "2026-09-21T09:14:20+07:00",
   "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/main",
-  "release_tag": "v0.2.4",
+  "release_tag": "v0.2.5",
   "note": {
-    "vi": "v0.2.4: sửa lỗi tự thoát khi bấm nút và bổ sung tiếng Việt có dấu.",
-    "en": "v0.2.4: fix controller-button crash and add fully accented Vietnamese UI."
+    "vi": "v0.2.5: sửa lỗi crash khi mở màn hình Cài đặt.",
+    "en": "v0.2.5: fix crash when opening the Settings screen."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "fadf384c19676d33abf82eaaaa12b93873a814c389fd2f8fd6ca1511db231fb0",
-      "size": 4246
+      "sha256": "2b8f4d7d8b867e1aa5354ebbf9f752ffc59cae592e082a234079409b20d68cfa",
+      "size": 4241
     },
     {
       "path": "config.json",
@@ -92,7 +92,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "8eaa4057e4aed9b5d05402bcc8cbc7e33e67eba7c50e15458e06a79d0780b967",
+      "sha256": "7b9b1fb1e90a7df77c04a12181786a8e22e1d2dd7afd3c3c84acc264c70cc85f",
       "size": 404
     },
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "8a35a752d2e5c0b2b5c1e16060b0735f980cf1bdb87a889ada15f4e937c69465",
-      "size": 4456
+      "sha256": "edb290eb722e17150d74b53a314e34bfa55de65068e7074007309d8e136d903a",
+      "size": 4548
     },
     {
       "path": "rh/ui/__init__.py",
@@ -528,8 +528,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.2.4.zip",
-    "sha256": "4331ecf0cf40c02320f1958d1694ecfd2183e67336e44cc801d2da4fe98bf195",
-    "size": 630819
+    "name": "trimui-chiaki-ng-v0.2.5.zip",
+    "sha256": "a2b347086689cc7e251093ea3a0fa3c39138385a76b22fabae7505ee1c0cf489",
+    "size": 630872
   }
 }

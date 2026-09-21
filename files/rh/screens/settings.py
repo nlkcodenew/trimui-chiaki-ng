@@ -17,6 +17,10 @@ log = get_logger()
 
 
 class SettingsScreen(BaseScreen):
+    LABEL_KEYS = {
+        "current_lang": "language",
+    }
+
     def __init__(self, engine=None):
         super().__init__(engine, "settings")
         self.rows = [
@@ -27,7 +31,7 @@ class SettingsScreen(BaseScreen):
             ("auto_update", [True, False], None),
             ("auto_upload_logs", [True, False], None),
             ("enable_logging", [True, False], self._set_logging),
-            ("language", ["VI", "EN"], self._set_lang),
+            ("current_lang", ["VI", "EN"], self._set_lang),
         ]
         self.selected = 0
 
@@ -106,7 +110,7 @@ class SettingsScreen(BaseScreen):
         for i in range(first, min(len(self.rows), first + 6)):
             key, values, _ = self.rows[i]
             cur = getattr(state, key)
-            label = tr(key)
+            label = tr(self.LABEL_KEYS.get(key, key))
             value = str(cur)
             col = (0, 230, 150) if i == self.selected else (40, 60, 90)
             engine.fill_rect(40, y, engine.screen_w - 80, 70, col[0], col[1], col[2], 240)
