@@ -10,12 +10,15 @@ from .. import state
 from ..i18n import tr
 from ..paths import APP_DIR
 from ..version import is_newer, APP_VERSION
+from ..logger import get_logger
 from ..updater import (
     apply_update, check_for_update, download_update, release_note,
     request_restart, skip_version,
     SETTINGS_REL,
 )
 from .base import BaseModal
+
+log = get_logger()
 
 
 class UpdateModal(BaseModal):
@@ -68,38 +71,40 @@ class UpdateModal(BaseModal):
         self.selected_opt = (self.selected_opt + delta) % len(self.get_labels())
 
     def handle_input(self, inputs):
+        edges = inputs.get("edges", [])
         if self.busy:
-            if inputs.get("btn_b") or inputs.get("quit"):
-                self.close()
-                return True
             return False
-        if inputs.get("btn_left"):
+        if "btn_left" in edges:
             self._move(-1)
             return True
-        if inputs.get("btn_right"):
+        if "btn_right" in edges:
             self._move(1)
             return True
-        if inputs.get("btn_up"):
+        if "btn_up" in edges:
             self._move(-1)
             return True
-        if inputs.get("btn_down"):
+        if "btn_down" in edges:
             self._move(1)
             return True
-        if inputs.get("btn_a"):
+        if "btn_a" in edges:
             self._activate(self.selected_opt)
             return True
-        if inputs.get("btn_b") or inputs.get("quit"):
+        if "btn_b" in edges or "quit" in edges:
             self._activate(1)
             return True
         return False
 
     def _activate(self, idx):
         if idx == 0:
+            log.info("update modal: install selected for v%s",
+                     (self.manifest or {}).get("version", "?"))
             self._start_install()
         elif idx == 1:
+            log.info("update modal: later selected")
             self.close()
         else:
             if self.manifest and "version" in self.manifest:
+                log.info("update modal: skip v%s", self.manifest["version"])
                 skip_version(self.manifest["version"])
             self.close()
 
@@ -108,6 +113,7 @@ class UpdateModal(BaseModal):
             return
         self.busy = True
         self.phase = tr("update_downloading")
+        self.status = tr("update_network_check")
         threading.Thread(target=self._run_install, daemon=True).start()
 
     def _run_install(self):
@@ -119,7 +125,8 @@ class UpdateModal(BaseModal):
             self.progress_file = os.path.basename(path) if path else ""
             if total > 0:
                 self.progress_pct = min(0.9, done / total)
-            self.status = "Download %d/%d: %s" % (done, total, self.progress_file)
+            self.status = "%s %d/%d: %s" % (
+                tr("update_download_progress"), done, total, self.progress_file)
         try:
             ok = download_update(m, files, progress=prog) if files else True
             if ok:
@@ -129,14 +136,21 @@ class UpdateModal(BaseModal):
             if ok:
                 self.phase = tr("update_done")
                 self.progress_pct = 1.0
-                self.restart = True
-                request_restart()
+                self.restart = request_restart()
+                if self.restart and self.engine:
+                    self.engine.quit("update_restart")
+                elif not self.restart:
+                    self.phase = tr("update_failed")
+                    self.status = tr("update_failed_hint")
+                    self.failed = True
             else:
                 self.phase = tr("update_failed")
+                self.status = tr("update_failed_hint")
                 self.failed = True
         except Exception as exc:
-            print("Update error: %s" % exc)
+            log.exception("update modal install failed: %s", exc)
             self.phase = tr("update_failed")
+            self.status = tr("update_failed_hint")
             self.failed = True
         finally:
             self.busy = False

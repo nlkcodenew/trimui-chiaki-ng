@@ -43,6 +43,10 @@ ARCHIVE_EXCLUDE_PREFIXES = (
 )
 
 
+def _runtime_file(name):
+    return name.startswith(ARCHIVE_EXCLUDE_PREFIXES)
+
+
 def app_version():
     with open(os.path.join(FILES_DIR, "rh", "version.py"), encoding="utf-8") as f:
         m = re.search(r'APP_VERSION\s*=\s*["\']([^"\']+)["\']', f.read())
@@ -73,7 +77,7 @@ def _archive_excluded(name):
         or name in ARCHIVE_EXCLUDE_FILES
         or name.startswith(".")
         or name.endswith(".pyc")
-        or name.startswith(ARCHIVE_EXCLUDE_PREFIXES)
+        or _runtime_file(name)
     )
 
 
@@ -111,7 +115,9 @@ def main():
     for root, dirs, names in os.walk(FILES_DIR):
         dirs[:] = [d for d in dirs if d not in EXCLUDE_NAMES]
         for fn in sorted(names):
-            if fn in EXCLUDE_FILES or fn in EXCLUDE_USER_FILES or fn.startswith(".") or fn.endswith(".pyc"):
+            if (fn in EXCLUDE_FILES or fn in EXCLUDE_USER_FILES
+                    or fn.startswith(".") or fn.endswith(".pyc")
+                    or _runtime_file(fn)):
                 continue
             fp = os.path.join(root, fn)
             rel = os.path.relpath(fp, FILES_DIR).replace(os.sep, "/")
@@ -131,11 +137,14 @@ def main():
         "app": "trimui-chiaki-ng",
         "python": "3.10+",
         "built": datetime.now(TZ).replace(microsecond=0).isoformat(),
-        "base_url": "https://raw.githubusercontent.com/%s/%s" % (REPO, BRANCH),
-        "release_tag": "v%s" % version,
+        "base_url": "https://raw.githubusercontent.com/%s/v%s/files" % (REPO, version),
+        # Hau to /files giu tuong thich voi updater v0.2.4/v0.2.5, noi ghep
+        # release_tag truc tiep voi path app.py thay vi biet source nam trong
+        # thu muc files/. Updater moi cung chap nhan dinh dang nay.
+        "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: sửa lỗi crash khi mở màn hình Cài đặt." % version,
-            "en": "v%s: fix crash when opening the Settings screen." % version,
+            "vi": "v%s: sửa điều khiển popup, đường dẫn tải OTA và thêm log kiểm tra mạng." % version,
+            "en": "v%s: fix update controls and payload URLs; add network diagnostics." % version,
         },
         "files": files,
         "remove": [],

@@ -12,6 +12,9 @@ class BaseModal:
     def close(self):
         self.active = False
         self.data = None
+        if (self.engine is not None
+                and getattr(self.engine, "active_modal", None) is self):
+            self.engine.active_modal = None
 
     def is_active(self):
         return self.active

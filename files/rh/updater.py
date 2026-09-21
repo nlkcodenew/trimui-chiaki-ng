@@ -28,6 +28,9 @@ import urllib.request
 from . import state
 from .paths import APP_DIR
 from .version import APP_VERSION, is_newer
+from .logger import get_logger
+
+log = get_logger()
 
 # Repo public mac dinh. Co the doi qua settings.json > update_url.
 DEFAULT_REPO = "nlkcodenew/trimui-chiaki-ng"
@@ -87,13 +90,27 @@ def candidate_manifest_urls():
 
 
 def payload_base_urls(manifest, rel_path=""):
-    """URL cua payload theo release tag bat bien, fallback ve main/proxy/CDN."""
+    """URL payload nằm trong thư mục files/ của source repository."""
     out = []
     release_tag = (manifest or {}).get("release_tag")
     if isinstance(release_tag, str) and release_tag:
+        release_path = release_tag.rstrip("/")
+        if not release_path.endswith("/files"):
+            release_path += "/files"
         out.append("https://raw.githubusercontent.com/%s/%s" %
-                   (DEFAULT_REPO, release_tag))
-    out.extend(candidate_base_urls(rel_path))
+                   (DEFAULT_REPO, release_path))
+    manifest_base = (manifest or {}).get("base_url")
+    if isinstance(manifest_base, str) and manifest_base.strip():
+        out.append(manifest_base.rstrip("/"))
+    custom = getattr(state, "update_url", "") or ""
+    if custom.strip():
+        out.extend(candidate_base_urls(rel_path))
+    else:
+        out.extend([
+            UPDATE_BASE_URL + "/files",
+            "https://ghproxy.net/" + UPDATE_BASE_URL + "/files",
+            CDN_BASE_URL + "/files",
+        ])
     seen = set()
     return [url for url in out if not (url in seen or seen.add(url))]
 
@@ -108,6 +125,8 @@ def _get(url, max_bytes, timeout=TIMEOUT):
     kwargs = {"timeout": timeout}
     if url.startswith("https://"):
         kwargs["context"] = ssl.create_default_context()
+    started = time.time()
+    log.info("network GET start: %s timeout=%ss", url, timeout)
     with urllib.request.urlopen(req, **kwargs) as resp:
         buf = bytearray()
         while True:
@@ -117,6 +136,9 @@ def _get(url, max_bytes, timeout=TIMEOUT):
             buf.extend(chunk)
             if len(buf) > max_bytes:
                 raise ValueError("response larger than %d bytes" % max_bytes)
+    elapsed = time.time() - started
+    log.info("network GET ok: status=%s bytes=%d elapsed=%.2fs url=%s",
+             getattr(resp, "status", "?"), len(buf), elapsed, url)
     return bytes(buf)
 
 
@@ -127,15 +149,21 @@ def _fetch_blob(rel_path, max_bytes, expected_sha=None, manifest=None):
         url = "%s/%s?_t=%d" % (base, quoted, int(time.time()))
         for attempt in range(2):
             try:
+                log.info("OTA download: file=%s attempt=%d url=%s",
+                         rel_path, attempt + 1, url)
                 data = _get(url, max_bytes)
                 if expected_sha:
                     if hashlib.sha256(data).hexdigest() == expected_sha:
+                        log.info("OTA verified: file=%s bytes=%d", rel_path, len(data))
                         return data
                     last = ValueError("hash mismatch for %s" % rel_path)
+                    log.warning("OTA hash mismatch: file=%s url=%s", rel_path, url)
                 else:
                     return data
             except Exception as exc:
                 last = exc
+                log.warning("OTA download attempt failed: file=%s url=%s error=%s",
+                            rel_path, url, exc)
             time.sleep(0.3)
     raise last or RuntimeError("fetch failed for %s" % rel_path)
 
@@ -165,6 +193,7 @@ def fetch_manifest():
         try:
             separator = "&" if "?" in manifest_url else "?"
             url = "%s%s_t=%d" % (manifest_url, separator, int(time.time()))
+            log.info("OTA manifest check: %s", url)
             raw = _get(url, MAX_MANIFEST_BYTES)
             parsed = json.loads(raw.decode("utf-8"))
             if not isinstance(parsed, dict) or not parsed.get("version"):
@@ -181,8 +210,11 @@ def fetch_manifest():
                     ok = False
                     break
             if ok:
+                log.info("OTA manifest ready: version=%s files=%d source=%s",
+                         parsed.get("version"), len(files), manifest_url)
                 return parsed
-        except (urllib.error.URLError, OSError, ValueError, UnicodeDecodeError):
+        except (urllib.error.URLError, OSError, ValueError, UnicodeDecodeError) as exc:
+            log.warning("OTA manifest failed: source=%s error=%s", manifest_url, exc)
             continue
     return None
 
@@ -215,7 +247,7 @@ def check_for_update(force=False):
     try:
         m = fetch_manifest()
     except Exception as exc:
-        print("check_for_update fetch failed: %s" % exc)
+        log.exception("OTA update check failed: %s", exc)
         return None
     if not m:
         return None
@@ -243,9 +275,11 @@ def _stage_files(manifest, files, progress=None):
     try:
         os.makedirs(STAGING_DIR, exist_ok=True)
     except OSError as exc:
-        print("Update staging failed: %s" % exc)
+        log.error("OTA staging setup failed: %s", exc)
         return False
     total = len(files)
+    log.info("OTA staging start: version=%s files=%d network=required",
+             manifest.get("version"), total)
     for i, f in enumerate(files):
         if progress:
             progress(i, total, f["path"])
@@ -253,10 +287,10 @@ def _stage_files(manifest, files, progress=None):
             data = _fetch_blob(f["path"], MAX_FILE_BYTES,
                                expected_sha=f["sha256"], manifest=manifest)
         except ValueError:
-            print("Update hash mismatch for %s" % f["path"])
+            log.error("OTA hash mismatch for %s", f["path"])
             return False
         except Exception as exc:
-            print("Update download failed for %s: %s" % (f["path"], exc))
+            log.error("OTA download failed for %s: %s", f["path"], exc)
             return False
         dst = os.path.join(STAGING_DIR, f["path"])
         try:
@@ -264,10 +298,11 @@ def _stage_files(manifest, files, progress=None):
             with open(dst, "wb") as fh:
                 fh.write(data)
         except OSError as exc:
-            print("Update write failed for %s: %s" % (f["path"], exc))
+            log.error("OTA staging write failed for %s: %s", f["path"], exc)
             return False
     if progress:
         progress(total, total, "")
+    log.info("OTA staging complete: version=%s files=%d", manifest.get("version"), total)
     return True
 
 
@@ -295,7 +330,7 @@ def apply_update(manifest, files):
                     pass
             moved += 1
         except OSError as exc:
-            print("Update install failed for %s: %s" % (f["path"], exc))
+            log.error("OTA install failed for %s: %s", f["path"], exc)
             return False
     for rel in manifest.get("remove", []):
         if not _safe_rel(rel):
@@ -306,7 +341,7 @@ def apply_update(manifest, files):
             pass
     _purge_pycache()
     shutil.rmtree(STAGING_DIR, ignore_errors=True)
-    print("Update installed: %d file(s) -> %s" % (moved, manifest["version"]))
+    log.info("OTA installed: %d file(s) -> %s", moved, manifest["version"])
     return True
 
 
@@ -333,7 +368,7 @@ def request_restart():
         os.chmod("/tmp/launch_game.sh", 0o755)
         return True
     except OSError as exc:
-        print("Restart request failed: %s" % exc)
+        log.error("OTA restart request failed: %s", exc)
         return False
 
 

@@ -24,6 +24,7 @@ class LogUploaderTests(unittest.TestCase):
         cls.updater = importlib.import_module("rh.updater")
         cls.inputs = importlib.import_module("rh.inputs")
         cls.settings_module = importlib.import_module("rh.screens.settings")
+        cls.update_modal_module = importlib.import_module("rh.modals.update")
 
     @classmethod
     def tearDownClass(cls):
@@ -105,6 +106,16 @@ class LogUploaderTests(unittest.TestCase):
         urls = self.updater.candidate_manifest_urls()
         self.assertIn("releases/latest/download/manifest.json", urls[0])
 
+    def test_payload_urls_include_repository_files_directory(self):
+        urls = self.updater.payload_base_urls(
+            {"release_tag": "v0.2.6/files"}, "app.py")
+        self.assertEqual(
+            urls[0],
+            "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/"
+            "v0.2.6/files",
+        )
+        self.assertTrue(all(not url.endswith("/files/files") for url in urls))
+
     def test_joystick_fallback_maps_profile_buttons(self):
         manager = self.inputs.InputManager()
         manager._map_joy_button(1, True)
@@ -185,6 +196,31 @@ class LogUploaderTests(unittest.TestCase):
         for index in range(len(screen.rows)):
             screen.selected = index
             screen.render(engine)
+
+    def test_update_modal_uses_edges_and_closes_to_home(self):
+        engine = types.SimpleNamespace(active_modal=None)
+        modal = self.update_modal_module.UpdateModal(engine)
+        engine.active_modal = modal
+        modal.open({"manifest": {"version": "9.9.9"}, "files": []})
+
+        modal.handle_input({"btn_right": True, "edges": []})
+        self.assertEqual(modal.selected_opt, 0)
+        modal.handle_input({"edges": ["btn_right"]})
+        self.assertEqual(modal.selected_opt, 1)
+        modal.handle_input({"edges": ["btn_a"]})
+        self.assertIsNone(engine.active_modal)
+        self.assertFalse(modal.active)
+
+    def test_update_modal_skip_closes_and_records_version(self):
+        engine = types.SimpleNamespace(active_modal=None)
+        modal = self.update_modal_module.UpdateModal(engine)
+        engine.active_modal = modal
+        modal.open({"manifest": {"version": "9.9.9"}, "files": []})
+        modal.selected_opt = 2
+        with mock.patch.object(self.update_modal_module, "skip_version") as skip:
+            modal.handle_input({"edges": ["btn_a"]})
+        skip.assert_called_once_with("9.9.9")
+        self.assertIsNone(engine.active_modal)
 
 
 if __name__ == "__main__":

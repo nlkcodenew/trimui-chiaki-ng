@@ -237,8 +237,10 @@ class ChiakiEngine:
             inputs = self.input_mgr.poll()
 
             if self.active_modal:
-                self.active_modal.handle_input(inputs)
-                self.active_modal.update(0.016)
+                modal = self.active_modal
+                modal.handle_input(inputs)
+                if self.active_modal is modal:
+                    modal.update(0.016)
             elif self.current_screen:
                 self.current_screen.handle_input(inputs)
                 self.current_screen.update(0.016)

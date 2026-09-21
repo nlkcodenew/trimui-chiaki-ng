@@ -60,8 +60,11 @@ def main():
     version = app_version()
     if manifest.get("version") != version:
         fail("manifest version does not match APP_VERSION")
-    if manifest.get("release_tag") != "v%s" % version:
+    if manifest.get("release_tag") not in ("v%s" % version, "v%s/files" % version):
         fail("release_tag does not match APP_VERSION")
+    expected_base = "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v%s/files" % version
+    if manifest.get("base_url") != expected_base:
+        fail("base_url does not point to immutable tag files directory")
 
     with open(os.path.join(FILES_DIR, "settings.json"), encoding="utf-8") as handle:
         default_settings = json.load(handle)
@@ -73,6 +76,9 @@ def main():
         rel = item.get("path", "")
         if rel in FORBIDDEN_MANIFEST:
             fail("private/user file appears in manifest: %s" % rel)
+        base = os.path.basename(rel)
+        if base.startswith("Chiaki-loi.txt") or base.startswith("Chiaki-debug.log"):
+            fail("log file appears in manifest: %s" % rel)
         source = os.path.join(FILES_DIR, *rel.split("/"))
         if not os.path.isfile(source):
             fail("manifest source is missing: %s" % rel)
