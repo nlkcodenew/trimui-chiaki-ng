@@ -1,19 +1,19 @@
 {
-  "version": "0.2.3",
+  "version": "0.2.4",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-21T08:44:03+07:00",
+  "built": "2026-09-21T09:04:35+07:00",
   "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/main",
-  "release_tag": "v0.2.3",
+  "release_tag": "v0.2.4",
   "note": {
-    "vi": "Phien ban 0.2.3 - cap nhat tu dong.",
-    "en": "Version 0.2.3 - auto-update."
+    "vi": "v0.2.4: sửa lỗi tự thoát khi bấm nút và bổ sung tiếng Việt có dấu.",
+    "en": "v0.2.4: fix controller-button crash and add fully accented Vietnamese UI."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "042ad9187a3d1152720b0edcfa11d6ef04748405700eb78565fc861f9738c238",
-      "size": 4054
+      "sha256": "fadf384c19676d33abf82eaaaa12b93873a814c389fd2f8fd6ca1511db231fb0",
+      "size": 4246
     },
     {
       "path": "config.json",
@@ -47,8 +47,8 @@
     },
     {
       "path": "rh/engine.py",
-      "sha256": "efa191ddc5e16f2feeb75cfcea1c552ab14eaa524d46e3c055e81e8abc3f7e9e",
-      "size": 10905
+      "sha256": "9cf0970ae397a6b15af3aeac0ac89f5d7164c08c69eeda80245aa93a4c249db8",
+      "size": 11523
     },
     {
       "path": "rh/fonts.py",
@@ -57,13 +57,13 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "ef20607d241c4e184b806b10f8fd55c99ff1cce7066911200d7df05a1bae3278",
-      "size": 4295
+      "sha256": "a601f65045cfaac312fc19e5e263e3008d486617bd273c0f583584076fb38066",
+      "size": 4648
     },
     {
       "path": "rh/inputs.py",
-      "sha256": "8a65053585a6011e161b6c0bddc1f46468980fa5aa5dabedb5e2a090c0c584e5",
-      "size": 7857
+      "sha256": "50349fc6a42f85a5df58091c617a89d0b547cc2997cb5fd9712ef90ec2446b2d",
+      "size": 7573
     },
     {
       "path": "rh/log_uploader.py",
@@ -82,8 +82,8 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "dc5824606363782f6528f1c9d61da77647098e2810126e84a7c204ed77191b9e",
-      "size": 4278
+      "sha256": "bceb992b311c2fcaa7cc65bb080c5962cfbcc1df9ff5ea9eda9e033a5bcfb90b",
+      "size": 4457
     },
     {
       "path": "rh/updater.py",
@@ -92,7 +92,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "e6bb9f677612ee980fef36d3cf1876b5ed14d79fcf881709f6389f655a25e950",
+      "sha256": "8eaa4057e4aed9b5d05402bcc8cbc7e33e67eba7c50e15458e06a79d0780b967",
       "size": 404
     },
     {
@@ -127,8 +127,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "ffcd5b215c80e5701443f4d7142ccdbea921a8c13e6a1a0edddfd362600bad7c",
-      "size": 7256
+      "sha256": "bcec13788bf9ea8d745cbd0dc905d8f04f119eeec1857cf4fadff309a1e65025",
+      "size": 7257
     },
     {
       "path": "rh/screens/settings.py",
@@ -528,8 +528,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.2.3.zip",
-    "sha256": "f67a9e270bf70c169b9e2c44eef6b0e72b6a7c48b07f3c48b90b86fc835f0df1",
-    "size": 630072
+    "name": "trimui-chiaki-ng-v0.2.4.zip",
+    "sha256": "4331ecf0cf40c02320f1958d1694ecfd2183e67336e44cc801d2da4fe98bf195",
+    "size": 630819
   }
 }

@@ -2,7 +2,7 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.2.3 - giao diện SDL, quét PS4/PS5 trong LAN, GitHub Release,
+**Trạng thái**: v0.2.4 - giao diện SDL, quét PS4/PS5 trong LAN, GitHub Release,
 OTA theo manifest và tự gửi crash log đã sẵn sàng để thử trên máy thật. Luồng
 stream video thực tế chưa được triển khai; mục tiêu của v0.3.0 là H264/H265
 720p30.

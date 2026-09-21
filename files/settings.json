@@ -7,7 +7,7 @@
   "wifi_awake": true,
   "auto_update": true,
   "enable_logging": true,
-  "device_id": "CHI-A6A9",
+  "device_id": "",
   "skipped_versions": [],
   "update_url": "",
   "pending_update": "",

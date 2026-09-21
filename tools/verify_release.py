@@ -63,6 +63,11 @@ def main():
     if manifest.get("release_tag") != "v%s" % version:
         fail("release_tag does not match APP_VERSION")
 
+    with open(os.path.join(FILES_DIR, "settings.json"), encoding="utf-8") as handle:
+        default_settings = json.load(handle)
+    if default_settings.get("device_id"):
+        fail("default settings.json must not contain a generated device_id")
+
     listed = set()
     for item in manifest.get("files", []):
         rel = item.get("path", "")

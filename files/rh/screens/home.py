@@ -63,8 +63,8 @@ class HomeScreen(BaseScreen):
 
     def get_footer_actions(self):
         if self.hosts:
-            return [("A", tr("connect")), ("B", tr("back")), ("START", tr("exit"))]
-        return [("A", tr("connect")), ("B", tr("back")), ("START", tr("exit"))]
+            return [("A", tr("connect")), ("B", tr("back"))]
+        return [("A", tr("select"))]
 
     def _start_scan(self):
         if self.scanning:
@@ -127,9 +127,9 @@ class HomeScreen(BaseScreen):
         if "btn_a" in edges:
             self._activate()
             return True
-        if "btn_start" in edges or "quit" in edges:
-            log.info("home: user exit")
-            self.engine.quit()
+        if "quit" in edges:
+            log.warning("home: quit input received")
+            self.engine.quit("quit_input")
             return True
         return False
 
@@ -143,7 +143,8 @@ class HomeScreen(BaseScreen):
             from ..updater import check_for_update
             threading.Thread(target=self._force_update_check, daemon=True).start()
         elif key == "exit":
-            self.engine.quit()
+            log.info("home: user selected exit menu")
+            self.engine.quit("user_exit")
 
     def _force_update_check(self):
         from ..updater import check_for_update

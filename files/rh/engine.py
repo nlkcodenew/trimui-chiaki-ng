@@ -22,6 +22,9 @@ from . import state
 from .paths import APP_DIR, SDCARD_PATH
 from .fonts import FALLBACK_FONT, font_candidates, pick_font
 from .inputs import InputManager
+from .logger import get_logger
+
+log = get_logger()
 
 
 class ChiakiEngine:
@@ -44,6 +47,7 @@ class ChiakiEngine:
         self.font_big = None
         self.controllers = []
         self.joysticks = []
+        self.exit_reason = "not_started"
 
     # ----- SDL init --------------------------------------------------------
 
@@ -208,11 +212,13 @@ class ChiakiEngine:
 
     # ----- main loop ------------------------------------------------------
 
-    def quit(self):
+    def quit(self, reason="user_exit"):
+        self.exit_reason = reason
         self.running = False
 
     def run(self):
         self.running = True
+        self.exit_reason = "running"
         footer_h = 56
         header_h = 64
         last = time.time()
@@ -222,7 +228,12 @@ class ChiakiEngine:
             while sdl2.SDL_PollEvent(evt):
                 self.input_mgr.feed_event(evt)
                 if evt.type == sdl2.SDL_QUIT:
+                    self.exit_reason = "sdl_quit"
+                    log.error("SDL_QUIT received unexpectedly")
                     self.running = False
+                    break
+            if not self.running:
+                break
             inputs = self.input_mgr.poll()
 
             if self.active_modal:
@@ -271,6 +282,10 @@ class ChiakiEngine:
             sdl2.SDL_RenderPresent(self.renderer)
             time.sleep(0.016)
             last = now
+        if self.exit_reason == "running":
+            self.exit_reason = "loop_ended"
+        log.info("engine stopped: reason=%s", self.exit_reason)
+        return self.exit_reason
 
     def cleanup(self):
         try:
@@ -290,5 +305,7 @@ class ChiakiEngine:
                 sdlttf.TTF_CloseFont(self.font_item)
             if self.font_big:
                 sdlttf.TTF_CloseFont(self.font_big)
+            sdlttf.TTF_Quit()
+            sdl2.SDL_Quit()
         except Exception:
             pass

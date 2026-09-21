@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 """trimui-chiaki-ng - PS4/PS5 Remote Play cho TrimUI Smart Pro S.
 
-Phien ban 0.2.3:
+Phien ban 0.2.4:
     - Bundled pysdl2 vao vendor/sdl2 (50 file .py) - khong can cai pip tren may
     - He thong chi can libSDL2.so + libSDL2_ttf.so (san trong /usr/lib64 cua
       firmware TrimUI Linux 1.1.1) duoc pysdl2 load qua ctypes + PYSDL2_DLL_PATH
-    - GitHub Release ZIP, OTA theo release tag va crash log qua GitHub Issues
+    - Sua crash khi nhan nut SDL GameController dau tien tren Smart Pro S
+    - Giao dien tieng Viet day du dau, OTA va crash log qua GitHub Issues
 
 Luu y khi update tu v0.2.0 hoac v0.2.1: nen xoa App/Chiaki cu va giai nen
 Release moi nhat vao goc the de vendor/sdl2 duoc cai day du.
@@ -98,7 +99,7 @@ def main():
     engine.push_screen("home")
 
     try:
-        engine.run()
+        exit_reason = engine.run()
     except Exception:
         err = traceback.format_exc()
         log.error("crash: %s", err)
@@ -107,6 +108,9 @@ def main():
     finally:
         engine.cleanup()
         log.info("== app thoat ==")
+    if exit_reason != "user_exit":
+        log.error("unexpected app exit: %s", exit_reason)
+        return 2
     return 0
 
 

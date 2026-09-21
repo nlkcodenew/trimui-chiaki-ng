@@ -119,38 +119,44 @@ class InputManager:
                 self._set_axis("left_y", val)
 
     def _map_controller_button(self, cbtn, down):
+        # SDL_GameControllerButton dung ten SDL_CONTROLLER_BUTTON_*. Ban
+        # v0.2.3 nham thanh SDL_GAMECONTROLLER_BUTTON_* nen crash ngay lan
+        # dau nguoi dung bam nut. Dung gia tri enum on dinh cua SDL2 de van
+        # tuong thich voi cac ban PySDL2 khong export enum o package root.
         m = {
-            sdl2.SDL_GAMECONTROLLER_BUTTON_A: "btn_a",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_B: "btn_b",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_X: "btn_x",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_Y: "btn_y",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_START: "btn_start",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_BACK: "btn_select",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_LEFTSTICK: "btn_l3",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_RIGHTSTICK: "btn_r3",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_LEFTSHOULDER: "btn_l1",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_RIGHTSHOULDER: "btn_r1",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_DPAD_UP: "btn_up",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_DPAD_DOWN: "btn_down",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_DPAD_LEFT: "btn_left",
-            sdl2.SDL_GAMECONTROLLER_BUTTON_DPAD_RIGHT: "btn_right",
+            0: "btn_a",
+            1: "btn_b",
+            2: "btn_x",
+            3: "btn_y",
+            4: "btn_select",
+            6: "btn_start",
+            7: "btn_l3",
+            8: "btn_r3",
+            9: "btn_l1",
+            10: "btn_r1",
+            11: "btn_up",
+            12: "btn_down",
+            13: "btn_left",
+            14: "btn_right",
         }
         key = m.get(cbtn)
         if key:
             self.set_state(key, down)
 
     def _map_controller_axis(self, axis, value):
-        if axis == sdl2.SDL_CONTROLLER_AXIS_LEFTX:
+        # SDL_GameControllerAxis: LEFTX=0, LEFTY=1, RIGHTX=2, RIGHTY=3,
+        # TRIGGERLEFT=4, TRIGGERRIGHT=5.
+        if axis == 0:
             self._set_axis("left_x", value)
-        elif axis == sdl2.SDL_CONTROLLER_AXIS_LEFTY:
+        elif axis == 1:
             self._set_axis("left_y", value)
-        elif axis == sdl2.SDL_CONTROLLER_AXIS_RIGHTX:
+        elif axis == 2:
             self._set_axis("right_x", value)
-        elif axis == sdl2.SDL_CONTROLLER_AXIS_RIGHTY:
+        elif axis == 3:
             self._set_axis("right_y", value)
-        elif axis == sdl2.SDL_CONTROLLER_AXIS_TRIGGERLEFT:
+        elif axis == 4:
             self.set_state("btn_l2", value > 8000)
-        elif axis == sdl2.SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+        elif axis == 5:
             self.set_state("btn_r2", value > 8000)
 
     def _map_keyboard(self, scancode, down):

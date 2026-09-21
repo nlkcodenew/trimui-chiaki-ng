@@ -107,7 +107,9 @@ def save_settings():
 
 
 _load()
-if not device_id:
+# v0.2.3 vo tinh dong goi device_id nay trong settings.json. OTA khong ghi de
+# cau hinh nguoi dung, nen doi no mot lan tren cac may da cai ban bi loi.
+if not device_id or device_id == "CHI-A6A9":
     import random
     device_id = "CHI-%s" % "".join(random.choices("0123456789ABCDEF", k=4))
     save_settings()

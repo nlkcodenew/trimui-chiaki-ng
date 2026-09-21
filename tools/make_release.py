@@ -134,8 +134,8 @@ def main():
         "base_url": "https://raw.githubusercontent.com/%s/%s" % (REPO, BRANCH),
         "release_tag": "v%s" % version,
         "note": {
-            "vi": "Phien ban %s - cap nhat tu dong." % version,
-            "en": "Version %s - auto-update." % version,
+            "vi": "v%s: sửa lỗi tự thoát khi bấm nút và bổ sung tiếng Việt có dấu." % version,
+            "en": "v%s: fix controller-button crash and add fully accented Vietnamese UI." % version,
         },
         "files": files,
         "remove": [],

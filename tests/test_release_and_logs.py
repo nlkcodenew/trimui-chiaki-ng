@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 import tempfile
+import types
 import unittest
 from unittest import mock
 
@@ -109,6 +110,41 @@ class LogUploaderTests(unittest.TestCase):
         self.assertTrue(manager.poll()["btn_a"])
         manager._map_joy_button(1, False)
         self.assertFalse(manager.poll()["btn_a"])
+
+    def test_gamecontroller_button_does_not_crash_on_first_press(self):
+        manager = self.inputs.InputManager()
+        fake_sdl = types.SimpleNamespace(
+            SDL_QUIT=0x100,
+            SDL_CONTROLLERBUTTONDOWN=0x651,
+            SDL_CONTROLLERBUTTONUP=0x652,
+        )
+        event = types.SimpleNamespace(
+            type=fake_sdl.SDL_CONTROLLERBUTTONDOWN,
+            cbutton=types.SimpleNamespace(button=0),
+        )
+        with mock.patch.object(self.inputs, "sdl2", fake_sdl, create=True), \
+                mock.patch.object(self.inputs, "SDL2_OK", True):
+            manager.feed_event(event)
+            state = manager.poll()
+            self.assertTrue(state["btn_a"])
+            self.assertIn("btn_a", state["edges"])
+            event.type = fake_sdl.SDL_CONTROLLERBUTTONUP
+            manager.feed_event(event)
+            self.assertFalse(manager.poll()["btn_a"])
+
+    def test_gamecontroller_axes_and_triggers(self):
+        manager = self.inputs.InputManager()
+        manager._map_controller_axis(0, 12345)
+        manager._map_controller_axis(4, 9000)
+        state = manager.poll()
+        self.assertEqual(state["axis_left_x"], 12345)
+        self.assertTrue(state["btn_l2"])
+
+    def test_vietnamese_ui_uses_accented_text(self):
+        i18n = importlib.import_module("rh.i18n")
+        self.assertEqual(i18n.TEXTS["VI"]["settings"], "CÀI ĐẶT")
+        self.assertEqual(i18n.TEXTS["VI"]["update"], "CẬP NHẬT")
+        self.assertIn("Không", i18n.TEXTS["VI"]["scan_none"])
 
 
 if __name__ == "__main__":
