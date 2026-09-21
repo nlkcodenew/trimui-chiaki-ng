@@ -28,6 +28,9 @@ host_addr = ""
 psn_account_id = ""
 psn_online_id = ""
 regist_key = ""
+rp_key = ""
+rp_key_type = 0
+server_mac = ""
 auto_upload_logs = True
 github_issue_repo = "nlkcodenew/trimui-chiaki-ng"
 
@@ -38,7 +41,7 @@ def _load():
     global current_lang, video_resolution, video_fps, video_bitrate, audio_volume
     global wifi_awake, auto_update, enable_logging, device_id, skipped_versions
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
-    global psn_account_id, psn_online_id, regist_key
+    global psn_account_id, psn_online_id, regist_key, rp_key, rp_key_type, server_mac
     global auto_upload_logs, github_issue_repo
     if not os.path.exists(SETTINGS_FILE):
         return
@@ -65,6 +68,12 @@ def _load():
     psn_account_id = cfg.get("psn_account_id", psn_account_id)
     psn_online_id = cfg.get("psn_online_id", psn_online_id)
     regist_key = cfg.get("regist_key", regist_key)
+    rp_key = cfg.get("rp_key", rp_key)
+    rp_key_type = int(cfg.get("rp_key_type", rp_key_type) or 0)
+    server_mac = cfg.get("server_mac", server_mac)
+    if str(psn_account_id).startswith("stub-rp-key-"):
+        psn_account_id = ""
+        regist_key = ""
     auto_upload_logs = bool(cfg.get("auto_upload_logs", auto_upload_logs))
     github_issue_repo = cfg.get("github_issue_repo", github_issue_repo)
 
@@ -94,6 +103,9 @@ def save_settings():
                 "psn_account_id": psn_account_id,
                 "psn_online_id": psn_online_id,
                 "regist_key": regist_key,
+                "rp_key": rp_key,
+                "rp_key_type": rp_key_type,
+                "server_mac": server_mac,
                 "auto_upload_logs": auto_upload_logs,
                 "github_issue_repo": github_issue_repo,
             }

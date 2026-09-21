@@ -1,7 +1,7 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.2.10)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.0-beta)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-21.
-> Phiên bản đã phát hành & xác nhận trên máy: v0.2.11 (fix quét PS4/PS5). v0.2.10 đã chạy OK trên máy (A đổi giá trị, B thoát).
+> Phiên bản đang chuẩn bị phát hành: v0.3.0-beta. v0.3.0-alpha đã xác nhận giao diện nhập PIN nhưng chỉ tạo khóa giả; beta thay bằng đăng ký PS4 thật.
 
 ## 1. Mục tiêu
 
@@ -19,7 +19,15 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
   chặn `settings.json` mặc định có `device_id`.
 - CI: `.github/workflows/release.yml` (push tag `v*` -> checkout -> verify tag == `APP_VERSION` ->
   compileall -> make_release -> verify -> publish bằng `softprops/action-gh-release`).
-- 20 unittest pass tại `tests/test_release_and_logs.py`.
+- 25 unittest pass tại `tests/test_release_and_logs.py`.
+
+### Ghép nối PS4 thật — v0.3.0-beta
+- Xóa hoàn toàn `stub-rp-key-*`; chỉ báo thành công khi PS4 trả HTTP 200 và đủ `PS4-RegistKey`, `RP-Key`, `RP-KeyType`, MAC.
+- Thực hiện đúng handshake upstream: UDP `SRC2`/`RES2` cổng 9295, TCP `/sie/ps4/rp/sess/rgst`, `RP-Version: 10.0`, HMAC-SHA256 và AES-128-CFB.
+- Không kết nối dịch vụ PSN. Trường Account-ID 8 byte vẫn là yêu cầu của giao thức PS4 firmware 8+; app dùng Account-ID đã cấu hình hoặc thử ID offline bằng 0.
+- Lưu riêng `psn_account_id`, `rp_key`, `rp_key_type`, `regist_key`, `server_mac`; tự vô hiệu dữ liệu giả của alpha.
+- Sửa enum target theo đúng upstream (`800/900/1000/1000100`) và ưu tiên protocol header để PS4 không còn bị lưu thành PS5.
+- Chưa hỗ trợ đăng ký PS5 trong beta; không tạo khóa giả khi người dùng thử PS5.
 
 ### OTA
 - Fix lỗi vòng lặp RetroHub: `settings.json`, `secrets.json` không vào manifest/ZIP; `pending_files()`

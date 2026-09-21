@@ -189,6 +189,11 @@ def _parse_srch(data, addr, ps5_mode):
         req_port = int(headers.get("host-request-port", "9295") or "9295")
     except ValueError:
         req_port = 9295
+    protocol = headers.get("device-discovery-protocol-version", "")
+    if protocol == PS4_PROTOCOL_VERSION:
+        ps5_mode = False
+    elif protocol == PS5_PROTOCOL_VERSION:
+        ps5_mode = True
     host = DiscoveredHost(
         addr=addr[0],
         is_ps5=ps5_mode,
@@ -210,13 +215,13 @@ def _target_from_version(version, ps5):
     except ValueError:
         return 0
     if ps5 and v >= 8050001:
-        return 2  # CHIAKI_TARGET_PS5_1
+        return 1000100  # CHIAKI_TARGET_PS5_1
     if v >= 8000000:
-        return 3  # CHIAKI_TARGET_PS4_10
+        return 1000  # CHIAKI_TARGET_PS4_10
     if v >= 7000000:
-        return 4  # CHIAKI_TARGET_PS4_9
+        return 900  # CHIAKI_TARGET_PS4_9
     if v > 0:
-        return 5  # CHIAKI_TARGET_PS4_8
+        return 800  # CHIAKI_TARGET_PS4_8
     return 0
 
 
@@ -297,17 +302,35 @@ def discovery_broadcast(timeout=3.0):
 
 
 def regist_with_pin(host, pin, timeout=10.0):
-    """Dang ky PS4/PS5 bang PIN 8 so (danh cho may GoldHEN/PSN khoa)."""
+    """Đăng ký PS4 qua LAN bằng PIN 8 số, không kết nối dịch vụ PSN."""
     pin = "".join(c for c in str(pin) if c.isdigit())[:8]
     if len(pin) != 8:
         return False, {"error": "PIN phai 8 so"}
     addr = getattr(host, "addr", "") or "unknown"
-    name = getattr(host, "name", "") or addr
     is_ps5 = bool(getattr(host, "is_ps5", False))
-    log.info("regist_with_pin stub: host=%s pin=%s ps5=%s", addr, pin, is_ps5)
-    fake_rp_key = "stub-rp-key-%s" % pin
-    fake_regist_key = "%08x" % (int(pin) ^ 0xA5A5A5A5)
-    return True, {"rp_key": fake_rp_key, "regist_key": fake_regist_key, "pin": pin, "name": name, "addr": addr}
+    target = int(getattr(host, "target", 0) or 0)
+    log.info("registration start: host=%s ps5=%s target=%d", addr, is_ps5, target)
+    if is_ps5:
+        message = "PS5 registration is not available in this beta"
+        log.warning("registration rejected: %s", message)
+        return False, {"error": message}
+    if target not in (0, 800, 900, 1000):
+        message = "this beta supports PS4 firmware 8.0 or newer"
+        log.warning("registration rejected: target=%d", target)
+        return False, {"error": message}
+    try:
+        from .ps4_regist import register
+        result = register(addr, pin, getattr(state, "psn_account_id", ""), timeout)
+    except Exception as exc:
+        log.error("registration failed: host=%s error=%s", addr, exc)
+        return False, {"error": str(exc)}
+    result.update({"addr": addr, "is_ps5": False, "target": 1000})
+    log.info(
+        "registration success: host=%s key_type=%s mac=%s offline_account=%s",
+        addr, result.get("rp_key_type"), result.get("server_mac"),
+        result.get("used_offline_account"),
+    )
+    return True, result
 
 
 def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):

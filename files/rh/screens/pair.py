@@ -59,9 +59,11 @@ class PairScreen(BaseScreen):
         if ok:
             try:
                 state.host_addr = self.host.addr
-                state.host_name = getattr(self.host, "name", "") or self.host.addr
-                state.regist_key = info.get("regist_key", pin)
-                state.psn_account_id = info.get("rp_key", "")
+                state.host_name = info.get("name") or getattr(self.host, "name", "") or self.host.addr
+                state.regist_key = info["regist_key"]
+                state.rp_key = info["rp_key"]
+                state.rp_key_type = int(info.get("rp_key_type", 0))
+                state.server_mac = info.get("server_mac", "")
                 state.save_settings()
                 import json, os
                 from ..paths import APP_DIR
@@ -71,9 +73,27 @@ class PairScreen(BaseScreen):
                     try: paired = json.load(open(ppath, "r", encoding="utf-8")) or []
                     except: paired = []
                 paired = [h for h in paired if h.get("addr") != self.host.addr]
-                paired.append({"addr": self.host.addr, "name": getattr(self.host, "name", ""), "is_ps5": bool(getattr(self.host, "is_ps5", False)), "regist_key": state.regist_key, "rp_key": state.psn_account_id})
-                json.dump(paired, open(ppath, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-            except Exception as e: log.warning("pair save failed: %s", e)
+                paired.append({
+                    "addr": self.host.addr,
+                    "name": state.host_name,
+                    "is_ps5": False,
+                    "target": int(info.get("target", 1000)),
+                    "regist_key": state.regist_key,
+                    "rp_key": state.rp_key,
+                    "rp_key_type": state.rp_key_type,
+                    "server_mac": state.server_mac,
+                })
+                temp_path = ppath + ".tmp"
+                with open(temp_path, "w", encoding="utf-8") as handle:
+                    json.dump(paired, handle, ensure_ascii=False, indent=2)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(temp_path, ppath)
+            except Exception as e:
+                log.error("pair save failed: %s", e)
+                self.status = tr("pair_failed") % "không lưu được khóa"
+                self.pairing = False
+                return
             self.status = tr("pair_success")
             time.sleep(1)
             try: self.engine.pop_screen()

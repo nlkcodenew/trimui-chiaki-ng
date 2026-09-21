@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import importlib
+import base64
 import json
 import logging
 import os
@@ -461,15 +462,65 @@ class LogUploaderTests(unittest.TestCase):
         self.assertFalse(host.is_ps5)
         self.assertEqual(host.addr, "192.168.1.50")
         self.assertEqual(host.host_request_port, 9295)
-        # atoi("0900000") = 900000 < 7000000 -> PS4_8 (target 5), giong upstream.
-        self.assertEqual(host.target, 5)
+        # atoi("0900000") = 900000 < 7000000 -> PS4_8, giống upstream.
+        self.assertEqual(host.target, 800)
 
         standby = b"HTTP/1.1 620 Standby\nhost-name:PS5\nsystem-version:08050001\n"
         host5 = chiaki._parse_srch(standby, ("192.168.1.60", 9302), True)
         self.assertIsNotNone(host5)
         self.assertEqual(host5.state, "standby")
         self.assertTrue(host5.is_ps5)
-        self.assertEqual(host5.target, 2)  # PS5_1
+        self.assertEqual(host5.target, 1000100)  # PS5_1
+
+    def test_ps4_registration_crypto_roundtrip_and_response_parse(self):
+        regist = importlib.import_module("rh.ps4_regist")
+        self.assertEqual(len(regist.PS4_KEYS_0), 512)
+        self.assertEqual(len(regist.PS4_KEYS_1), 512)
+        ambassador = bytes(range(16))
+        payload, bright, used_ambassador = regist._build_payload(
+            "12345678", b"\0" * 8, ambassador,
+        )
+        self.assertEqual(used_ambassador, ambassador)
+        self.assertGreater(len(payload), regist.INNER_HEADER_OFFSET)
+        encrypted = regist._aes_cfb(b"remote-play", bright, ambassador)
+        self.assertEqual(
+            regist._aes_cfb(encrypted, bright, ambassador, decrypt=True),
+            b"remote-play",
+        )
+        response = (
+            b"PS4-Nickname: PS4-896\r\n"
+            b"PS4-RegistKey: 6134396430386564\r\n"
+            b"RP-KeyType: 2\r\n"
+            b"RP-Key: 000102030405060708090a0b0c0d0e0f\r\n"
+            b"PS4-Mac: 001122334455\r\n"
+        )
+        result = regist._parse_result(response)
+        self.assertEqual(result["regist_key"], "a49d08ed")
+        self.assertEqual(result["rp_key_type"], 2)
+        self.assertEqual(result["server_mac"], "001122334455")
+        self.assertEqual(base64.b64decode(result["rp_key"]), bytes(range(16)))
+
+    def test_regist_with_pin_never_returns_stub_keys(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        host = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", is_ps5=False, target=1000,
+        )
+        real = {
+            "regist_key": "a49d08ed",
+            "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            "rp_key_type": 2,
+            "server_mac": "001122334455",
+        }
+        regist = importlib.import_module("rh.ps4_regist")
+        with mock.patch.object(regist, "register", return_value=real):
+            ok, result = chiaki.regist_with_pin(host, "12345678")
+        self.assertTrue(ok)
+        self.assertFalse(result["is_ps5"])
+        self.assertNotIn("stub", result["rp_key"])
+        with mock.patch.object(regist, "register", side_effect=regist.RegistError("HTTP 403")):
+            ok, result = chiaki.regist_with_pin(host, "12345678")
+        self.assertFalse(ok)
+        self.assertEqual(result["error"], "HTTP 403")
 
 
 if __name__ == "__main__":

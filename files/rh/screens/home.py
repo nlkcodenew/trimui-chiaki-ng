@@ -99,7 +99,9 @@ class HomeScreen(BaseScreen):
     def _is_paired(self, host):
         if not host:
             return False
-        if getattr(state, "host_addr", "") == host.addr and getattr(state, "regist_key", ""):
+        if (getattr(state, "host_addr", "") == host.addr
+                and self._real_keys(getattr(state, "regist_key", ""),
+                                    getattr(state, "rp_key", ""))):
             return True
         try:
             import json, os
@@ -109,11 +111,16 @@ class HomeScreen(BaseScreen):
                 with open(ppath, "r", encoding="utf-8") as f:
                     data = json.load(f) or []
                 for entry in data:
-                    if entry.get("addr") == host.addr and entry.get("regist_key"):
+                    if (entry.get("addr") == host.addr
+                            and self._real_keys(entry.get("regist_key"), entry.get("rp_key"))):
                         return True
         except Exception:
             pass
         return False
+
+    @staticmethod
+    def _real_keys(regist_key, rp_key):
+        return bool(regist_key and rp_key and not str(rp_key).startswith("stub-rp-key-"))
 
     def _open_pair(self, host):
         if not host:

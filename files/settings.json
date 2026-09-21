@@ -17,6 +17,9 @@
   "psn_account_id": "",
   "psn_online_id": "",
   "regist_key": "",
+  "rp_key": "",
+  "rp_key_type": 0,
+  "server_mac": "",
   "auto_upload_logs": true,
   "github_issue_repo": "nlkcodenew/trimui-chiaki-ng"
 }

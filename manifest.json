@@ -1,13 +1,13 @@
 {
-  "version": "0.3.0-alpha",
+  "version": "0.3.0-beta",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-21T19:10:00+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.0-alpha/files",
-  "release_tag": "v0.3.0-alpha/files",
+  "built": "2026-09-21T20:08:13+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.0-beta/files",
+  "release_tag": "v0.3.0-beta/files",
   "note": {
-    "vi": "v0.3.0-alpha: thêm GHÉP NỐI PIN 8 số cho PS4 hack và đa máy.",
-    "en": "v0.3.0-alpha: add 8-digit PIN pairing for hacked PS4 and multi-console support."
+    "vi": "v0.3.0-beta: ghép nối PS4 thật qua LAN, nhận và lưu khóa Remote Play thật.",
+    "en": "v0.3.0-beta: real PS4 LAN registration with real Remote Play keys."
   },
   "files": [
     {
@@ -42,8 +42,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "d719a82437064c9e1d0c0ad87e9baaf9d96ec53628e3ec259c262588c1873bcb",
-      "size": 13381
+      "sha256": "996082869ea7f0e410b83e7e4955b427865ed8849f29348b03be471333dbf0c9",
+      "size": 14380
     },
     {
       "path": "rh/engine.py",
@@ -81,9 +81,14 @@
       "size": 1013
     },
     {
+      "path": "rh/ps4_regist.py",
+      "sha256": "f0218dbf73b084f48e31ef32f5c89c5f64d57fa016ac13676bf493c985e44947",
+      "size": 10665
+    },
+    {
       "path": "rh/state.py",
-      "sha256": "bceb992b311c2fcaa7cc65bb080c5962cfbcc1df9ff5ea9eda9e033a5bcfb90b",
-      "size": 4457
+      "sha256": "2622f0bee5d4c64849a0042189fc8925b4792068d0ae5ca10fd83816485e71a9",
+      "size": 4915
     },
     {
       "path": "rh/updater.py",
@@ -92,8 +97,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "027429de9f2c325bbf05e55ca0d29092e297164223abdc76a647d3c06d32f573",
-      "size": 1183
+      "sha256": "e57ec1b7e8034d07fdfdcd52fa3fc6b2c7e74ac5e522c5987a42e22d337a6195",
+      "size": 1182
     },
     {
       "path": "rh/modals/__init__.py",
@@ -127,13 +132,13 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "2cfb92c5e6b817c1f541009eefa0aa4bf2b5ad2b636415dc443f2be1ea764423",
-      "size": 9011
+      "sha256": "9cfe8a1e227a35845c8e7512351c640e2b9b0e9fec355626cf5921e44a8bfcaf",
+      "size": 9329
     },
     {
       "path": "rh/screens/pair.py",
-      "sha256": "967af61ceb7f6ac45eaf8dfa0b0a3b7b0384bf07c3df94d57f110d235f9dd005",
-      "size": 5119
+      "sha256": "5004b84f6f94fd3434dd6f1e8fbb3abf4cfa326784aec7cca3635cb8428d16e0",
+      "size": 5840
     },
     {
       "path": "rh/screens/settings.py",
@@ -533,8 +538,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.0-alpha.zip",
-    "sha256": "79af5cd84f4d31ee96e6dd4cc26603ac5baa02ec4502645c8947e500a9a717bf",
-    "size": 636434
+    "name": "trimui-chiaki-ng-v0.3.0-beta.zip",
+    "sha256": "1c3910c2b3f366d8406ab2f6c17de94771f1677a09cca5a7b856608de7e48d54",
+    "size": 641628
   }
 }
