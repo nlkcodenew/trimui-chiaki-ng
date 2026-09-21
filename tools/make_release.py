@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: sửa quét PS4/PS5 gửi SRCH đúng cổng 987/9302 để thấy máy trong LAN." % version,
-            "en": "v%s: fix discovery to send SRCH to ports 987/9302 so LAN consoles are found." % version,
+            "vi": "v%s: thêm GHÉP NỐI PIN 8 số cho PS4 hack và đa máy." % version,
+            "en": "v%s: add 8-digit PIN pairing for hacked PS4 and multi-console support." % version,
         },
         "files": files,
         "remove": [],

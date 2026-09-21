@@ -64,7 +64,10 @@ class HomeScreen(BaseScreen):
 
     def get_footer_actions(self):
         if self.hosts:
-            return [("A", tr("connect")), ("B", tr("back"))]
+            paired = self._is_paired(self.hosts[self.host_selected]) if self.hosts else False
+            if paired:
+                return [("A", tr("connect")), ("Y", tr("pair")), ("B", tr("back"))]
+            return [("A", tr("pair")), ("B", tr("back"))]
         return [("A", tr("select"))]
 
     def _start_scan(self):
@@ -93,8 +96,38 @@ class HomeScreen(BaseScreen):
             log.info("scan: khong thay host")
         self.toast_until = time.time() + 4
 
+    def _is_paired(self, host):
+        if not host:
+            return False
+        if getattr(state, "host_addr", "") == host.addr and getattr(state, "regist_key", ""):
+            return True
+        try:
+            import json, os
+            from ..paths import APP_DIR
+            ppath = os.path.join(APP_DIR, "paired_hosts.json")
+            if os.path.isfile(ppath):
+                with open(ppath, "r", encoding="utf-8") as f:
+                    data = json.load(f) or []
+                for entry in data:
+                    if entry.get("addr") == host.addr and entry.get("regist_key"):
+                        return True
+        except Exception:
+            pass
+        return False
+
+    def _open_pair(self, host):
+        if not host:
+            return
+        log.info("home: open pair for %s (%s)", host.name or host.addr, host.addr)
+        self.engine.push_screen("pair", {"host": host})
+
     def _start_stream(self, host):
         if not host:
+            return
+        if not self._is_paired(host):
+            log.info("home: host %s chua pair, mo man pair", host.addr)
+            self.toast = tr("pair_required") if "pair_required" in tr("pair_required") else "Chưa ghép - bấm Y để nhập PIN"
+            self._open_pair(host)
             return
         log.info("home: yeu cau stream toi %s (%s)", host.name or host.addr, host.addr)
         profile = chiaki.video_profile_summary()
@@ -112,8 +145,15 @@ class HomeScreen(BaseScreen):
             if "btn_up" in edges:
                 self.host_selected = (self.host_selected - 1) % len(self.hosts)
                 return True
+            if "btn_y" in edges or "btn_x" in edges:
+                self._open_pair(self.hosts[self.host_selected])
+                return True
             if "btn_a" in edges:
-                self._start_stream(self.hosts[self.host_selected])
+                host = self.hosts[self.host_selected]
+                if self._is_paired(host):
+                    self._start_stream(host)
+                else:
+                    self._open_pair(host)
                 return True
             if "btn_b" in edges:
                 self.hosts = []

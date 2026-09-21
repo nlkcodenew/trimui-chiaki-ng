@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 """trimui-chiaki-ng - PS4/PS5 Remote Play cho TrimUI Smart Pro S.
 
-Phien ban 0.2.11:
-    - Sua quet PS4/PS5: gui SRCH den dung cong dich 987 (PS4) / 9302 (PS5)
-      theo protocol upstream chiaki. Truoc day gui den cong nguon 9303-9308
-      nen khong bao gio toi may PS -> luon tra ve 0 host.
-    - Packet SRCH dung format byte upstream ('\\n', khong dau cach sau ':',
-      kem byte null), parser chap nhan ca '\\r\\n' va ma HTTP 200/620.
-    - (v0.2.10) Dao anh xa A/B tay cầm, Cai dat B chi thoat, them dong Quay lai.
+Phien ban 0.3.0-alpha:
+    - Them man hinh GHÉP NỐI bang PIN 8 so (danh cho PS4 hack/PSN khoa): chi can
+      PIN tu PS4 > Cai dat > Ket noi choi tu xa > Them thiet bi. Luu rp_key/
+      regist_key theo tung dia chi IP vao state + paired_hosts.json de dung cho
+      lan sau va cho cac may PS khac. Nút PAIR có trên Home khi chọn host.
+    - Luồng Kết nối giờ kiểm tra Pair trước: nếu chưa ghép sẽ mở màn Pair thay vì
+      chỉ hiện toast. v0.3.0-alpha stub regist (trả rp_key giả để test flow).
+    - (v0.2.11) Sua quet PS4/PS5 dung cong dich 987/9302, da tim thay PS4-896.
 
 Luu y khi update tu v0.2.0 hoac v0.2.1: nen xoa App/Chiaki cu va giai nen
 Release moi nhat vao goc the de vendor/sdl2 duoc cai day du.
@@ -77,6 +78,7 @@ def main():
     from rh.engine import ChiakiEngine
     from rh.screens.home import HomeScreen
     from rh.screens.settings import SettingsScreen
+    from rh.screens.pair import PairScreen
     from rh.modals.update import UpdateModal
     from rh.modals.common import InfoModal, ConfirmModal
 
@@ -93,6 +95,7 @@ def main():
 
     engine.register_screen("home", HomeScreen(engine))
     engine.register_screen("settings", SettingsScreen(engine))
+    engine.register_screen("pair", PairScreen(engine))
     engine.register_modal("update", UpdateModal(engine))
     engine.register_modal("info", InfoModal(engine))
     engine.register_modal("confirm", ConfirmModal(engine))

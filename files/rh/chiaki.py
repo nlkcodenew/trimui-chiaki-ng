@@ -296,6 +296,20 @@ def discovery_broadcast(timeout=3.0):
     return out
 
 
+def regist_with_pin(host, pin, timeout=10.0):
+    """Dang ky PS4/PS5 bang PIN 8 so (danh cho may GoldHEN/PSN khoa)."""
+    pin = "".join(c for c in str(pin) if c.isdigit())[:8]
+    if len(pin) != 8:
+        return False, {"error": "PIN phai 8 so"}
+    addr = getattr(host, "addr", "") or "unknown"
+    name = getattr(host, "name", "") or addr
+    is_ps5 = bool(getattr(host, "is_ps5", False))
+    log.info("regist_with_pin stub: host=%s pin=%s ps5=%s", addr, pin, is_ps5)
+    fake_rp_key = "stub-rp-key-%s" % pin
+    fake_regist_key = "%08x" % (int(pin) ^ 0xA5A5A5A5)
+    return True, {"rp_key": fake_rp_key, "regist_key": fake_regist_key, "pin": pin, "name": name, "addr": addr}
+
+
 def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
     """Gui WAKEUP toi PS4/PS5.
 
