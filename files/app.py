@@ -2,21 +2,24 @@
 # -*- coding: utf-8 -*-
 """trimui-chiaki-ng - PS4/PS5 Remote Play cho TrimUI Smart Pro S.
 
-Phien ban 0.2.0:
-    - Logger rolling 2 file (Chiaki-loi.txt / Chiaki-debug.log) co level + thread
-    - Wire protocol discovery + wakeup (port 987 PS4 / 9302 PS5)
-    - Chiaki.conf parse theo mau Switch
-    - SDL GameController bind day du (axis + button)
-    - Auto-update OTA qua GitHub Raw + ghproxy + jsDelivr
-    - Video stream that se them o 0.3.0 (FFmpeg subprocess / libplacebo)
+Phien ban 0.2.2:
+    - Bundled pysdl2 vao vendor/sdl2 (50 file .py) - khong can cai pip tren may
+    - He thong chi can libSDL2.so + libSDL2_ttf.so (san trong /usr/lib64 cua
+      firmware TrimUI Linux 1.1.1) duoc pysdl2 load qua ctypes + PYSDL2_DLL_PATH
+    - Fix crash ModuleNotFoundError: No module named "sdl2" cua v0.2.0/0.2.1
 
-Thu vien Python can thiet (co san trong firmware TrimUI Linux 1.1.1):
-    - python3 (>=3.10)
-    - pysdl2 (dat san trong $APP/libs hoac /usr/lib64)
-    - sdl2, sdl2_ttf
-    - curl/wget de auto-update
+Luu y khi update tu v0.2.0 hoac v0.2.1:
+    - v0.2.2 bundle them 50 file pysdl2 vao vendor/sdl2
+    - OTA chi ghi de file da co trong manifest, khong them file moi vao thu muc
+      dang co, nen CAN xoa App/Chiaki/ tren may truoc khi copy files/ moi,
+      hoac copy de len va dam bao vendor/sdl2/ ton tai day du 50 file.
 
-Copy vao $SDCARD_PATH/Apps/Chiaki/ roi mo tu menu TrimUI.
+Video stream that se them o 0.3.0 (FFmpeg subprocess / libplacebo).
+
+Thu vien can thiet:
+    - python3 (>= 3.10, san trong firmware TrimUI Linux 1.1.1)
+    - libSDL2.so, libSDL2_ttf.so (san trong /usr/lib64 firmware)
+    - libopus.so, libcurl.so (san trong /usr/lib)
 """
 
 import os
