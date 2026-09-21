@@ -2,7 +2,10 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.2.0 - đã chạy được trên máy thật, quét máy PS4/PS5 qua LAN, hỗ trợ auto-update từ GitHub. Phiên bản v0.3.0 sẽ thêm luồng stream video thật với codec H264 / H265.
+**Trạng thái**: v0.2.3 - giao diện SDL, quét PS4/PS5 trong LAN, GitHub Release,
+OTA theo manifest và tự gửi crash log đã sẵn sàng để thử trên máy thật. Luồng
+stream video thực tế chưa được triển khai; mục tiêu của v0.3.0 là H264/H265
+720p30.
 
 ## Cấu hình phần cứng mục tiêu
 
@@ -20,25 +23,52 @@
 - Bitrate: `8000` kbps (giảm xuống `6000` nếu thấy giật)
 - Codec: H264 (PS4), H265 (PS5)
 
-## Cài đặt vào thẻ nhớ
+## Cài đặt từ GitHub Releases
 
-1. Copy toàn bộ thư mục `files/` vào thẻ theo đường dẫn `/mnt/SDCARD/Apps/Chiaki/`.
-2. Thêm một file `icon.png` (256×256 PNG, nền trong suốt) vào cùng thư mục.
-3. Trong máy Smart Pro S, vào menu **Apps** → **Chiaki-ng**.
-4. Lần đầu khởi động, ứng dụng sẽ:
+1. Mở [trang Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
+2. Tải `trimui-chiaki-ng-vX.Y.Z.zip` (không tải Source code ZIP của GitHub).
+3. Giải nén ZIP trực tiếp vào **thư mục gốc của thẻ nhớ**. Kết quả phải có
+   `Apps/Chiaki/launch.sh` và `Apps/Chiaki/app.py`.
+4. Lắp thẻ vào Smart Pro S, vào **Apps** → **Chiaki-ng**.
+5. Lần đầu khởi động, ứng dụng sẽ:
    - Kiểm tra Python 3 và thư viện SDL2
    - Tự quét máy PS4/PS5 qua Wi-Fi
    - Tự kiểm tra bản cập nhật mới trên GitHub (có thể tắt trong **Cài đặt**)
 
 ## Tự cập nhật (OTA)
 
-Mỗi lần khởi động, nếu `settings.auto_update = true`, ứng dụng sẽ gọi `manifest.json` tại `https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/main/manifest.json`. Nếu có bản mới, popup sẽ hiện ra cho phép bạn chọn:
+Mỗi lần khởi động, nếu `auto_update = true`, ứng dụng ưu tiên đọc
+`manifest.json` của GitHub Release mới nhất và dùng bản trên nhánh `main` làm
+dự phòng. Nếu có bản mới, popup cho phép chọn:
 
 - **CÀI NGAY**: tải từng file, kiểm tra `sha256`, ghi đè vào chỗ thật bằng `os.replace` (an toàn khi máy tắt đột ngột).
 - **ĐỂ SAU**: đóng popup, lần sau sẽ hỏi lại.
 - **BỎ QUA**: ghi phiên bản vào `settings.json.skipped_versions`, không hỏi nữa.
 
 `settings.json` trên máy không bao giờ bị ghi đè, để bảo toàn cấu hình người dùng.
+Payload OTA ưu tiên tải từ tag bất biến `vX.Y.Z` và luôn được kiểm tra SHA-256
+trước khi cài.
+
+## Tự gửi crash log lên GitHub
+
+GitHub không hỗ trợ tạo Issue ẩn danh. Muốn app tự gửi log, tạo một
+**fine-grained personal access token** chỉ cho repo
+`nlkcodenew/trimui-chiaki-ng`, với quyền tối thiểu:
+
+- Repository access: **Only select repositories** → `trimui-chiaki-ng`
+- Repository permissions: **Issues: Read and write**
+- Không cấp quyền Contents, Administration hoặc quyền tài khoản khác
+
+Trên máy tính, copy `Apps/Chiaki/secrets.example.json` thành
+`Apps/Chiaki/secrets.json`, điền token vào `github_token`, rồi lắp thẻ vào máy.
+Không gửi token qua chat và không commit file này. `secrets.json` bị loại khỏi
+Git, manifest OTA và ZIP Release.
+
+Khi app thoát do lỗi, launcher tạo `.pending_crash` và gửi log trong lần hiện
+tại hoặc lần khởi động tiếp theo nếu mạng đang mất. Trước khi gửi, app lọc token,
+password, khóa đăng ký, PSN ID, địa chỉ IP nội bộ và địa chỉ MAC. Fingerprint
+được lưu cục bộ để cùng một crash không tạo Issue lặp lại. Có thể tắt bằng mục
+**Tự gửi log lỗi** trong **Cài đặt**.
 
 ## File log
 
@@ -53,7 +83,8 @@ App ghi log rolling vào hai file nằm ngay trong thư mục `Apps/Chiaki/`:
 [2026-09-19 11:30:00.123] [INFO ] [MainThread  ] [trimui-chiaki-ng] home: bat dau scan...
 ```
 
-Để bật log debug chi tiết, mở `settings.json` đổi `"enable_logging": false` thành `true`. Sau đó gửi hai file log này cho dev khi cần hỗ trợ.
+Để bật log debug chi tiết, mở `settings.json` đổi `"enable_logging": false` thành
+`true`. Nếu chưa cấu hình token, vẫn có thể lấy hai file trên và gửi thủ công.
 
 ## Cấu trúc repo
 
@@ -75,7 +106,7 @@ files/
     state.py            # Trạng thái runtime
     version.py          # Hằng số APP_VERSION
 .github/workflows/
-  release.yml           # Auto build manifest khi push tag v*
+  release.yml           # Build ZIP + manifest và tạo GitHub Release khi push tag
 manifest.json           # (chỉ tool tạo ra) danh sách sha256 + version
 ```
 
@@ -88,7 +119,21 @@ git tag v0.3.0
 git push origin v0.3.0
 ```
 
-GitHub Action chạy `tools/make_release.py` → cập nhật `manifest.json` → commit ngược vào `main`. Mọi máy đang chạy bản cũ sẽ tự popup cập nhật trong vòng 30 giây khi người dùng mở ứng dụng.
+Trước khi tag, chạy build và commit manifest:
+
+```
+python tools/make_release.py
+python tools/verify_release.py
+git add manifest.json
+git commit -m "chore(release): prepare v0.3.0"
+git push origin main
+git tag v0.3.0
+git push origin v0.3.0
+```
+
+GitHub Actions build lại, kiểm tra gói và tạo Release gồm ZIP cài đặt, file
+SHA-256 và `manifest.json`. Máy cũ đọc manifest trên `main` để biết có version
+mới; sau khi lên v0.2.3, app ưu tiên manifest của GitHub Releases.
 
 ## Lưu ý quan trọng
 

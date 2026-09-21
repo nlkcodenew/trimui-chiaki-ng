@@ -174,7 +174,7 @@ class InputManager:
         prof = self.profile
         for action, ids in prof.items():
             if isinstance(ids, list) and btn in ids:
-                self.set_state("btn_" + action, down)
+                self.set_state(action, down)
                 return
         # Direct mapping
         if btn in (0,):

@@ -28,6 +28,8 @@ host_addr = ""
 psn_account_id = ""
 psn_online_id = ""
 regist_key = ""
+auto_upload_logs = True
+github_issue_repo = "nlkcodenew/trimui-chiaki-ng"
 
 _save_lock = threading.Lock()
 
@@ -37,6 +39,7 @@ def _load():
     global wifi_awake, auto_update, enable_logging, device_id, skipped_versions
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
     global psn_account_id, psn_online_id, regist_key
+    global auto_upload_logs, github_issue_repo
     if not os.path.exists(SETTINGS_FILE):
         return
     try:
@@ -62,6 +65,8 @@ def _load():
     psn_account_id = cfg.get("psn_account_id", psn_account_id)
     psn_online_id = cfg.get("psn_online_id", psn_online_id)
     regist_key = cfg.get("regist_key", regist_key)
+    auto_upload_logs = bool(cfg.get("auto_upload_logs", auto_upload_logs))
+    github_issue_repo = cfg.get("github_issue_repo", github_issue_repo)
 
 
 def save_settings():
@@ -89,6 +94,8 @@ def save_settings():
                 "psn_account_id": psn_account_id,
                 "psn_online_id": psn_online_id,
                 "regist_key": regist_key,
+                "auto_upload_logs": auto_upload_logs,
+                "github_issue_repo": github_issue_repo,
             }
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)

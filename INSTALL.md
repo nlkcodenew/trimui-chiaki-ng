@@ -9,15 +9,20 @@
 - Thẻ nhớ micro SD format FAT32 hoặc exFAT
 - Quyền ghi vào thư mục `Apps/` trên thẻ
 
-## Lần đầu cài (v0.2.0 trở xuống → v0.2.2)
+## Cài bản GitHub Release
 
-**Quan trọng: nếu máy đang chạy v0.2.0 hoặc v0.2.1 bị crash `ModuleNotFoundError: No module named 'sdl2'`, làm theo các bước sau.**
+**Nếu máy đang có v0.2.0/v0.2.1 lỗi `ModuleNotFoundError: No module named
+'sdl2'`, hãy xoá thư mục cũ trước khi cài.**
 
-1. **Tắt app và xoá thư mục cũ**: trên máy Smart Pro S, mở **Settings** → **Apps** → **Chiaki-ng** → **Uninstall** (nếu có). Nếu không có, mở **File Manager** trên máy, vào `/mnt/SDCARD/Apps/Chiaki/` rồi xoá sạch thư mục `Chiaki`.
+1. Tải `trimui-chiaki-ng-vX.Y.Z.zip` tại
+   `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
+   Không tải mục **Source code** do GitHub tự tạo.
 
-2. **Tháo thẻ nhớ** khỏi máy, cắm vào PC.
+2. Tháo thẻ khỏi máy và cắm vào PC. Nếu đang dùng bản v0.2.0/v0.2.1, xoá
+   thư mục `Apps/Chiaki/` cũ.
 
-3. **Copy thư mục `files/` vào thẻ** ở đường dẫn `/mnt/SDCARD/Apps/Chiaki/`.
+3. Giải nén ZIP vào thư mục gốc của thẻ. Không tạo thêm một lớp thư mục mang
+   tên file ZIP.
 
    Nội dung cuối cùng phải có:
    ```
@@ -31,19 +36,31 @@
        sdl2/              (50 file .py - bắt buộc có)
    ```
 
-4. **Thêm file `icon.png`** (256×256 PNG, nền trong suốt) vào cùng thư mục.
+4. Lắp thẻ lại vào máy, vào **Apps** → **Chiaki-ng**.
 
-5. **Lắp thẻ lại vào máy**, vào **Apps** → **Chiaki-ng**.
+## Cập nhật OTA
 
-## Cập nhật OTA từ v0.2.2 trở đi
-
-Sau khi cài v0.2.2 thành công, mỗi lần khởi động app sẽ tự động kiểm tra GitHub release mới. Nếu có bản mới (ví dụ v0.3.0), popup sẽ hiện ra để bạn chọn:
+Mỗi lần khởi động app sẽ kiểm tra GitHub Release mới. Nếu có bản mới, popup
+hiện ra để chọn:
 
 - **CÀI NGAY**: tải về ~30s, tự kiểm tra `sha256`, ghi đè vào chỗ thật, restart.
 - **ĐỂ SAU**: đóng popup, lần sau mở app sẽ hỏi lại.
 - **BỎ QUA**: ghi vào `skipped_versions`, không hỏi nữa cho bản đó.
 
-## File log
+## Bật tự gửi crash log
+
+GitHub yêu cầu xác thực khi tạo Issue. Tạo fine-grained token chỉ cấp quyền
+**Issues: Read and write** cho riêng repo `nlkcodenew/trimui-chiaki-ng`.
+
+1. Copy `Apps/Chiaki/secrets.example.json` thành `Apps/Chiaki/secrets.json`.
+2. Điền token vào trường `github_token`.
+3. Không gửi token cho người khác và không đăng nội dung file lên Issue/chat.
+
+Token chỉ nằm trên thẻ nhớ; OTA và Release không đọc, ghi đè hoặc đóng gói file
+này. Khi crash, log được lọc dữ liệu nhạy cảm rồi tạo GitHub Issue. Nếu mất mạng,
+app giữ yêu cầu và thử lại ở lần mở sau.
+
+## File log cục bộ
 
 Khi app chạy, 2 file log nằm ngay trong `Apps/Chiaki/`:
 
@@ -52,11 +69,13 @@ Khi app chạy, 2 file log nằm ngay trong `Apps/Chiaki/`:
 
 Format mỗi dòng: `[YYYY-MM-DD HH:MM:SS.mmm] [LEVEL] [Thread] module - message`
 
-Để bật log debug, sửa `settings.json` đổi `"enable_logging": false` thành `true`. Khi gặp lỗi, copy 2 file log đó và gửi cho dev.
+Để bật log debug, sửa `settings.json` đổi `"enable_logging": false` thành `true`.
+Nếu không cấu hình tự gửi, copy hai file này để gửi thủ công.
 
 ## Gỡ lỗi nhanh
 
-**Crash `ModuleNotFoundError: No module named 'sdl2'`**: bản cũ (v0.2.0 / v0.2.1) chưa bundle pysdl2. Xoá `Apps/Chiaki/` rồi copy lại v0.2.2.
+**Crash `ModuleNotFoundError: No module named 'sdl2'`**: bản cũ chưa bundle
+pysdl2. Xoá `Apps/Chiaki/` rồi giải nén bản Release mới nhất vào gốc thẻ.
 
 **Crash `ImportError: PySDL2 not loaded`**: firmware TrimUI thiếu `libSDL2.so`. Cập nhật firmware lên 1.0.4 trở lên (có sẵn libSDL2 2.30.8).
 

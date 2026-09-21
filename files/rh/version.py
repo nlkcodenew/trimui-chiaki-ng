@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Phien ban cua app. Tool release doc file nay de dat ten tag va manifest."""
 
-APP_VERSION = "0.2.2"
+APP_VERSION = "0.2.3"
 
 
 def version_tuple(v=None):

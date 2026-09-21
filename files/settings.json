@@ -7,7 +7,7 @@
   "wifi_awake": true,
   "auto_update": true,
   "enable_logging": true,
-  "device_id": "CHI-24A6",
+  "device_id": "CHI-A6A9",
   "skipped_versions": [],
   "update_url": "",
   "pending_update": "",
@@ -16,5 +16,7 @@
   "host_addr": "",
   "psn_account_id": "",
   "psn_online_id": "",
-  "regist_key": ""
+  "regist_key": "",
+  "auto_upload_logs": true,
+  "github_issue_repo": "nlkcodenew/trimui-chiaki-ng"
 }

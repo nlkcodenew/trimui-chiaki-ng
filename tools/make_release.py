@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tao manifest.json cho OTA updater.
+"""Tạo manifest OTA và gói ZIP cài đặt cho GitHub Releases.
 
-Quet toan bo files/, tinh sha256 + size cho moi file, ghi ra manifest.json.
-File nay duoc GitHub Action goi khi push tag v* hoac chay thu cong.
+Quét toàn bộ files/, tính sha256 cho mỗi file OTA và tạo ZIP có cấu trúc
+App/Chiaki/ để người dùng giải nén trực tiếp vào gốc thẻ nhớ.
 """
 
 import hashlib
 import json
 import os
 import re
-import sys
+import shutil
+import zipfile
 from datetime import datetime, timezone, timedelta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILES_DIR = os.path.join(ROOT, "files")
 MANIFEST_PATH = os.path.join(ROOT, "manifest.json")
+DIST_DIR = os.path.join(ROOT, "dist")
 TZ = timezone(timedelta(hours=7))
 REPO = "nlkcodenew/trimui-chiaki-ng"
 BRANCH = "main"
@@ -25,7 +27,20 @@ EXCLUDE_FILES = {"desktop.ini", ".DS_Store"}
 # settings.json la file cau hinh nguoi dung (device_id random + tuy chinh).
 # Dua no vao manifest se lam pending_files luon co no vi hash luon lech sau
 # lan chay dau, gay vong lap popup. Exclude ngay tu be build.
-EXCLUDE_USER_FILES = {"settings.json"}
+EXCLUDE_USER_FILES = {
+    "settings.json",
+    "secrets.json",
+    ".log_upload_state.json",
+    ".pending_crash",
+}
+ARCHIVE_EXCLUDE_FILES = {
+    "secrets.json",
+    "settings.json.tmp",
+}
+ARCHIVE_EXCLUDE_PREFIXES = (
+    "Chiaki-loi.txt",
+    "Chiaki-debug.log",
+)
 
 
 def app_version():
@@ -38,6 +53,54 @@ def app_version():
 
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def _archive_file(archive, source, target, executable=False):
+    """Ghi file với mode Unix ổn định, kể cả khi build trên Windows."""
+    with open(source, "rb") as handle:
+        data = handle.read()
+    info = zipfile.ZipInfo(target, date_time=(2020, 1, 1, 0, 0, 0))
+    info.compress_type = zipfile.ZIP_DEFLATED
+    info.create_system = 3
+    mode = 0o100755 if executable else 0o100644
+    info.external_attr = mode << 16
+    archive.writestr(info, data)
+
+
+def _archive_excluded(name):
+    return (
+        name in EXCLUDE_FILES
+        or name in ARCHIVE_EXCLUDE_FILES
+        or name.startswith(".")
+        or name.endswith(".pyc")
+        or name.startswith(ARCHIVE_EXCLUDE_PREFIXES)
+    )
+
+
+def build_release_zip(version):
+    """Tạo ZIP có cấu trúc App/Chiaki để giải nén vào gốc thẻ nhớ."""
+    shutil.rmtree(DIST_DIR, ignore_errors=True)
+    os.makedirs(DIST_DIR, exist_ok=True)
+    archive_name = "trimui-chiaki-ng-v%s.zip" % version
+    archive_path = os.path.join(DIST_DIR, archive_name)
+    with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        _archive_file(archive, os.path.join(ROOT, "INSTALL.md"), "CAI_DAT.md")
+        _archive_file(archive, os.path.join(ROOT, "LICENSE"), "LICENSE.txt")
+        for root, dirs, names in os.walk(FILES_DIR):
+            dirs[:] = sorted(d for d in dirs if d not in EXCLUDE_NAMES)
+            for name in sorted(names):
+                if _archive_excluded(name):
+                    continue
+                src = os.path.join(root, name)
+                rel = os.path.relpath(src, FILES_DIR).replace(os.sep, "/")
+                executable = rel.endswith(".sh") or rel.startswith("bin/")
+                _archive_file(archive, src, "App/Chiaki/%s" % rel, executable)
+    with open(archive_path, "rb") as handle:
+        checksum = sha256(handle.read())
+    checksum_path = archive_path + ".sha256"
+    with open(checksum_path, "w", encoding="ascii", newline="\n") as handle:
+        handle.write("%s  %s\n" % (checksum, archive_name))
+    return archive_name, checksum, os.path.getsize(archive_path)
 
 
 def main():
@@ -69,12 +132,19 @@ def main():
         "python": "3.10+",
         "built": datetime.now(TZ).replace(microsecond=0).isoformat(),
         "base_url": "https://raw.githubusercontent.com/%s/%s" % (REPO, BRANCH),
+        "release_tag": "v%s" % version,
         "note": {
             "vi": "Phien ban %s - cap nhat tu dong." % version,
             "en": "Version %s - auto-update." % version,
         },
         "files": files,
         "remove": [],
+    }
+    archive_name, archive_sha, archive_size = build_release_zip(version)
+    manifest["release_asset"] = {
+        "name": archive_name,
+        "sha256": archive_sha,
+        "size": archive_size,
     }
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)

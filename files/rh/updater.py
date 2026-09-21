@@ -22,6 +22,7 @@ import ssl
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from . import state
@@ -33,6 +34,7 @@ DEFAULT_REPO = "nlkcodenew/trimui-chiaki-ng"
 DEFAULT_BRANCH = "main"
 
 UPDATE_BASE_URL = "https://raw.githubusercontent.com/%s/%s" % (DEFAULT_REPO, DEFAULT_BRANCH)
+LATEST_RELEASE_URL = "https://github.com/%s/releases/latest/download" % DEFAULT_REPO
 GHPROXY_BASE_URL = "https://ghproxy.net/" + UPDATE_BASE_URL
 CDN_BASE_URL = "https://cdn.jsdelivr.net/gh/%s@%s" % (DEFAULT_REPO, DEFAULT_BRANCH)
 
@@ -72,6 +74,30 @@ def candidate_base_urls(rel_path=""):
     return candidates
 
 
+def candidate_manifest_urls():
+    """Ưu tiên manifest đính kèm Release; main là cầu nối/fallback."""
+    custom = getattr(state, "update_url", "") or ""
+    if custom.strip():
+        return ["%s/manifest.json" % base.rstrip("/")
+                for base in candidate_base_urls("manifest.json")]
+    urls = ["%s/manifest.json" % LATEST_RELEASE_URL]
+    urls.extend("%s/manifest.json" % base.rstrip("/")
+                for base in candidate_base_urls("manifest.json"))
+    return urls
+
+
+def payload_base_urls(manifest, rel_path=""):
+    """URL cua payload theo release tag bat bien, fallback ve main/proxy/CDN."""
+    out = []
+    release_tag = (manifest or {}).get("release_tag")
+    if isinstance(release_tag, str) and release_tag:
+        out.append("https://raw.githubusercontent.com/%s/%s" %
+                   (DEFAULT_REPO, release_tag))
+    out.extend(candidate_base_urls(rel_path))
+    seen = set()
+    return [url for url in out if not (url in seen or seen.add(url))]
+
+
 def _get(url, max_bytes, timeout=TIMEOUT):
     headers = {
         "User-Agent": UA,
@@ -80,14 +106,8 @@ def _get(url, max_bytes, timeout=TIMEOUT):
     }
     req = urllib.request.Request(url, headers=headers)
     kwargs = {"timeout": timeout}
-    try:
-        ctx = ssl._create_unverified_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-        if url.startswith("https://"):
-            kwargs["context"] = ctx
-    except Exception:
-        pass
+    if url.startswith("https://"):
+        kwargs["context"] = ssl.create_default_context()
     with urllib.request.urlopen(req, **kwargs) as resp:
         buf = bytearray()
         while True:
@@ -100,11 +120,10 @@ def _get(url, max_bytes, timeout=TIMEOUT):
     return bytes(buf)
 
 
-def _fetch_blob(rel_path, max_bytes, expected_sha=None):
+def _fetch_blob(rel_path, max_bytes, expected_sha=None, manifest=None):
     last = None
-    sep_quote = "%2F"
-    quoted = rel_path.replace("/", sep_quote)
-    for base in candidate_base_urls(rel_path):
+    quoted = urllib.parse.quote(rel_path, safe="/")
+    for base in payload_base_urls(manifest, rel_path):
         url = "%s/%s?_t=%d" % (base, quoted, int(time.time()))
         for attempt in range(2):
             try:
@@ -142,9 +161,10 @@ def sha256_of(path):
 
 
 def fetch_manifest():
-    for base in candidate_base_urls("manifest.json"):
+    for manifest_url in candidate_manifest_urls():
         try:
-            url = "%s/manifest.json?_t=%d" % (base, int(time.time()))
+            separator = "&" if "?" in manifest_url else "?"
+            url = "%s%s_t=%d" % (manifest_url, separator, int(time.time()))
             raw = _get(url, MAX_MANIFEST_BYTES)
             parsed = json.loads(raw.decode("utf-8"))
             if not isinstance(parsed, dict) or not parsed.get("version"):
@@ -230,7 +250,8 @@ def _stage_files(manifest, files, progress=None):
         if progress:
             progress(i, total, f["path"])
         try:
-            data = _fetch_blob(f["path"], MAX_FILE_BYTES, expected_sha=f["sha256"])
+            data = _fetch_blob(f["path"], MAX_FILE_BYTES,
+                               expected_sha=f["sha256"], manifest=manifest)
         except ValueError:
             print("Update hash mismatch for %s" % f["path"])
             return False

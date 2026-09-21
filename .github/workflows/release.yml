@@ -1,13 +1,8 @@
-name: Build & Release
+name: Build GitHub Release
 
-# Tao release khi push tag v* hoac chay thu cong.
-# Buoc 1: Verify tag khop APP_VERSION.
-# Buoc 2: tools/make_release.py scan files/, ghi sha256 vao manifest.json.
-# Buoc 3: Commit manifest.json + README vao main.
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -24,30 +19,36 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Verify tag matches files/rh/version.py
+      - name: Verify tag matches APP_VERSION
         run: |
-          V=$(python -c "import re;print(re.search(r'APP_VERSION\s*=\s*[\"\\']([^\"\\']+)',open('files/rh/version.py',encoding='utf-8').read()).group(1).lstrip('v'))")
-          echo "version.py = $V"
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            TAG="${GITHUB_REF_NAME#v}"
-            if [ "$TAG" != "$V" ]; then
-              echo "::error::tag $TAG does not match APP_VERSION $V"
-              exit 1
-            fi
-          fi
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
 
-      - name: Build manifest.json
+          text = Path("files/rh/version.py").read_text(encoding="utf-8")
+          match = re.search(r'APP_VERSION\s*=\s*["\x27]([^"\x27]+)', text)
+          version = match.group(1).lstrip("v") if match else ""
+          tag = os.environ["GITHUB_REF_NAME"].lstrip("v")
+          print("version.py=%s tag=%s" % (version, tag))
+          if tag != version:
+              raise SystemExit("tag does not match APP_VERSION")
+          PY
+
+      - name: Compile Python sources
+        run: python -m compileall -q files tools
+
+      - name: Build and verify release assets
         run: |
           python tools/make_release.py
+          python tools/verify_release.py
 
-      - name: Commit manifest back to main
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add manifest.json
-          if git diff --cached --quiet; then
-            echo "no manifest changes"
-          else
-            git commit -m "chore(release): sync manifest for ${GITHUB_REF_NAME:-manual}"
-            git push origin HEAD:main
-          fi
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/trimui-chiaki-ng-v*.zip
+            dist/trimui-chiaki-ng-v*.zip.sha256
+            manifest.json

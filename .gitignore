@@ -8,3 +8,8 @@ Thumbs.db
 *.swp
 *~
 dist/
+files/secrets.json
+files/.log_upload_state.json
+files/.pending_crash
+files/Chiaki-loi.txt*
+files/Chiaki-debug.log*

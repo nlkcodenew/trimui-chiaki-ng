@@ -2,17 +2,14 @@
 # -*- coding: utf-8 -*-
 """trimui-chiaki-ng - PS4/PS5 Remote Play cho TrimUI Smart Pro S.
 
-Phien ban 0.2.2:
+Phien ban 0.2.3:
     - Bundled pysdl2 vao vendor/sdl2 (50 file .py) - khong can cai pip tren may
     - He thong chi can libSDL2.so + libSDL2_ttf.so (san trong /usr/lib64 cua
       firmware TrimUI Linux 1.1.1) duoc pysdl2 load qua ctypes + PYSDL2_DLL_PATH
-    - Fix crash ModuleNotFoundError: No module named "sdl2" cua v0.2.0/0.2.1
+    - GitHub Release ZIP, OTA theo release tag va crash log qua GitHub Issues
 
-Luu y khi update tu v0.2.0 hoac v0.2.1:
-    - v0.2.2 bundle them 50 file pysdl2 vao vendor/sdl2
-    - OTA chi ghi de file da co trong manifest, khong them file moi vao thu muc
-      dang co, nen CAN xoa App/Chiaki/ tren may truoc khi copy files/ moi,
-      hoac copy de len va dam bao vendor/sdl2/ ton tai day du 50 file.
+Luu y khi update tu v0.2.0 hoac v0.2.1: nen xoa App/Chiaki cu va giai nen
+Release moi nhat vao goc the de vendor/sdl2 duoc cai day du.
 
 Video stream that se them o 0.3.0 (FFmpeg subprocess / libplacebo).
 
@@ -52,24 +49,34 @@ os.environ["PYSDL2_DLL_PATH"] = ":".join([
 
 from rh import state, paths
 from rh.logger import init_logger, get_logger, set_debug_level
-from rh.engine import ChiakiEngine
-from rh.screens.home import HomeScreen
-from rh.screens.settings import SettingsScreen
-from rh.modals.update import UpdateModal
-from rh.modals.common import InfoModal, ConfirmModal
+from rh.version import APP_VERSION
 
 
 def main():
     # Logger khoi dong SOM nhat de bat moi loi import / sys.argv
     init_logger()
     log = get_logger()
-    log.info("== trimui-chiaki-ng v%s khoi dong ==", "0.2.0")
+    log.info("== trimui-chiaki-ng v%s khoi dong ==", APP_VERSION)
     log.info("SDCARD_PATH=%s", paths.SDCARD_PATH)
     log.info("APP_DIR=%s", paths.APP_DIR)
     log.info("PYTHON=%s", sys.version.replace("\n", " "))
     log.info("enable_logging=%s", state.enable_logging)
     if state.enable_logging:
         set_debug_level(True)
+
+    try:
+        from rh.log_uploader import start_pending_upload
+        start_pending_upload("startup_retry")
+    except Exception as exc:
+        log.warning("cannot start pending log uploader: %s", exc)
+
+    # Import SDL-dependent modules only after logger is ready. Neu SDL/pysdl2
+    # thieu, traceback se duoc launch.sh thu gom va gui len GitHub Issue.
+    from rh.engine import ChiakiEngine
+    from rh.screens.home import HomeScreen
+    from rh.screens.settings import SettingsScreen
+    from rh.modals.update import UpdateModal
+    from rh.modals.common import InfoModal, ConfirmModal
 
     engine = ChiakiEngine()
     if not engine.init_sdl():

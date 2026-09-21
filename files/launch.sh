@@ -26,6 +26,7 @@ if [ -n "$LOGS_PATH" ] && [ -d "$LOGS_PATH" ]; then
 else
     ERRLOG="$SDCARD_PATH/Chiaki-loi.txt"
 fi
+export CHIAKI_STDERR_LOG="$ERRLOG"
 
 log() { echo "[Chiaki] $*"; }
 
@@ -69,8 +70,11 @@ PY="$(find_python)"
 [ -n "$PY" ] || fatal "Khong tim thay python3 tren may." \
 "Hay cap nhat firmware TrimUI len phien ban 1.0.4 tro len (co san python3 trong rootfs) hoac copy python3 vao $SDCARD_PATH/System/bin/python3."
 
-# Da qua duoc kiem tra - log cu (neu co) la cu, xoa di.
-rm -f "$ERRLOG" 2>/dev/null
+# Neu crash truoc chua gui duoc, giu log cu cho uploader retry o lan khoi dong
+# tiep theo. Khi khong co crash pending, log launcher cu co the xoa an toan.
+if [ ! -f "$APP/.pending_crash" ]; then
+    rm -f "$ERRLOG" 2>/dev/null
+fi
 
 # TrimUI Smart Pro S hay bi Kernel Panic khi deep suspend giet app dang chay.
 touch /tmp/stay_alive 2>/dev/null
@@ -79,6 +83,10 @@ while true; do
     rm -f /tmp/launch_game.sh
     "$PY" app.py 2>> "$ERRLOG"
     APP_EXIT_CODE=$?
+    if [ $APP_EXIT_CODE -ne 0 ]; then
+        touch "$APP/.pending_crash" 2>/dev/null
+        "$PY" -m rh.log_uploader --reason "exit_$APP_EXIT_CODE" >> "$ERRLOG" 2>&1 || true
+    fi
     if [ -f /tmp/launch_game.sh ]; then
         sh /tmp/launch_game.sh
         rm -f /tmp/launch_game.sh

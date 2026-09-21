@@ -12,6 +12,7 @@ cung codec H264 / H265 (ffpyplayer hoac Native FFmpeg subprocess).
 import os
 import sys
 import time
+import ctypes
 
 import sdl2
 import sdl2.ext
@@ -41,6 +42,8 @@ class ChiakiEngine:
         self.font_sub = None
         self.font_item = None
         self.font_big = None
+        self.controllers = []
+        self.joysticks = []
 
     # ----- SDL init --------------------------------------------------------
 
@@ -80,6 +83,16 @@ class ChiakiEngine:
         if not self.renderer:
             self.renderer = sdl2.SDL_CreateRenderer(self.window, -1,
                                                     sdl2.SDL_RENDERER_SOFTWARE)
+        for index in range(sdl2.SDL_NumJoysticks()):
+            if sdl2.SDL_IsGameController(index) == sdl2.SDL_TRUE:
+                controller = sdl2.SDL_GameControllerOpen(index)
+                if controller:
+                    self.controllers.append(controller)
+                    self.input_mgr.attach_controller(controller)
+            else:
+                joystick = sdl2.SDL_JoystickOpen(index)
+                if joystick:
+                    self.joysticks.append(joystick)
         return self.window is not None and self.renderer is not None
 
     def init_fonts(self):
@@ -150,10 +163,14 @@ class ChiakiEngine:
         if not font or not text:
             return 8 * len(str(text))
         try:
-            w = sdlttf.TTF_SizeText(font, text.encode("utf-8"))
-            return w
+            width = ctypes.c_int()
+            height = ctypes.c_int()
+            if sdlttf.TTF_SizeUTF8(font, text.encode("utf-8"),
+                                   ctypes.byref(width), ctypes.byref(height)) == 0:
+                return width.value
         except Exception:
-            return 16 * len(str(text))
+            pass
+        return 16 * len(str(text))
 
     def draw_text(self, text, font, x, y, r, g, b, a=255, center_x=False, center_y=False):
         if not font or not text:
@@ -202,14 +219,10 @@ class ChiakiEngine:
         evt = sdl2.SDL_Event()
         while self.running:
             now = time.time()
-            sdl2.SDL_PollEvent(evt)
-            ev_type = evt.type
-            if ev_type == sdl2.SDL_QUIT:
-                self.running = False
-            elif ev_type == sdl2.SDL_KEYDOWN:
-                self.input_mgr.feed_key(evt.key.keysym.scancode)
-            elif ev_type == sdl2.SDL_KEYUP:
-                self.input_mgr.feed_keyup(evt.key.keysym.scancode)
+            while sdl2.SDL_PollEvent(evt):
+                self.input_mgr.feed_event(evt)
+                if evt.type == sdl2.SDL_QUIT:
+                    self.running = False
             inputs = self.input_mgr.poll()
 
             if self.active_modal:
@@ -261,6 +274,10 @@ class ChiakiEngine:
 
     def cleanup(self):
         try:
+            for controller in self.controllers:
+                sdl2.SDL_GameControllerClose(controller)
+            for joystick in self.joysticks:
+                sdl2.SDL_JoystickClose(joystick)
             if self.renderer:
                 sdl2.SDL_DestroyRenderer(self.renderer)
             if self.window:

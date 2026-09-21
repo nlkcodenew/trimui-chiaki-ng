@@ -182,10 +182,10 @@ def init_logger():
                                      datefmt="%Y-%m-%d %H:%M:%S")
         fmt_dbg = logging.Formatter("[%(asctime)s.%(msecs)03d] [%(levelname)-5s] [%(threadName)-12s] [%(name)s] %(message)s",
                                     datefmt="%Y-%m-%d %H:%M:%S")
-        # handlers duoc set default level DEBUG - logging.Logger se tu filter
-        # theo log.setLevel() goi boi set_debug_level().
+        # Error log chi nhan warning/error. Debug log nhan toan bo level khi
+        # enable_logging=True; logger root se chan DEBUG khi tuy chon nay tat.
         eh = logging.StreamHandler(_FanOut(err_fh, dbg_fh))
-        eh.setLevel(logging.DEBUG)
+        eh.setLevel(logging.WARNING)
         eh.setFormatter(fmt_err)
         root.addHandler(eh)
 
