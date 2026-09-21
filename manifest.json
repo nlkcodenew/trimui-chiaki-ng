@@ -1,19 +1,19 @@
 {
-  "version": "0.2.7",
+  "version": "0.2.8",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-21T09:51:02+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.2.7/files",
-  "release_tag": "v0.2.7/files",
+  "built": "2026-09-21T09:58:02+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.2.8/files",
+  "release_tag": "v0.2.8/files",
   "note": {
-    "vi": "v0.2.7: nút A thay đổi giá trị Cài đặt; nút B lưu và quay lại.",
-    "en": "v0.2.7: A changes Settings values; B saves and returns."
+    "vi": "v0.2.8: nút B chỉ thoát Cài đặt; tiêu đề hiển thị phiên bản.",
+    "en": "v0.2.8: B only exits Settings; header shows version."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "4a6f0014b6c5358679e2b6cfec23e72bcf8b0cc23d73d6fd5c55b9e068bac720",
-      "size": 4267
+      "sha256": "097f868b69e27cce143768c1dbabacac20ab1d0d69811e9eba7f6e1154fb1f45",
+      "size": 4259
     },
     {
       "path": "config.json",
@@ -92,7 +92,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "f37cf3b6ee99568e9362a5cede37adfafe340b33593a77469864c78c722527dc",
+      "sha256": "48d2499a32caec68f8f4168997a6da5e62766232244067a8a98a1e734e446d95",
       "size": 404
     },
     {
@@ -127,13 +127,13 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "bcec13788bf9ea8d745cbd0dc905d8f04f119eeec1857cf4fadff309a1e65025",
-      "size": 7257
+      "sha256": "22e3dbdb52f8848aca361822388367d28f84fdb47d88feccac0d12858bc00689",
+      "size": 7317
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "b1beb213740ba79316d69b04c6e412a2870e6b1f747574fbbf07cddeb3028adf",
-      "size": 4572
+      "sha256": "635b92787e737179f5daa86cfae625e7477720f6217204e0c8219f6da48f367a",
+      "size": 4601
     },
     {
       "path": "rh/ui/__init__.py",
@@ -528,8 +528,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.2.7.zip",
-    "sha256": "36c6310101096394cb4f19e88a028d7dfa32a252822508811eae842a23b005eb",
-    "size": 631693
+    "name": "trimui-chiaki-ng-v0.2.8.zip",
+    "sha256": "4deccb3c75452c7325c5d6a51a10d44cae0a898e9ab5331516f1a8280bd743ba",
+    "size": 631711
   }
 }

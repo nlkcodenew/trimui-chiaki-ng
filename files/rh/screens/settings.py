@@ -68,16 +68,17 @@ class SettingsScreen(BaseScreen):
                 return True
             if "btn_left" in inputs["edges"]:
                 self._change(-1)
+                self._save()
                 return True
             if "btn_right" in inputs["edges"]:
                 self._change(1)
+                self._save()
                 return True
             if "btn_a" in inputs["edges"]:
                 self._change(1)
                 self._save()
                 return True
             if "btn_b" in inputs["edges"] or "quit" in inputs["edges"]:
-                self._save()
                 self.engine.pop_screen()
                 return True
         return False

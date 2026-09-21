@@ -6,6 +6,7 @@ import threading
 import time
 from .. import state, chiaki
 from ..i18n import tr
+from ..version import APP_VERSION
 from ..logger import get_logger
 from .base import BaseScreen
 
@@ -59,7 +60,7 @@ class HomeScreen(BaseScreen):
         threading.Thread(target=worker, daemon=True).start()
 
     def get_header_title(self):
-        return tr("app_title")
+        return "%s v%s" % (tr("app_title"), APP_VERSION)
 
     def get_footer_actions(self):
         if self.hosts:

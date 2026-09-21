@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: nút A thay đổi giá trị Cài đặt; nút B lưu và quay lại." % version,
-            "en": "v%s: A changes Settings values; B saves and returns." % version,
+            "vi": "v%s: nút B chỉ thoát Cài đặt; tiêu đề hiển thị phiên bản." % version,
+            "en": "v%s: B only exits Settings; header shows version." % version,
         },
         "files": files,
         "remove": [],

@@ -215,14 +215,21 @@ class LogUploaderTests(unittest.TestCase):
         finally:
             self.settings_module.state.auto_update = original
 
-    def test_settings_b_saves_and_returns_to_home(self):
+    def test_settings_b_returns_to_home_without_extra_save(self):
         engine = mock.Mock()
         screen = self.settings_module.SettingsScreen(engine)
         with mock.patch.object(self.settings_module.state, "save_settings") as save:
             handled = screen.handle_input({"edges": ["btn_b"]})
         self.assertTrue(handled)
-        save.assert_called_once_with()
+        save.assert_not_called()
         engine.pop_screen.assert_called_once_with()
+
+    def test_home_title_includes_app_version(self):
+        home_module = importlib.import_module("rh.screens.home")
+        version = importlib.import_module("rh.version").APP_VERSION
+        screen = home_module.HomeScreen()
+        self.assertIn(version, screen.get_header_title())
+        self.assertTrue(screen.get_header_title().startswith("CHIAKI-NG"))
 
     def test_update_modal_uses_edges_and_closes_to_home(self):
         engine = types.SimpleNamespace(active_modal=None)
