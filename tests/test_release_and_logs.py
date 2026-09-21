@@ -399,6 +399,78 @@ class LogUploaderTests(unittest.TestCase):
         skip.assert_called_once_with("9.9.9")
         self.assertIsNone(engine.active_modal)
 
+    def test_srch_packet_matches_upstream_format(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        pkt = chiaki._build_srch(chiaki.PS4_PROTOCOL_VERSION)
+        self.assertEqual(
+            pkt,
+            b"SRCH * HTTP/1.1\ndevice-discovery-protocol-version:00020020\n\x00",
+        )
+        self.assertEqual(chiaki.PS4_DISCOVERY_PORT, 987)
+        self.assertEqual(chiaki.PS5_DISCOVERY_PORT, 9302)
+
+    def test_discovery_sends_to_ps4_and_ps5_destination_ports(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        sent_dests = []
+
+        class FakeSocket:
+            def __init__(self, *args, **kwargs):
+                self._closed = False
+
+            def setsockopt(self, *args, **kwargs):
+                return None
+
+            def settimeout(self, *args, **kwargs):
+                return None
+
+            def bind(self, addr):
+                return None
+
+            def getsockname(self):
+                return ("0.0.0.0", 9303)
+
+            def sendto(self, data, dest):
+                sent_dests.append(dest[1])
+
+            def recvfrom(self, size):
+                raise OSError("timeout")
+
+            def close(self):
+                self._closed = True
+
+        with mock.patch.object(chiaki.socket, "socket", FakeSocket), \
+                mock.patch.object(chiaki.time, "sleep", lambda *_: None):
+            chiaki.discovery_broadcast(timeout=0.1)
+        self.assertIn(987, sent_dests)
+        self.assertIn(9302, sent_dests)
+        self.assertNotIn(9303, sent_dests)
+
+    def test_parse_srch_response_ready_and_standby(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        ready = (
+            b"HTTP/1.1 200 OK\n"
+            b"host-name:Living-Room-PS4\n"
+            b"system-version:0900000\n"
+            b"host-request-port:9295\n"
+            b"device-discovery-protocol-version:00020020\n"
+        )
+        host = chiaki._parse_srch(ready, ("192.168.1.50", 987), False)
+        self.assertIsNotNone(host)
+        self.assertEqual(host.state, "ready")
+        self.assertEqual(host.name, "Living-Room-PS4")
+        self.assertFalse(host.is_ps5)
+        self.assertEqual(host.addr, "192.168.1.50")
+        self.assertEqual(host.host_request_port, 9295)
+        # atoi("0900000") = 900000 < 7000000 -> PS4_8 (target 5), giong upstream.
+        self.assertEqual(host.target, 5)
+
+        standby = b"HTTP/1.1 620 Standby\nhost-name:PS5\nsystem-version:08050001\n"
+        host5 = chiaki._parse_srch(standby, ("192.168.1.60", 9302), True)
+        self.assertIsNotNone(host5)
+        self.assertEqual(host5.state, "standby")
+        self.assertTrue(host5.is_ps5)
+        self.assertEqual(host5.target, 2)  # PS5_1
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,19 +1,19 @@
 {
-  "version": "0.2.10",
+  "version": "0.2.11",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-21T10:47:23+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.2.10/files",
-  "release_tag": "v0.2.10/files",
+  "built": "2026-09-21T11:34:10+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.2.11/files",
+  "release_tag": "v0.2.11/files",
   "note": {
-    "vi": "v0.2.10: sửa lỗi nút B trong Cài đặt làm đổi giá trị (đảo lại ánh xạ A/B của tay cầm).",
-    "en": "v0.2.10: fix Settings B button changing values (corrected gamepad A/B mapping)."
+    "vi": "v0.2.11: sửa quét PS4/PS5 gửi SRCH đúng cổng 987/9302 để thấy máy trong LAN.",
+    "en": "v0.2.11: fix discovery to send SRCH to ports 987/9302 so LAN consoles are found."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "c7592c673b2ff676d4bec889ca3a6408fda49048fce1a85b965de4297579b413",
-      "size": 4249
+      "sha256": "dce8a304dfe65854659d515639fa1dd9db56889a950d3c537f0c68057ac0ebbb",
+      "size": 4228
     },
     {
       "path": "config.json",
@@ -42,8 +42,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "7cba2f5ad7f4e87dde2b1bdef3d92e05aa11cf9537cd24430ede959724d304ff",
-      "size": 10556
+      "sha256": "328cd77fef0445a38c7b741cda6048a398488a74f03fc815f6c9544c029fa6d3",
+      "size": 12699
     },
     {
       "path": "rh/engine.py",
@@ -92,7 +92,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "851cf1ecc3eac87dd9973c504d11ab87b93d34b87fdc8fbc0331887c225caad9",
+      "sha256": "bfb038d0ba6a01e17d80a111972380f9e725c0d0dce964e8951e851a7f777b54",
       "size": 404
     },
     {
@@ -528,8 +528,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.2.10.zip",
-    "sha256": "ba20535cebc17ee2ad954845042bccd02bf7dff58d97a032e2a5e8921fd3e630",
-    "size": 632432
+    "name": "trimui-chiaki-ng-v0.2.11.zip",
+    "sha256": "73fbfd7b7050baaad5c107ddc39dcfe496d7e05bc749d37146aef8404afcaf03",
+    "size": 633197
   }
 }

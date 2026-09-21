@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: sửa lỗi nút B trong Cài đặt làm đổi giá trị (đảo lại ánh xạ A/B của tay cầm)." % version,
-            "en": "v%s: fix Settings B button changing values (corrected gamepad A/B mapping)." % version,
+            "vi": "v%s: sửa quét PS4/PS5 gửi SRCH đúng cổng 987/9302 để thấy máy trong LAN." % version,
+            "en": "v%s: fix discovery to send SRCH to ports 987/9302 so LAN consoles are found." % version,
         },
         "files": files,
         "remove": [],

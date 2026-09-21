@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 """trimui-chiaki-ng - PS4/PS5 Remote Play cho TrimUI Smart Pro S.
 
-Phien ban 0.2.10:
-    - Sua nut B trong Cai dat bi doi gia tri: dao lai anh xa A/B/X/Y cua
-      SDL GameController theo layout trimui (A vat ly = BUTTON_B), bo qua su
-      kien JOY* khi da mo GameController de tranh edge trung lap
-    - Cai dat: B chi thoat, A/Left/Right doi gia tri + luu ngay; dong
-      "Quay lai" moi nut deu thoat
-    - Bundled pysdl2 vao vendor/sdl2 - khong can cai pip tren may
-    - Giao dien tieng Viet day du dau, OTA va crash log qua GitHub Issues
+Phien ban 0.2.11:
+    - Sua quet PS4/PS5: gui SRCH den dung cong dich 987 (PS4) / 9302 (PS5)
+      theo protocol upstream chiaki. Truoc day gui den cong nguon 9303-9308
+      nen khong bao gio toi may PS -> luon tra ve 0 host.
+    - Packet SRCH dung format byte upstream ('\\n', khong dau cach sau ':',
+      kem byte null), parser chap nhan ca '\\r\\n' va ma HTTP 200/620.
+    - (v0.2.10) Dao anh xa A/B tay cầm, Cai dat B chi thoat, them dong Quay lai.
 
 Luu y khi update tu v0.2.0 hoac v0.2.1: nen xoa App/Chiaki cu va giai nen
 Release moi nhat vao goc the de vendor/sdl2 duoc cai day du.

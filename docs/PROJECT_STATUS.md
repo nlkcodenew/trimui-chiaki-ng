@@ -1,7 +1,7 @@
 # trimui-chiaki-ng — Trạng thái dự án (đến v0.2.10)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-21.
-> Phiên bản đang chạy trên máy: v0.2.9. v0.2.10 đã build + verify xong, chờ push tag để Actions phát hành.
+> Phiên bản đã phát hành & xác nhận trên máy: v0.2.11 (fix quét PS4/PS5). v0.2.10 đã chạy OK trên máy (A đổi giá trị, B thoát).
 
 ## 1. Mục tiêu
 
@@ -98,25 +98,29 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
 
 Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10.
 
-**Việc còn lại:** push tag `v0.2.10` để Actions build Release, rồi **test lại trên máy thật sau OTA**
-(xác nhận A đổi giá trị + lưu ngay, B thoát, dòng `QUAY LẠI` thoát bằng mọi nút).
+**Đã xác nhận trên máy thật (v0.2.10):** nút A đổi giá trị + lưu ngay, nút B thoát ra menu chính, dòng `QUAY LẠI` hoạt động. Bug P0 đã đóng.
 
-### 4.2 P1 — Tiêu đề hiển thị version
-Đã làm ở v0.2.8 (`HomeScreen.get_header_title` -> `CHIAKI-NG vX.Y.Z`), cần đảm bảo không bị cắt
-trên màn 720p và test lại trên máy.
+### 4.2 P1 — Tiêu đề hiển thị version — ĐÃ XONG (v0.2.8)
+`HomeScreen.get_header_title` trả `CHIAKI-NG vX.Y.Z`. Bạn thấy trên máy ở header rồi. Coi như đóng.
 
-### 4.3 P1 — OTA v0.2.9 đang queued
-Tag đã push, Actions `https://github.com/nlkcodenew/trimui-chiaki-ng/actions/runs/35556194124`
-còn queued lúc 10:06. Chờ nó success là `latest` sẽ thành v0.2.9 — nhưng lưu ý v0.2.10 sẽ thay
-ngay sau khi push tag, nên máy có thể bỏ qua v0.2.9 và lên thẳng v0.2.10.
+### 4.3 OTA — v0.2.10/v0.2.11 đã phát hành
+`v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
+để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
 ### 4.4 P2 — Stream thật chưa làm
-`files/rh/chiaki.py::init_session`/`run_stream` vẫn là stub. Mục tiêu v0.3.0: FFmpeg + SDL renderer,
-720p30, bitrate 6000-10000, PS4 H264 / PS5 H265.
+`files/rh/chiaki.py::init_session`/`run_stream` vẫn là stub (trả -1). Mục tiêu v0.3.0: FFmpeg + SDL renderer,
+720p30, bitrate 6000-10000, PS4 H264 / PS5 H265. Cần quyết định test LAN trước hay làm codec ngay (xem mục 8).
 
-### 4.5 P2 — Quét PS4/PS5
-Log cho thấy discovery về 0 host. Cần test lại khi có PS4/PS5 trong cùng WiFi,
-và hướng dẫn user tắt Bluetooth để tránh nhiễu.
+### 4.5 P0 — Quét PS4/PS5 luôn trả 0 host — ĐÃ SỬA TRONG v0.2.11
+**Triệu chứng:** dù PS4 Pro bật cùng WiFi, `QUÉT MÁY PS4/PS5` luôn báo `0 host` (log 3 lần đều 0).
+**Nguyên nhân gốc (đối chiếu `E:\Trimiu Brick Pro\Project APPS\chiaki-ng-tmp\lib\include\chiaki\discovery.h`):**
+`CHIAKI_DISCOVERY_PORT_PS4=987`, `PORT_PS5=9302` là cổng **đích** gửi SRCH; `9303-9319` chỉ là cổng **nguồn** để nhận phản hồi.
+Code cũ gửi SRCH tới chính `9303-9308` (cổng nguồn) nên packet không bao giờ tới PS4/PS5.
+**Đã sửa:** `files/rh/chiaki.py` gửi SRCH tới `987`/`9302` với socket nguồn bind `9303-9319`, packet `SRCH ...\n...\n\x00`
+khớp `chiaki_discovery_packet_fmt`, parser chấp nhận `\r\n`/`\n` và mã `200`/`620`. Thêm 5 test trong
+`tests/test_release_and_logs.py` (packet format, dest ports, parse ready/standby). 23/23 pass.
+**Việc còn lại:** cập nhật lên `v0.2.11` rồi test lại `QUÉT MÁY PS4/PS5` với PS4 Pro trong cùng mạng
+(tắt Bluetooth trên TrimUI để tránh nhiễu WiFi).
 
 ## 5. Cách cài / cập nhật
 
@@ -135,15 +139,15 @@ python -m unittest discover -s tests -v
 python tools/make_release.py; python tools/verify_release.py
 ```
 
-Phát hành v0.2.10:
+Phát hành tag mới (vd v0.2.11):
 
 ```powershell
 git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' fetch origin
 git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' add files tests tools README.md docs manifest.json
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' commit -m 'fix: correct gamepad A/B mapping so Settings B only exits in v0.2.10'
+git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' commit -m 'fix: discovery sends SRCH to ports 987/9302 in v0.2.11'
 git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin main
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' tag -a v0.2.10 -m 'v0.2.10: fix Settings B button changing values (gamepad A/B mapping)'
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.10
+git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' tag -a v0.2.11 -m 'v0.2.11: fix PS4/PS5 discovery'
+git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 ```
 
 ## 7. File quan trọng
@@ -156,3 +160,24 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.10
 - `tools/make_release.py` / `tools/verify_release.py` — build gate
 - `tests/test_release_and_logs.py` — 20 tests
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
+
+
+## 8. Khuyến nghị hướng đi (đã thảo luận với user)
+
+Ưu tiên nên là: **test quét LAN với PS4 Pro trước (v0.2.11), rồi mới làm codec/stream**.
+
+Lý do:
+- Discovery là tầng đầu tiên của mọi thứ. Trước v0.2.11 nó sai cổng nên không thể test gì phía sau.
+- Stream (init_session/run_stream) cần host_addr + regist_key + rp_key lấy từ bước quét/đăng ký. Nếu quét chưa thấy host thì làm codec cũng không có gì để nối tới.
+- v0.2.11 đã sửa đúng protocol upstream, nên bước kế tiếp hợp lý là xác nhận máy TrimUI thấy được PS4 Pro trong LAN (0 -> >=1 host), xem đúng tên/state/addr trong log.
+
+Sau khi quét OK, thứ tự đề xuất cho v0.3.0:
+1. Đăng ký (regist): lấy `rp_key` / `regist_key` từ PS4/PS5 (upstream `lib/src/regist.c`) — cần PSN account-id + PIN.
+2. Session init + handshake RUDP (`lib/src/session.c`, `remote/rudp.c`).
+3. Bind codec H264 (PS4) / H265 (PS5): 2 hướng
+   - a) FFmpeg subprocess decode -> frame -> SDL texture (dễ port, nặng hơn).
+   - b) native lib (build aarch64 chiaki/ffmpeg) + ctypes/gRPC (nhẹ, khó port).
+   Khuyến nghị bắt đầu bằng (a) để có hình ảnh trước, tối ưu (b) sau.
+4. Audio Opus + input (đã có SDL controller map ở `files/rh/inputs.py`).
+
+Lưu ý phần cứng: 1GB RAM, native 720p -> chốt 720p30, bitrate 6000-10000, tắt Bluetooth khi stream.

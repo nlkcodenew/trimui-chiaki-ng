@@ -134,9 +134,26 @@ def write_chiaki_conf(hosts, path=None):
         return False
 
 
+# Cong discovery theo upstream chiaki (lib/include/chiaki/discovery.h).
+# DAY LA CONG DICH ma PS4/PS5 lang nghe goi SRCH. Truoc v0.2.11 code gui SRCH
+# toi chinh cong nguon 9303-9308 nen khong bao gio toi duoc may PS -> luon 0 host.
+PS4_DISCOVERY_PORT = 987
+PS5_DISCOVERY_PORT = 9302
+PS4_PROTOCOL_VERSION = "00020020"
+PS5_PROTOCOL_VERSION = "00030010"
+# Khoang cong nguon cuc bo de bind va nhan phan hoi (PS tra loi ve dung cong nguon).
+LOCAL_PORT_MIN = 9303
+LOCAL_PORT_MAX = 9319
+
+
 def _build_srch(protocol_version):
-    return ("SRCH * HTTP/1.1\r\n"
-            "device-discovery-protocol-version: %s\r\n\r\n") % protocol_version
+    """Goi SRCH, giong het chiaki_discovery_packet_fmt cua upstream.
+
+    Upstream dinh dang: "SRCH * HTTP/1.1\\ndevice-discovery-protocol-version:%s\\n"
+    (dung '\\n', khong co dau cach sau ':') va gui kem byte null cuoi (sendto len+1).
+    """
+    body = "SRCH * HTTP/1.1\ndevice-discovery-protocol-version:%s\n" % protocol_version
+    return body.encode("ascii") + b"\x00"
 
 
 def _parse_srch(data, addr, ps5_mode):
@@ -144,38 +161,55 @@ def _parse_srch(data, addr, ps5_mode):
         text = data.decode("ascii", errors="ignore")
     except Exception:
         return None
+    # Parser upstream (chiaki_http_header_parse) chap nhan ca '\r' va '\n'.
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
     if not text.startswith("HTTP/1.1"):
         return None
+    lines = text.split("\n")
+    status_line = lines[0]
     headers = {}
-    for line in text.split("\r\n")[1:]:
+    for line in lines[1:]:
         if ":" not in line:
             continue
         k, v = line.split(":", 1)
         headers[k.strip().lower()] = v.strip()
+    # Ma HTTP: 200 = ready, 620 = standby (chiaki_discovery_srch_response_parse).
+    host_state = "unknown"
+    parts = status_line.split()
+    if len(parts) >= 2:
+        try:
+            code = int(parts[1])
+        except ValueError:
+            code = 0
+        if code == 200:
+            host_state = "ready"
+        elif code == 620:
+            host_state = "standby"
+    try:
+        req_port = int(headers.get("host-request-port", "9295") or "9295")
+    except ValueError:
+        req_port = 9295
     host = DiscoveredHost(
         addr=addr[0],
         is_ps5=ps5_mode,
+        state=host_state,
         system_version=headers.get("system-version", ""),
         running_app=urllib.parse.unquote(headers.get("running-app-name", "")),
-        host_request_port=int(headers.get("host-request-port", "9295") or "9295"),
+        host_request_port=req_port,
     )
-    status_line = text.split("\r\n", 1)[0]
-    if "200" in status_line:
-        host.state = "ready"
-    elif "620" in status_line:
-        host.state = "standby"
     host.name = urllib.parse.unquote(headers.get("host-name", ""))
     host.target = _target_from_version(host.system_version, ps5_mode)
     return host
 
 
 def _target_from_version(version, ps5):
+    # chiaki_discovery_host_system_version_target: PS5 >= 8050001 -> PS5_1.
     digits = "".join(c for c in version if c.isdigit())
     try:
         v = int(digits) if digits else 0
     except ValueError:
         return 0
-    if ps5 and v >= 8000001:
+    if ps5 and v >= 8050001:
         return 2  # CHIAKI_TARGET_PS5_1
     if v >= 8000000:
         return 3  # CHIAKI_TARGET_PS4_10
@@ -187,30 +221,54 @@ def _target_from_version(version, ps5):
 
 
 def discovery_broadcast(timeout=3.0):
-    """SRCH broadcast dong bo theo PSN protocol. Tra danh sach DiscoveredHost.
+    """SRCH broadcast theo PSN protocol. Tra danh sach DiscoveredHost.
 
-    PS4 response o port 987, PS5 o 9302. Listen o 9303-9319 giong upstream
-    chiaki (do PS4 phan hoi qua bat ky port trong khoang ay).
+    Dung protocol upstream chiaki:
+        - Gui SRCH toi cong dich 987 (PS4) va 9302 (PS5).
+        - Socket nguon bind trong khoang 9303-9319; PS4/PS5 tra loi ve dung
+          dia chi + cong nguon cua goi SRCH.
     """
     out = []
     seen = set()
     lock = threading.Lock()
 
-    def worker(protocol_version, ps5_mode, port):
+    def worker(protocol_version, ps5_mode, dest_port):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.settimeout(timeout)
-            s.bind(("", port))
-            pkt = _build_srch(protocol_version).encode("ascii")
-            s.sendto(pkt, ("255.255.255.255", port))
+            bound = False
+            for local_port in range(LOCAL_PORT_MIN, LOCAL_PORT_MAX + 1):
+                try:
+                    s.bind(("", local_port))
+                    bound = True
+                    break
+                except OSError:
+                    continue
+            if not bound:
+                s.bind(("", 0))
+            pkt = _build_srch(protocol_version)
+            try:
+                src_port = s.getsockname()[1]
+            except OSError:
+                src_port = 0
+            # Gui 2 lan cach nhau mot chut: mot so firmware bo qua goi dau tien.
+            for attempt in range(2):
+                s.sendto(pkt, ("255.255.255.255", dest_port))
+                if attempt == 0:
+                    time.sleep(0.15)
+            log.info("discovery: SRCH -> 255.255.255.255:%d (%s) src_port=%d",
+                     dest_port, "PS5" if ps5_mode else "PS4", src_port)
             end = time.time() + timeout
             while time.time() < end:
                 try:
                     data, addr = s.recvfrom(2048)
                 except socket.timeout:
                     continue
+                except OSError as exc:
+                    log.warning("discovery recvfrom error: %s", exc)
+                    break
                 host = _parse_srch(data, addr, ps5_mode)
                 if host is None:
                     continue
@@ -220,19 +278,16 @@ def discovery_broadcast(timeout=3.0):
                     seen.add(host.addr)
                     out.append(host)
         except OSError as exc:
-            log.warning("discovery worker port %d error: %s", port, exc)
+            log.warning("discovery worker dest %d error: %s", dest_port, exc)
         finally:
             s.close()
 
-    threads = []
-    for port in (9303, 9304, 9305):
-        threads.append(threading.Thread(target=worker,
-                                        args=("00020020", False, port),
-                                        daemon=True))
-    for port in (9306, 9307, 9308):
-        threads.append(threading.Thread(target=worker,
-                                        args=("00030010", True, port),
-                                        daemon=True))
+    threads = [
+        threading.Thread(target=worker, daemon=True,
+                         args=(PS4_PROTOCOL_VERSION, False, PS4_DISCOVERY_PORT)),
+        threading.Thread(target=worker, daemon=True,
+                         args=(PS5_PROTOCOL_VERSION, True, PS5_DISCOVERY_PORT)),
+    ]
     for t in threads:
         t.start()
     for t in threads:
