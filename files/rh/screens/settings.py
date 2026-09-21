@@ -73,28 +73,29 @@ class SettingsScreen(BaseScreen):
             if "btn_down" in inputs["edges"]:
                 self.selected = (self.selected + 1) % len(self.rows)
                 return True
+            edges = inputs["edges"]
+            # B (hoac quit) luon chi thoat, khong bao gio doi gia tri. Kiem tra
+            # truoc A de neu ca hai edge den cung khung hinh (nut bam nhanh,
+            # su kien lap) thi thoat van thang.
+            if "btn_b" in edges or "quit" in edges:
+                self.engine.pop_screen()
+                return True
             if self._is_back_row():
-                if "btn_a" in inputs["edges"] or "btn_b" in inputs["edges"] or "quit" in inputs["edges"]:
-                    self.engine.pop_screen()
-                    return True
-                if "btn_left" in inputs["edges"] or "btn_right" in inputs["edges"]:
+                if any(k in edges for k in ("btn_a", "btn_left", "btn_right")):
                     self.engine.pop_screen()
                     return True
                 return False
-            if "btn_left" in inputs["edges"]:
+            if "btn_left" in edges:
                 self._change(-1)
                 self._save()
                 return True
-            if "btn_right" in inputs["edges"]:
+            if "btn_right" in edges:
                 self._change(1)
                 self._save()
                 return True
-            if "btn_a" in inputs["edges"]:
+            if "btn_a" in edges:
                 self._change(1)
                 self._save()
-                return True
-            if "btn_b" in inputs["edges"] or "quit" in inputs["edges"]:
-                self.engine.pop_screen()
                 return True
         return False
 

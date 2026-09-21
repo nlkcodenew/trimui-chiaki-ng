@@ -103,6 +103,13 @@ class InputManager:
             down = (t == sdl2.SDL_KEYDOWN)
             self._map_keyboard(event.key.keysym.scancode, down)
             return
+        # Khi da mo GameController, SDL2 van phat SONG SONG su kien JOY* cho
+        # cung mot lan bam nut. Neu xu ly ca hai luong, mot nut vat ly se sinh
+        # 2 edge nguoc nhau; man Cai dat khi do doi gia tri thay vi thoat khi
+        # bam B. Vi vay chi dung JOY* lam fallback khi khong co GameController
+        # (firmware cu khong ho tro SDL_GameController).
+        if self.controller is not None:
+            return
         if t in (sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP):
             down = (t == sdl2.SDL_JOYBUTTONDOWN)
             self._map_joy_button(event.jbutton.button, down)
@@ -123,11 +130,18 @@ class InputManager:
         # v0.2.3 nham thanh SDL_GAMECONTROLLER_BUTTON_* nen crash ngay lan
         # dau nguoi dung bam nut. Dung gia tri enum on dinh cua SDL2 de van
         # tuong thich voi cac ban PySDL2 khong export enum o package root.
+        #
+        # SDL2 dat ten nut theo layout Xbox (A=o Nam/south, B=o Dong/east,
+        # X=o Tay/west, Y=o Bac/north). TrimUI Smart Pro S dung layout kieu
+        # Nintendo: nut A vat ly o o Dong, nut B vat ly o o Nam. Nen phai dao
+        # A<->B va X<->Y de virtual action trung voi nut in tren vo may, giong
+        # RetroHub. Truoc v0.2.10 map de 0:btn_a/1:btn_b nen nut B vat ly bi
+        # hieu thanh btn_a -> Cai dat doi gia tri thay vi thoat (P0).
         m = {
-            0: "btn_a",
-            1: "btn_b",
-            2: "btn_x",
-            3: "btn_y",
+            0: "btn_b",
+            1: "btn_a",
+            2: "btn_y",
+            3: "btn_x",
             4: "btn_select",
             6: "btn_start",
             7: "btn_l3",

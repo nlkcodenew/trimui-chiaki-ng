@@ -1,19 +1,19 @@
 {
-  "version": "0.2.9",
+  "version": "0.2.10",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-21T10:03:05+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.2.9/files",
-  "release_tag": "v0.2.9/files",
+  "built": "2026-09-21T10:47:23+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.2.10/files",
+  "release_tag": "v0.2.10/files",
   "note": {
-    "vi": "v0.2.9: thêm dòng Quay lại ở cuối Cài đặt để thoát ra menu chính.",
-    "en": "v0.2.9: add Back row at the end of Settings to exit to main menu."
+    "vi": "v0.2.10: sửa lỗi nút B trong Cài đặt làm đổi giá trị (đảo lại ánh xạ A/B của tay cầm).",
+    "en": "v0.2.10: fix Settings B button changing values (corrected gamepad A/B mapping)."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "59633b23619aca8197573de1db6ed587a26a41979195a6bc9bce464cb4befaac",
-      "size": 4262
+      "sha256": "c7592c673b2ff676d4bec889ca3a6408fda49048fce1a85b965de4297579b413",
+      "size": 4249
     },
     {
       "path": "config.json",
@@ -62,8 +62,8 @@
     },
     {
       "path": "rh/inputs.py",
-      "sha256": "50349fc6a42f85a5df58091c617a89d0b547cc2997cb5fd9712ef90ec2446b2d",
-      "size": 7573
+      "sha256": "5c6b3815f9f4f7cb53b0bb76711dc4d40cba833d1a87ea6f1ba75cc262c17762",
+      "size": 8467
     },
     {
       "path": "rh/log_uploader.py",
@@ -92,7 +92,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "5dd6c3c03a0718275e0a4a632432ed5b9d32409799d9e3e39cf8b86e5a04ac57",
+      "sha256": "851cf1ecc3eac87dd9973c504d11ab87b93d34b87fdc8fbc0331887c225caad9",
       "size": 404
     },
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "8d610271050a9bcd079bd477eb4d7efc8438e8fe4c3b6eb71dd3eac7b75a05fe",
-      "size": 5559
+      "sha256": "357c944d3143abdabf7aac3d197056f7adfcd700f71848c2c99e439e4342ab28",
+      "size": 5563
     },
     {
       "path": "rh/ui/__init__.py",
@@ -528,8 +528,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.2.9.zip",
-    "sha256": "62cf2b762f04e8d5a19e29a2744d17c40f4c9b6bbae172a8bc93c101ec5704ef",
-    "size": 631889
+    "name": "trimui-chiaki-ng-v0.2.10.zip",
+    "sha256": "ba20535cebc17ee2ad954845042bccd02bf7dff58d97a032e2a5e8921fd3e630",
+    "size": 632432
   }
 }

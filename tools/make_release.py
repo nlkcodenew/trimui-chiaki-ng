@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: thêm dòng Quay lại ở cuối Cài đặt để thoát ra menu chính." % version,
-            "en": "v%s: add Back row at the end of Settings to exit to main menu." % version,
+            "vi": "v%s: sửa lỗi nút B trong Cài đặt làm đổi giá trị (đảo lại ánh xạ A/B của tay cầm)." % version,
+            "en": "v%s: fix Settings B button changing values (corrected gamepad A/B mapping)." % version,
         },
         "files": files,
         "remove": [],

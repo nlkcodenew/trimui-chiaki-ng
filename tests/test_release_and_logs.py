@@ -130,9 +130,10 @@ class LogUploaderTests(unittest.TestCase):
             SDL_CONTROLLERBUTTONDOWN=0x651,
             SDL_CONTROLLERBUTTONUP=0x652,
         )
+        # Nut A vat ly tren TrimUI = SDL_CONTROLLER_BUTTON_B (id 1).
         event = types.SimpleNamespace(
             type=fake_sdl.SDL_CONTROLLERBUTTONDOWN,
-            cbutton=types.SimpleNamespace(button=0),
+            cbutton=types.SimpleNamespace(button=1),
         )
         with mock.patch.object(self.inputs, "sdl2", fake_sdl, create=True), \
                 mock.patch.object(self.inputs, "SDL2_OK", True):
@@ -143,6 +144,120 @@ class LogUploaderTests(unittest.TestCase):
             event.type = fake_sdl.SDL_CONTROLLERBUTTONUP
             manager.feed_event(event)
             self.assertFalse(manager.poll()["btn_a"])
+
+    def test_gamecontroller_physical_b_maps_to_btn_b_not_btn_a(self):
+        # Regress P0 v0.2.9: nut B vat ly (SDL_CONTROLLER_BUTTON_A, id 0) phai
+        # ra btn_b de man Cai dat thoat, khong duoc doi gia tri.
+        manager = self.inputs.InputManager()
+        fake_sdl = types.SimpleNamespace(
+            SDL_QUIT=0x100,
+            SDL_CONTROLLERBUTTONDOWN=0x651,
+            SDL_CONTROLLERBUTTONUP=0x652,
+        )
+        event = types.SimpleNamespace(
+            type=fake_sdl.SDL_CONTROLLERBUTTONDOWN,
+            cbutton=types.SimpleNamespace(button=0),
+        )
+        with mock.patch.object(self.inputs, "sdl2", fake_sdl, create=True), \
+                mock.patch.object(self.inputs, "SDL2_OK", True):
+            manager.feed_event(event)
+            state = manager.poll()
+            self.assertTrue(state["btn_b"])
+            self.assertFalse(state["btn_a"])
+            self.assertIn("btn_b", state["edges"])
+            self.assertNotIn("btn_a", state["edges"])
+
+    def test_joystick_events_ignored_when_controller_attached(self):
+        # Khi SDL da mo GameController, mot lan bam nut sinh ca CONTROLLER lan
+        # JOY*. Neu xu ly ca JOY*, nut B vat ly se vua la btn_b (controller)
+        # vua la btn_a (joy id 1 theo profile trimui) -> Cai dat doi gia tri.
+        manager = self.inputs.InputManager()
+        fake_sdl = types.SimpleNamespace(
+            SDL_QUIT=0x100,
+            SDL_CONTROLLERBUTTONDOWN=0x651,
+            SDL_CONTROLLERBUTTONUP=0x652,
+            SDL_CONTROLLERAXISMOTION=0x653,
+            SDL_KEYDOWN=0x300,
+            SDL_KEYUP=0x301,
+            SDL_JOYBUTTONDOWN=0x600,
+            SDL_JOYBUTTONUP=0x601,
+            SDL_JOYHATMOTION=0x602,
+            SDL_JOYAXISMOTION=0x603,
+        )
+        manager.attach_controller(object())
+        joy_event = types.SimpleNamespace(
+            type=fake_sdl.SDL_JOYBUTTONDOWN,
+            jbutton=types.SimpleNamespace(button=1),
+        )
+        with mock.patch.object(self.inputs, "sdl2", fake_sdl, create=True), \
+                mock.patch.object(self.inputs, "SDL2_OK", True):
+            manager.feed_event(joy_event)
+        state = manager.poll()
+        self.assertFalse(state["btn_a"])
+        self.assertFalse(state["btn_b"])
+        self.assertEqual(state["edges"], [])
+
+    def test_settings_integration_physical_buttons(self):
+        # Mo phong dung chuoi su kien may that: bam B vat ly (controller id 0)
+        # khi dang o Cai dat chi duoc pop, khong save; bam A vat ly (id 1) doi
+        # gia tri va save ngay.
+        manager = self.inputs.InputManager()
+        fake_sdl = types.SimpleNamespace(
+            SDL_QUIT=0x100,
+            SDL_CONTROLLERBUTTONDOWN=0x651,
+            SDL_CONTROLLERBUTTONUP=0x652,
+            SDL_CONTROLLERAXISMOTION=0x653,
+            SDL_KEYDOWN=0x300,
+            SDL_KEYUP=0x301,
+            SDL_JOYBUTTONDOWN=0x600,
+            SDL_JOYBUTTONUP=0x601,
+            SDL_JOYHATMOTION=0x602,
+            SDL_JOYAXISMOTION=0x603,
+        )
+        manager.attach_controller(object())
+        engine = mock.Mock()
+        screen = self.settings_module.SettingsScreen(engine)
+        screen.selected = next(
+            index for index, row in enumerate(screen.rows)
+            if row[0] == "auto_update"
+        )
+
+        def press_and_release(button_id):
+            with mock.patch.object(self.inputs, "sdl2", fake_sdl, create=True), \
+                    mock.patch.object(self.inputs, "SDL2_OK", True):
+                evt = types.SimpleNamespace(
+                    type=fake_sdl.SDL_CONTROLLERBUTTONDOWN,
+                    cbutton=types.SimpleNamespace(button=button_id),
+                )
+                manager.feed_event(evt)
+                down_state = manager.poll()
+                evt.type = fake_sdl.SDL_CONTROLLERBUTTONUP
+                manager.feed_event(evt)
+                manager.poll()
+            return down_state
+
+        original = self.settings_module.state.auto_update
+        try:
+            with mock.patch.object(self.settings_module.state, "save_settings") as save:
+                state_b = press_and_release(0)
+                self.assertIn("btn_b", state_b["edges"])
+                self.assertNotIn("btn_a", state_b["edges"])
+                screen.handle_input(state_b)
+                save.assert_not_called()
+                engine.pop_screen.assert_called_once_with()
+
+            engine.reset_mock()
+            with mock.patch.object(self.settings_module.state, "save_settings") as save:
+                state_a = press_and_release(1)
+                self.assertIn("btn_a", state_a["edges"])
+                self.assertNotIn("btn_b", state_a["edges"])
+                screen.handle_input(state_a)
+                save.assert_called_once_with()
+                engine.pop_screen.assert_not_called()
+                self.assertEqual(
+                    self.settings_module.state.auto_update, not original)
+        finally:
+            self.settings_module.state.auto_update = original
 
     def test_gamecontroller_axes_and_triggers(self):
         manager = self.inputs.InputManager()
