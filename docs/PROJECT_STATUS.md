@@ -1,7 +1,24 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.0-beta.1)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.1)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-21.
-> Phiên bản đang chuẩn bị phát hành: v0.3.0-beta.1. Bản này sửa lỗi máy thật không có executable `openssl` bằng AES thuần Python.
+> v0.3.1 thêm phiên Remote Play PS4 LAN thật: libchiaki, H264 720p30,
+> FFmpeg software decode, SDL fullscreen/input, Opus audio và log native.
+
+## Stream native v0.3.1
+
+- Binary `files/bin/chiaki-stream` là ELF AArch64 build bằng SDK TG5050 chính hãng.
+- Session dùng khóa thật từ `paired_hosts.json`; khóa đi qua file tạm `0600`,
+  được native xóa ngay khi đọc và không xuất hiện trong command line/log.
+- Renderer nhận frame H264 từ `chiaki_ffmpeg_decoder`, chuyển về YUV420P khi
+  cần và hiển thị bằng SDL texture đúng tỉ lệ trên màn 1280×720.
+- Audio giải mã Opus và phát bằng SDL queued audio; input map A/B/X/Y, D-pad,
+  analog, L/R, trigger, L3/R3, START/SELECT/PS; hỗ trợ rung đơn.
+- Menu đóng SDL trước khi chạy native và tự mở lại khi stream kết thúc.
+- Giữ START+SELECT 1,2 giây để thoát. Native stdout/stderr và `ldd` được ghi
+  vào `Chiaki-debug.log`/`Chiaki-loi.txt`.
+- Đã build/link/strip thành công và unit test 27/27. Chưa thể xác nhận hình/âm
+  thanh thực tế nếu không có Smart Pro S và PS4 trong sandbox.
+- Chưa xong: kiểm thử/tune trên máy thật, PS5/H265 và Internet/RUDP.
 
 ## 1. Mục tiêu
 
@@ -116,9 +133,11 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream thật chưa làm
-`files/rh/chiaki.py::init_session`/`run_stream` vẫn là stub (trả -1). Mục tiêu v0.3.0: FFmpeg + SDL renderer,
-720p30, bitrate 6000-10000, PS4 H264 / PS5 H265. Cần quyết định test LAN trước hay làm codec ngay (xem mục 8).
+### 4.4 P2 — Stream PS4 LAN đã triển khai trong v0.3.1
+`HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
+`bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
+`chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
+720p30, 8000 kbps. Việc còn lại là kiểm thử và tune trên máy thật.
 
 ### 4.5 P0 — Quét PS4/PS5 luôn trả 0 host — ĐÃ SỬA TRONG v0.2.11
 **Triệu chứng:** dù PS4 Pro bật cùng WiFi, `QUÉT MÁY PS4/PS5` luôn báo `0 host` (log 3 lần đều 0).
@@ -171,22 +190,14 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 
-## 8. Khuyến nghị hướng đi (đã thảo luận với user)
+## 8. Bước kiểm thử tiếp theo
 
-Ưu tiên nên là: **test quét LAN với PS4 Pro trước (v0.2.11), rồi mới làm codec/stream**.
+1. Cập nhật v0.3.1 bằng OTA, quét và chọn PS4-896 đã ghép nối.
+2. Bấm A để mở stream; xác nhận PS4 chuyển sang Remote Play, có hình/âm/input.
+3. Giữ START+SELECT 1,2 giây để thoát và xác nhận menu app mở lại.
+4. Nếu lỗi, lấy `Chiaki-debug.log` và `Chiaki-loi.txt`; tìm các dòng
+   `native stream preflight`, `Remote Play connected`, `first video frame` và
+   `native stream exit`.
+5. Nếu stream được nhưng drop, giảm bitrate 8000 xuống 6000 trước khi thử 60 FPS.
 
-Lý do:
-- Discovery là tầng đầu tiên của mọi thứ. Trước v0.2.11 nó sai cổng nên không thể test gì phía sau.
-- Stream (init_session/run_stream) cần host_addr + regist_key + rp_key lấy từ bước quét/đăng ký. Nếu quét chưa thấy host thì làm codec cũng không có gì để nối tới.
-- v0.2.11 đã sửa đúng protocol upstream, nên bước kế tiếp hợp lý là xác nhận máy TrimUI thấy được PS4 Pro trong LAN (0 -> >=1 host), xem đúng tên/state/addr trong log.
-
-Sau khi quét OK, thứ tự đề xuất cho v0.3.0:
-1. Đăng ký (regist): lấy `rp_key` / `regist_key` từ PS4/PS5 (upstream `lib/src/regist.c`) — cần PSN account-id + PIN.
-2. Session init + handshake RUDP (`lib/src/session.c`, `remote/rudp.c`).
-3. Bind codec H264 (PS4) / H265 (PS5): 2 hướng
-   - a) FFmpeg subprocess decode -> frame -> SDL texture (dễ port, nặng hơn).
-   - b) native lib (build aarch64 chiaki/ffmpeg) + ctypes/gRPC (nhẹ, khó port).
-   Khuyến nghị bắt đầu bằng (a) để có hình ảnh trước, tối ưu (b) sau.
-4. Audio Opus + input (đã có SDL controller map ở `files/rh/inputs.py`).
-
-Lưu ý phần cứng: 1GB RAM, native 720p -> chốt 720p30, bitrate 6000-10000, tắt Bluetooth khi stream.
+Lưu ý phần cứng: RAM 1GB, ưu tiên 720p30; tắt Bluetooth để giảm nhiễu Wi-Fi 5 GHz.

@@ -30,6 +30,7 @@
      app.py
      config.json
      launch.sh
+     bin/chiaki-stream   (ELF AArch64 bắt buộc)
      settings.json
      rh/                  (engine.py, chiaki.py, updater.py, ...)
      vendor/
@@ -37,6 +38,15 @@
    ```
 
 4. Lắp thẻ lại vào máy, vào **Apps** → **Chiaki-ng**.
+
+## Thử stream PS4 LAN
+
+1. Đặt PS4 và Smart Pro S cùng Wi-Fi/LAN 5 GHz.
+2. Mở app, quét máy, chọn PS4 đã ghép nối và bấm **A**.
+3. Cấu hình mặc định là H264 `1280x720`, 30 FPS, 8000 kbps.
+4. Giữ **START + SELECT** khoảng 1,2 giây để thoát stream về menu app.
+5. Nếu màn hình đen hoặc tự thoát, chép cả `Chiaki-debug.log` và
+   `Chiaki-loi.txt`. Dòng `native stream preflight` sẽ liệt kê thư viện thiếu.
 
 ## Cập nhật OTA
 
@@ -66,6 +76,9 @@ Khi app chạy, 2 file log nằm ngay trong `Apps/Chiaki/`:
 
 - `Chiaki-loi.txt` - lỗi + cảnh báo, xoay vòng 3 file backup 256 KB
 - `Chiaki-debug.log` - toàn bộ hoạt động, xoay vòng 1 file backup 512 KB
+
+Native stream ghi handshake, trạng thái audio/video, số frame mất và exit code
+vào hai file trên. PIN và khóa ghép nối không được ghi vào log.
 
 Format mỗi dòng: `[YYYY-MM-DD HH:MM:SS.mmm] [LEVEL] [Thread] module - message`
 

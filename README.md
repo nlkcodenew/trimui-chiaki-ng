@@ -2,10 +2,10 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.0-alpha - GHÉP NỐI PIN 8 số cho PS4 hack, đa máy, quét LAN đã thấy PS4-896,
-OTA theo manifest và tự gửi crash log đã sẵn sàng để thử trên máy thật. Luồng
-stream video thực tế chưa được triển khai; mục tiêu của v0.3.0 là H264/H265
-720p30.
+**Trạng thái**: v0.3.1 - đã có stream PS4 LAN thật bằng native `libchiaki` +
+FFmpeg + SDL2, mặc định H264 `720p30`, bitrate `8000` kbps. Ghép nối PIN 8 số,
+âm thanh Opus, gamepad, rung đơn, OTA và nhật ký native đã được nối hoàn chỉnh.
+Bản này cần kiểm thử đầu tiên trên Smart Pro S thật; PS5/Internet chưa được xác nhận.
 
 ## Cấu hình phần cứng mục tiêu
 
@@ -16,12 +16,21 @@ stream video thực tế chưa được triển khai; mục tiêu của v0.3.0 l
 - **Wi-Fi**: 802.11 a/b/g/n/ac/ax băng tần kép
 - **Firmware**: TrimUI Linux custom 1.1.1 (TG5050 Smart Pro S)
 
-## Cấu hình video đề xuất (mục tiêu v0.3.0)
+## Cấu hình stream hiện tại
 
 - Độ phân giải: `720p` (native, không tốn scaler)
 - FPS: `30`
 - Bitrate: `8000` kbps (giảm xuống `6000` nếu thấy giật)
-- Codec: H264 (PS4), H265 (PS5)
+- Codec: H264 cho PS4. H265/PS5 có trong helper nhưng chưa được kiểm thử.
+
+## Chạy stream
+
+1. Quét LAN và chọn PS4 đã ghép nối.
+2. Bấm **A – BẮT ĐẦU CHƠI**. Menu đóng để nhường SDL cho native helper.
+3. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại menu.
+4. Nếu không có hình, gửi `Chiaki-debug.log` và `Chiaki-loi.txt` trong
+   `Apps/Chiaki/`. Log có kết quả `ldd`, handshake, frame và exit code nhưng
+   không chứa PIN, `regist_key` hoặc `rp_key`.
 
 ## Cài đặt từ GitHub Releases
 
@@ -96,6 +105,7 @@ files/
   config.json           # Manifest cho TrimUI launcher
   launch.sh             # Script khởi động (tìm python3, đặt env, ghi log)
   settings.json         # Cấu hình người dùng
+  bin/chiaki-stream     # ELF AArch64: session, H264, Opus, SDL input/render
   rh/
     engine.py           # Engine SDL2 (window, renderer, font, input)
     chiaki.py           # Wrapper discovery / wakeup / chiaki.conf
@@ -105,6 +115,9 @@ files/
     screens/            # Giao diện (home, settings)
     state.py            # Trạng thái runtime
     version.py          # Hằng số APP_VERSION
+native/
+  chiaki-stream.c       # Frontend native nhẹ cho RAM 1GB
+  build-tg5050.sh       # Build tái lập bằng SDK TG5050 chính hãng
 .github/workflows/
   release.yml           # Build ZIP + manifest và tạo GitHub Release khi push tag
 manifest.json           # (chỉ tool tạo ra) danh sách sha256 + version
@@ -142,7 +155,8 @@ mới; sau khi lên v0.2.3, app ưu tiên manifest của GitHub Releases.
 - Ghép nối PS4 dùng AES-128-CFB thuần Python, không cần `openssl` hay thư viện ngoài.
 - Nên **tắt Bluetooth** trước khi stream để tránh nhiễu Wi-Fi (khuyến cáo của hãng).
 - Bitrate mặc định `8000` kbps; nếu thấy giật thì giảm xuống `6000`.
-- Phiên bản stream video thật sẽ đến ở v0.3.0 (FFmpeg subprocess + SDL renderer).
+- Native helper dùng ABI của SDK TG5050: SDL2 2.32, FFmpeg 6, Opus và OpenSSL 1.1.
+- Stream hiện chỉ nhắm LAN; Internet/RUDP và PS5 cần kiểm thử sau.
 
 ## Giấy phép
 

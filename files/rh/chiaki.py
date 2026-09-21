@@ -8,21 +8,24 @@ Bao gom:
     - Doc chiaki.conf theo mau Switch (host_addr, psn_account_id, rp_key, rp_regist_key,
       rp_key_type, video_resolution, video_fps, target)
 
-Crypto và session init vẫn đang ở upstream chiaki-ng. Bản stream thật sẽ dùng
-native helper aarch64 hoặc một backend có sẵn trên firmware để thực thi:
+Crypto và session stream chạy trong native helper AArch64 build bằng SDK TG5050:
 
     chiaki_session_init
     chiaki_session_start
     chiaki_session_set_controller_state
     chiaki_session_set_video_sample_cb
 
-Hien tai cac ham chi in log va tra ve ma loi de app khong crash.
+Python chỉ chuẩn bị file phiên tạm quyền 0600 và yêu cầu launch.sh chuyển sang
+native helper sau khi SDL menu đã đóng hoàn toàn.
 """
 
+import base64
 import json
 import os
+import shlex
 import socket
 import struct
+import tempfile
 import threading
 import time
 import urllib.parse
@@ -48,18 +51,145 @@ class DiscoveredHost:
 
 
 def find_chiaki_binary(app_dir):
-    """Tim chiaki binary trong bin/ cua app. None khi khong co."""
+    """Tìm native stream helper trong bin/ của app."""
     candidates = [
-        os.path.join(app_dir, "bin", "chiaki"),
-        os.path.join(app_dir, "bin", "chiaki-ng"),
-        os.path.join("/usr", "local", "bin", "chiaki"),
+        os.path.join(app_dir, "bin", "chiaki-stream"),
     ]
     for path in candidates:
-        if os.path.isfile(path) and os.access(path, os.X_OK):
+        if not os.path.isfile(path):
+            continue
+        if not os.access(path, os.X_OK):
+            try:
+                os.chmod(path, 0o755)
+            except OSError:
+                continue
+        if os.access(path, os.X_OK):
             log.info("chiaki binary found: %s", path)
             return path
-    log.debug("chiaki binary not bundled, using pure python shim")
+    log.error("native stream helper not found in %s", os.path.join(app_dir, "bin"))
     return None
+
+def _paired_credentials(addr):
+    from .paths import APP_DIR
+
+    entries = []
+    paired_path = os.path.join(APP_DIR, "paired_hosts.json")
+    try:
+        with open(paired_path, "r", encoding="utf-8") as handle:
+            value = json.load(handle)
+        if isinstance(value, list):
+            entries.extend(value)
+    except (OSError, ValueError, TypeError):
+        pass
+    if getattr(state, "host_addr", "") == addr:
+        entries.append({
+            "addr": state.host_addr,
+            "name": state.host_name,
+            "is_ps5": False,
+            "regist_key": state.regist_key,
+            "rp_key": state.rp_key,
+        })
+    for entry in entries:
+        if not isinstance(entry, dict) or entry.get("addr") != addr:
+            continue
+        regist_key = str(entry.get("regist_key") or "")
+        rp_key = str(entry.get("rp_key") or "")
+        try:
+            decoded = base64.b64decode(rp_key, validate=True)
+        except Exception:
+            decoded = b""
+        if (1 <= len(regist_key) <= 8
+                and all(char in "0123456789abcdefABCDEF" for char in regist_key)
+                and len(decoded) == 16
+                and not rp_key.startswith("stub-rp-key-")):
+            return {
+                "addr": addr,
+                "name": entry.get("name") or addr,
+                "is_ps5": bool(entry.get("is_ps5", False)),
+                "regist_key": regist_key,
+                "rp_key": rp_key,
+            }
+    return None
+
+def prepare_stream_launch(host):
+    """Chuẩn bị native stream rồi trả về (ok, thông báo)."""
+    from .paths import APP_DIR
+
+    binary = find_chiaki_binary(APP_DIR)
+    if not binary:
+        return False, "Thiếu bin/chiaki-stream"
+    credentials = _paired_credentials(getattr(host, "addr", ""))
+    if not credentials:
+        return False, "Khóa ghép nối không hợp lệ; hãy ghép lại PS4"
+    profile = _video_profile_from_state()
+    requested_temp = os.environ.get("CHIAKI_SESSION_DIR", "")
+    temp_dir = requested_temp if requested_temp and os.path.isdir(requested_temp) else (
+        "/tmp" if os.path.isdir("/tmp") else APP_DIR)
+    session_path = ""
+    try:
+        descriptor, session_path = tempfile.mkstemp(
+            prefix="chiaki-session-", suffix=".conf", dir=temp_dir)
+        if hasattr(os, "fchmod"):
+            os.fchmod(descriptor, 0o600)
+        else:
+            os.chmod(session_path, 0o600)
+        with os.fdopen(descriptor, "w", encoding="ascii", newline="\n") as handle:
+            handle.write("host=%s\n" % credentials["addr"])
+            handle.write("regist_key=%s\n" % credentials["regist_key"])
+            handle.write("rp_key=%s\n" % credentials["rp_key"])
+            handle.write("ps5=%d\n" % int(credentials["is_ps5"]))
+            handle.write("width=%d\n" % profile["width"])
+            handle.write("height=%d\n" % profile["height"])
+            handle.write("fps=%d\n" % profile["max_fps"])
+            handle.write("bitrate=%d\n" % profile["bitrate"])
+            handle.write("volume=%d\n" % int(getattr(state, "audio_volume", 80)))
+            handle.flush()
+            os.fsync(handle.fileno())
+
+        debug_path = os.path.join(APP_DIR, "Chiaki-debug.log")
+        error_path = os.path.join(APP_DIR, "Chiaki-loi.txt")
+        launcher_path = os.environ.get("CHIAKI_STREAM_LAUNCHER", "/tmp/launch_game.sh")
+        launcher_temp = launcher_path + ".tmp"
+        dollar = "$"
+        quoted = {name: shlex.quote(value) for name, value in {
+            "binary": binary,
+            "session": session_path,
+            "debug": debug_path,
+            "error": error_path,
+        }.items()}
+        lines = [
+            "#!/bin/sh",
+            "BIN=%s" % quoted["binary"],
+            "SESSION=%s" % quoted["session"],
+            "DEBUG=%s" % quoted["debug"],
+            "ERROR_LOG=%s" % quoted["error"],
+            "trap 'rm -f \"%sSESSION\"' EXIT INT TERM" % dollar,
+            "chmod +x \"%sBIN\" 2>/dev/null || true" % dollar,
+            "echo \"[%s(date '+%%Y-%%m-%%d %%H:%%M:%%S')] native stream preflight\" >> \"%sDEBUG\"" % (dollar, dollar),
+            "echo \"binary: %s(file \"%sBIN\" 2>/dev/null || echo unavailable)\" >> \"%sDEBUG\"" % (dollar, dollar, dollar),
+            "if command -v ldd >/dev/null 2>&1; then ldd \"%sBIN\" >> \"%sDEBUG\" 2>&1; fi" % (dollar, dollar),
+            "\"%sBIN\" \"%sSESSION\" >> \"%sDEBUG\" 2>> \"%sERROR_LOG\"" % (dollar, dollar, dollar, dollar),
+            "RC=%s?" % dollar,
+            "echo \"[%s(date '+%%Y-%%m-%%d %%H:%%M:%%S')] native stream exit=%sRC\" >> \"%sDEBUG\"" % (dollar, dollar, dollar),
+            "exit \"%sRC\"" % dollar,
+        ]
+        with open(launcher_temp, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write("\n".join(lines) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(launcher_temp, 0o700)
+        os.replace(launcher_temp, launcher_path)
+        log.info("native stream prepared: host=%s profile=%s",
+                 credentials["addr"], video_profile_summary())
+        return True, "Đang mở Remote Play..."
+    except OSError as exc:
+        if session_path:
+            try:
+                os.remove(session_path)
+            except OSError:
+                pass
+        log.error("cannot prepare native stream: %s", exc)
+        return False, "Không chuẩn bị được stream: %s" % exc
 
 
 def read_chiaki_conf(path=None):

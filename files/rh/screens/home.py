@@ -137,9 +137,11 @@ class HomeScreen(BaseScreen):
             self._open_pair(host)
             return
         log.info("home: yeu cau stream toi %s (%s)", host.name or host.addr, host.addr)
-        profile = chiaki.video_profile_summary()
-        self.toast = "%s [%s]" % (tr("stream_running") % host.name, profile)
-        self.toast_until = time.time() + 3
+        ok, message = chiaki.prepare_stream_launch(host)
+        self.toast = message
+        self.toast_until = time.time() + 4
+        if ok:
+            self.engine.quit("stream_launch")
 
     def handle_input(self, inputs):
         if not inputs:

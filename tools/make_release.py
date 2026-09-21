@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: bỏ phụ thuộc OpenSSL, dùng AES thuần Python để ghép nối PS4." % version,
-            "en": "v%s: remove the OpenSSL dependency and pair PS4 using pure Python AES." % version,
+            "vi": "v%s: thêm stream PS4 LAN H264 720p30 bằng libchiaki, FFmpeg, SDL2; có âm thanh, gamepad và log native." % version,
+            "en": "v%s: add PS4 LAN H264 720p30 streaming with libchiaki, FFmpeg, SDL2, audio, gamepad and native logs." % version,
         },
         "files": files,
         "remove": [],

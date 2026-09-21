@@ -29,6 +29,7 @@ REQUIRED_ARCHIVE = {
     "App/Chiaki/settings.json",
     "App/Chiaki/secrets.example.json",
     "App/Chiaki/assets/fallback.ttf",
+    "App/Chiaki/bin/chiaki-stream",
     "App/Chiaki/vendor/sdl2/__init__.py",
 }
 
@@ -70,6 +71,14 @@ def main():
         default_settings = json.load(handle)
     if default_settings.get("device_id"):
         fail("default settings.json must not contain a generated device_id")
+
+    native_path = os.path.join(FILES_DIR, "bin", "chiaki-stream")
+    with open(native_path, "rb") as handle:
+        elf_header = handle.read(20)
+    if elf_header[:4] != b"\x7fELF" or elf_header[4] != 2 or elf_header[5] != 1:
+        fail("chiaki-stream is not a little-endian ELF64 binary")
+    if int.from_bytes(elf_header[18:20], "little") != 183:
+        fail("chiaki-stream is not an AArch64 binary")
 
     listed = set()
     for item in manifest.get("files", []):

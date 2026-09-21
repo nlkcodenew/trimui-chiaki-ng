@@ -543,6 +543,54 @@ class LogUploaderTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertEqual(result["error"], "HTTP 403")
 
+    def test_native_stream_launcher_keeps_keys_out_of_script(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        work_dir = tempfile.mkdtemp(dir=self.work_dir)
+        launcher_path = os.path.join(work_dir, "launch_game.sh")
+        binary_path = os.path.join(work_dir, "chiaki-stream")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        regist_key = "a49d08ed"
+        rp_key = base64.b64encode(bytes(range(16))).decode("ascii")
+        with open(binary_path, "wb") as handle:
+            handle.write(b"binary")
+        os.chmod(binary_path, 0o755)
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.45",
+                "name": "PS4-896",
+                "is_ps5": False,
+                "regist_key": regist_key,
+                "rp_key": rp_key,
+            }], handle)
+        host = chiaki.DiscoveredHost(name="PS4-896", addr="192.168.1.45")
+        with mock.patch.object(chiaki, "find_chiaki_binary", return_value=binary_path), \
+                mock.patch.dict(os.environ, {
+                    "CHIAKI_SESSION_DIR": work_dir,
+                    "CHIAKI_STREAM_LAUNCHER": launcher_path,
+                }, clear=False):
+            ok, _ = chiaki.prepare_stream_launch(host)
+        self.assertTrue(ok)
+        with open(launcher_path, encoding="utf-8") as handle:
+            script = handle.read()
+        self.assertNotIn(regist_key, script)
+        self.assertNotIn(rp_key, script)
+        session_line = next(line for line in script.splitlines() if line.startswith("SESSION="))
+        session_path = session_line.split("=", 1)[1].strip("'")
+        if os.name != "nt":
+            self.assertEqual(os.stat(session_path).st_mode & 0o777, 0o600)
+        else:
+            self.assertTrue(os.path.isfile(session_path))
+        with open(session_path, encoding="ascii") as handle:
+            session = handle.read()
+        self.assertIn("host=192.168.1.45", session)
+        self.assertIn("width=1280", session)
+        self.assertIn("fps=30", session)
+        self.assertIn("bitrate=8000", session)
+        self.assertIn(regist_key, session)
+        self.assertIn(rp_key, session)
+        os.remove(session_path)
+        os.remove(paired_path)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,19 +2,15 @@
 # -*- coding: utf-8 -*-
 """trimui-chiaki-ng - PS4/PS5 Remote Play cho TrimUI Smart Pro S.
 
-Phien ban 0.3.0-alpha:
-    - Them man hinh GHÉP NỐI bang PIN 8 so (danh cho PS4 hack/PSN khoa): chi can
-      PIN tu PS4 > Cai dat > Ket noi choi tu xa > Them thiet bi. Luu rp_key/
-      regist_key theo tung dia chi IP vao state + paired_hosts.json de dung cho
-      lan sau va cho cac may PS khac. Nút PAIR có trên Home khi chọn host.
-    - Luồng Kết nối giờ kiểm tra Pair trước: nếu chưa ghép sẽ mở màn Pair thay vì
-      chỉ hiện toast. v0.3.0-alpha stub regist (trả rp_key giả để test flow).
-    - (v0.2.11) Sua quet PS4/PS5 dung cong dich 987/9302, da tim thay PS4-896.
+Phiên bản 0.3.1:
+    - Ghép nối PS4 thật bằng PIN 8 số và lưu khóa theo từng máy.
+    - Stream PS4 LAN H264 720p30 bằng native libchiaki + FFmpeg + SDL2.
+    - Audio Opus, gamepad, rung đơn, log native và quay lại menu sau stream.
 
 Luu y khi update tu v0.2.0 hoac v0.2.1: nen xoa App/Chiaki cu va giai nen
 Release moi nhat vao goc the de vendor/sdl2 duoc cai day du.
 
-Video stream that se them o 0.3.0 (FFmpeg subprocess / libplacebo).
+Video stream chạy bằng native helper AArch64: libchiaki + FFmpeg + SDL2.
 
 Thu vien can thiet:
     - python3 (>= 3.10, san trong firmware TrimUI Linux 1.1.1)
@@ -112,7 +108,7 @@ def main():
     finally:
         engine.cleanup()
         log.info("== app thoat ==")
-    if exit_reason not in ("user_exit", "update_restart"):
+    if exit_reason not in ("user_exit", "update_restart", "stream_launch"):
         log.error("unexpected app exit: %s", exit_reason)
         return 2
     return 0

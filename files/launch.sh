@@ -89,7 +89,13 @@ while true; do
     fi
     if [ -f /tmp/launch_game.sh ]; then
         sh /tmp/launch_game.sh
+        STREAM_EXIT_CODE=$?
         rm -f /tmp/launch_game.sh
+        if [ $STREAM_EXIT_CODE -ne 0 ]; then
+            echo "native stream failed: exit $STREAM_EXIT_CODE" >> "$ERRLOG"
+            touch "$APP/.pending_crash" 2>/dev/null
+            "$PY" -m rh.log_uploader --reason "native_stream_$STREAM_EXIT_CODE" >> "$ERRLOG" 2>&1 || true
+        fi
         touch /tmp/stay_alive 2>/dev/null
     else
         break
