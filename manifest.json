@@ -1,13 +1,13 @@
 {
-  "version": "0.3.0-beta",
+  "version": "0.3.0-beta.1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-21T20:08:13+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.0-beta/files",
-  "release_tag": "v0.3.0-beta/files",
+  "built": "2026-09-21T20:27:07+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.0-beta.1/files",
+  "release_tag": "v0.3.0-beta.1/files",
   "note": {
-    "vi": "v0.3.0-beta: ghép nối PS4 thật qua LAN, nhận và lưu khóa Remote Play thật.",
-    "en": "v0.3.0-beta: real PS4 LAN registration with real Remote Play keys."
+    "vi": "v0.3.0-beta.1: bỏ phụ thuộc OpenSSL, dùng AES thuần Python để ghép nối PS4.",
+    "en": "v0.3.0-beta.1: remove the OpenSSL dependency and pair PS4 using pure Python AES."
   },
   "files": [
     {
@@ -42,8 +42,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "996082869ea7f0e410b83e7e4955b427865ed8849f29348b03be471333dbf0c9",
-      "size": 14380
+      "sha256": "ebd671249760d4b5e0fd3edc3ba641291f92b4346f9fb7ba47567141f917dc27",
+      "size": 14390
     },
     {
       "path": "rh/engine.py",
@@ -82,8 +82,8 @@
     },
     {
       "path": "rh/ps4_regist.py",
-      "sha256": "f0218dbf73b084f48e31ef32f5c89c5f64d57fa016ac13676bf493c985e44947",
-      "size": 10665
+      "sha256": "34f2fce708032ae9b814d7ac8e0e46685d7ed64214cb8a73ccea4413fa432dfa",
+      "size": 12331
     },
     {
       "path": "rh/state.py",
@@ -97,8 +97,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "e57ec1b7e8034d07fdfdcd52fa3fc6b2c7e74ac5e522c5987a42e22d337a6195",
-      "size": 1182
+      "sha256": "7dfe87bbe9f1a556d08837bc9793bc2fdf709894be5dd9776b3c22b446038473",
+      "size": 1184
     },
     {
       "path": "rh/modals/__init__.py",
@@ -538,8 +538,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.0-beta.zip",
-    "sha256": "1c3910c2b3f366d8406ab2f6c17de94771f1677a09cca5a7b856608de7e48d54",
-    "size": 641628
+    "name": "trimui-chiaki-ng-v0.3.0-beta.1.zip",
+    "sha256": "135b1d3d90f3afef7379b36ac91c65060cb7da23ede442e45993163da49b54b8",
+    "size": 642031
   }
 }

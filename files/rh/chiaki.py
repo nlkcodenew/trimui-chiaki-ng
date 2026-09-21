@@ -8,9 +8,8 @@ Bao gom:
     - Doc chiaki.conf theo mau Switch (host_addr, psn_account_id, rp_key, rp_regist_key,
       rp_key_type, video_resolution, video_fps, target)
 
-Crypto va session init van de~ dang o upstream chiaki-ng. v0.2.0 se build lib
-C aarch64 hoac dung OpenSSL 3.0.13 (san trong firmware TrimUI Linux 1.1.1) de
-thuc thi cac buoc tiep theo:
+Crypto và session init vẫn đang ở upstream chiaki-ng. Bản stream thật sẽ dùng
+native helper aarch64 hoặc một backend có sẵn trên firmware để thực thi:
 
     chiaki_session_init
     chiaki_session_start
@@ -391,7 +390,7 @@ def video_profile_summary():
 
 
 def init_session(addr, ps5, regist_key, morning, profile=None, log_cb=None):
-    """Stub - ban 0.2.0 se goi OpenSSL + chiaki wire o day.
+    """Stub - bản stream thật sẽ gọi native Chiaki session ở đây.
 
     Tra ve (rc, session_handle). Hien tai rc = -1 de app biet chua ho tro.
     """

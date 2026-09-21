@@ -1,7 +1,7 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.0-beta)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.0-beta.1)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-21.
-> Phiên bản đang chuẩn bị phát hành: v0.3.0-beta. v0.3.0-alpha đã xác nhận giao diện nhập PIN nhưng chỉ tạo khóa giả; beta thay bằng đăng ký PS4 thật.
+> Phiên bản đang chuẩn bị phát hành: v0.3.0-beta.1. Bản này sửa lỗi máy thật không có executable `openssl` bằng AES thuần Python.
 
 ## 1. Mục tiêu
 
@@ -28,6 +28,7 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
 - Lưu riêng `psn_account_id`, `rp_key`, `rp_key_type`, `regist_key`, `server_mac`; tự vô hiệu dữ liệu giả của alpha.
 - Sửa enum target theo đúng upstream (`800/900/1000/1000100`) và ưu tiên protocol header để PS4 không còn bị lưu thành PS5.
 - Chưa hỗ trợ đăng ký PS5 trong beta; không tạo khóa giả khi người dùng thử PS5.
+- Bản vá sau beta đầu tiên dùng AES-128-CFB thuần Python vì firmware máy thật không có executable `openssl`.
 
 ### OTA
 - Fix lỗi vòng lặp RetroHub: `settings.json`, `secrets.json` không vào manifest/ZIP; `pending_files()`

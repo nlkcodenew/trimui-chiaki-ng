@@ -6,7 +6,6 @@
   - Python 3.10+
   - `libSDL2.so`, `libSDL2_ttf.so` (ở `/usr/lib64` hoặc `/usr/lib`)
   - `libopus.so`, `libcurl.so` (ở `/usr/lib`)
-  - Lệnh `openssl` (dùng mã hóa khi ghép nối PS4)
 - Thẻ nhớ micro SD format FAT32 hoặc exFAT
 - Quyền ghi vào thư mục `Apps/` trên thẻ
 

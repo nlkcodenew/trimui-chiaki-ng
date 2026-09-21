@@ -375,6 +375,11 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn(version, screen.get_header_title())
         self.assertTrue(screen.get_header_title().startswith("CHIAKI-NG"))
 
+    def test_beta_patch_is_newer_for_ota(self):
+        version = importlib.import_module("rh.version")
+        self.assertTrue(version.is_newer("0.3.0-beta.1", "0.3.0-beta"))
+        self.assertFalse(version.is_newer("0.3.0-beta", "0.3.0-beta.1"))
+
     def test_update_modal_uses_edges_and_closes_to_home(self):
         engine = types.SimpleNamespace(active_modal=None)
         modal = self.update_modal_module.UpdateModal(engine)
@@ -476,7 +481,23 @@ class LogUploaderTests(unittest.TestCase):
         regist = importlib.import_module("rh.ps4_regist")
         self.assertEqual(len(regist.PS4_KEYS_0), 512)
         self.assertEqual(len(regist.PS4_KEYS_1), 512)
+        self.assertEqual(len(regist.AES_SBOX), 256)
+        self.assertEqual(
+            regist._aes_encrypt_block(
+                bytes.fromhex("00112233445566778899aabbccddeeff"),
+                bytes.fromhex("000102030405060708090a0b0c0d0e0f"),
+            ).hex(),
+            "69c4e0d86a7b0430d8cdb78070b4c55a",
+        )
         ambassador = bytes(range(16))
+        reference_key = bytes.fromhex("000102030405060708090a0b0c0d0e0f")
+        reference_plain = b"test-remote-play"
+        reference_cipher = regist._aes_cfb(reference_plain, reference_key, ambassador)
+        self.assertEqual(reference_cipher.hex(), "0602fa3629a2cf61584ba9aee9bf8a13")
+        self.assertEqual(
+            regist._aes_cfb(reference_cipher, reference_key, ambassador, decrypt=True),
+            reference_plain,
+        )
         payload, bright, used_ambassador = regist._build_payload(
             "12345678", b"\0" * 8, ambassador,
         )

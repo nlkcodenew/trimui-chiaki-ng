@@ -5,9 +5,7 @@ import base64
 import hashlib
 import hmac
 import os
-import shutil
 import socket
-import subprocess
 import time
 
 
@@ -59,18 +57,88 @@ class RegistError(Exception):
     pass
 
 
-def _openssl_path():
-    candidates = (
-        "/usr/bin/openssl",
-        "/usr/local/bin/openssl",
-        shutil.which("openssl"),
-        r"C:\Program Files\Git\mingw64\bin\openssl.exe",
-        r"C:\Program Files\Git\usr\bin\openssl.exe",
-    )
-    for candidate in candidates:
-        if candidate and os.path.isfile(candidate):
-            return candidate
-    raise RegistError("OpenSSL not found")
+def _xtime(value):
+    return ((value << 1) ^ (0x1B if value & 0x80 else 0)) & 0xFF
+
+
+def _gf_multiply(left, right):
+    result = 0
+    for _ in range(8):
+        if right & 1:
+            result ^= left
+        left = _xtime(left)
+        right >>= 1
+    return result
+
+
+def _rotate_byte(value, bits):
+    return ((value << bits) | (value >> (8 - bits))) & 0xFF
+
+
+def _make_sbox():
+    values = []
+    for value in range(256):
+        inverse = 0
+        if value:
+            for candidate in range(1, 256):
+                if _gf_multiply(value, candidate) == 1:
+                    inverse = candidate
+                    break
+        transformed = inverse ^ _rotate_byte(inverse, 1)
+        transformed ^= _rotate_byte(inverse, 2) ^ _rotate_byte(inverse, 3)
+        transformed ^= _rotate_byte(inverse, 4) ^ 0x63
+        values.append(transformed)
+    return bytes(values)
+
+
+AES_SBOX = _make_sbox()
+
+
+def _expand_key(key):
+    if len(key) != 16:
+        raise RegistError("AES-128 key must be 16 bytes")
+    expanded = bytearray(key)
+    rcon = 1
+    while len(expanded) < 176:
+        temp = list(expanded[-4:])
+        if len(expanded) % 16 == 0:
+            temp = temp[1:] + temp[:1]
+            temp = [AES_SBOX[value] for value in temp]
+            temp[0] ^= rcon
+            rcon = _xtime(rcon)
+        for value in temp:
+            expanded.append(expanded[-16] ^ value)
+    return bytes(expanded)
+
+
+def _mix_columns(state):
+    for offset in range(0, 16, 4):
+        a0, a1, a2, a3 = state[offset:offset + 4]
+        state[offset] = _xtime(a0) ^ (_xtime(a1) ^ a1) ^ a2 ^ a3
+        state[offset + 1] = a0 ^ _xtime(a1) ^ (_xtime(a2) ^ a2) ^ a3
+        state[offset + 2] = a0 ^ a1 ^ _xtime(a2) ^ (_xtime(a3) ^ a3)
+        state[offset + 3] = (_xtime(a0) ^ a0) ^ a1 ^ a2 ^ _xtime(a3)
+
+
+def _aes_encrypt_block(block, key):
+    if len(block) != 16:
+        raise RegistError("AES block must be 16 bytes")
+    round_keys = _expand_key(key)
+    state = bytearray(block)
+    for index in range(16):
+        state[index] ^= round_keys[index]
+    for round_index in range(1, 11):
+        state = bytearray(AES_SBOX[value] for value in state)
+        state = bytearray(state[index] for index in (
+            0, 5, 10, 15, 4, 9, 14, 3,
+            8, 13, 2, 7, 12, 1, 6, 11,
+        ))
+        if round_index != 10:
+            _mix_columns(state)
+        key_offset = round_index * 16
+        for index in range(16):
+            state[index] ^= round_keys[key_offset + index]
+    return bytes(state)
 
 
 def _iv(ambassador, counter=0):
@@ -79,25 +147,15 @@ def _iv(ambassador, counter=0):
 
 
 def _aes_cfb(data, key, ambassador, decrypt=False):
-    command = [
-        _openssl_path(), "enc", "-aes-128-cfb", "-K", key.hex(),
-        "-iv", _iv(ambassador).hex(), "-nopad",
-    ]
-    if decrypt:
-        command.append("-d")
-    try:
-        result = subprocess.run(
-            command, input=data, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            timeout=5, check=False,
-        )
-    except (OSError, subprocess.SubprocessError) as exc:
-        raise RegistError("cannot run OpenSSL: %s" % exc) from exc
-    if result.returncode != 0:
-        message = result.stderr.decode("utf-8", errors="ignore").strip()
-        raise RegistError("OpenSSL failed: %s" % (message or result.returncode))
-    if len(result.stdout) != len(data):
-        raise RegistError("OpenSSL returned an invalid size")
-    return result.stdout
+    feedback = _iv(ambassador)
+    output = bytearray()
+    for offset in range(0, len(data), 16):
+        chunk = data[offset:offset + 16]
+        stream = _aes_encrypt_block(feedback, key)
+        transformed = bytes(left ^ right for left, right in zip(chunk, stream))
+        output.extend(transformed)
+        feedback = chunk if decrypt else transformed
+    return bytes(output)
 
 
 def decode_account_id(value):

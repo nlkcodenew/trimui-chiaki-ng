@@ -139,7 +139,7 @@ mới; sau khi lên v0.2.3, app ưu tiên manifest của GitHub Releases.
 
 - Cần Python 3.10 trở lên. Firmware TrimUI Linux 1.1.1 đã có sẵn.
 - Cần SDL2 + SDL2_ttf. Có sẵn trong `/usr/lib64` của firmware.
-- Ghép nối PS4 cần lệnh `openssl`; firmware Linux 1.1.1 có sẵn trong `/usr/bin/openssl`.
+- Ghép nối PS4 dùng AES-128-CFB thuần Python, không cần `openssl` hay thư viện ngoài.
 - Nên **tắt Bluetooth** trước khi stream để tránh nhiễu Wi-Fi (khuyến cáo của hãng).
 - Bitrate mặc định `8000` kbps; nếu thấy giật thì giảm xuống `6000`.
 - Phiên bản stream video thật sẽ đến ở v0.3.0 (FFmpeg subprocess + SDL renderer).

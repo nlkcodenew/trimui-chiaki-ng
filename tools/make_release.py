@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: ghép nối PS4 thật qua LAN, nhận và lưu khóa Remote Play thật." % version,
-            "en": "v%s: real PS4 LAN registration with real Remote Play keys." % version,
+            "vi": "v%s: bỏ phụ thuộc OpenSSL, dùng AES thuần Python để ghép nối PS4." % version,
+            "en": "v%s: remove the OpenSSL dependency and pair PS4 using pure Python AES." % version,
         },
         "files": files,
         "remove": [],
