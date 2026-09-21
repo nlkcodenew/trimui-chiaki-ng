@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: sửa điều khiển popup, đường dẫn tải OTA và thêm log kiểm tra mạng." % version,
-            "en": "v%s: fix update controls and payload URLs; add network diagnostics." % version,
+            "vi": "v%s: nút A thay đổi giá trị Cài đặt; nút B lưu và quay lại." % version,
+            "en": "v%s: A changes Settings values; B saves and returns." % version,
         },
         "files": files,
         "remove": [],

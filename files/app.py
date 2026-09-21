@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 """trimui-chiaki-ng - PS4/PS5 Remote Play cho TrimUI Smart Pro S.
 
-Phien ban 0.2.6:
+Phien ban 0.2.7:
     - Bundled pysdl2 vao vendor/sdl2 (50 file .py) - khong can cai pip tren may
     - He thong chi can libSDL2.so + libSDL2_ttf.so (san trong /usr/lib64 cua
       firmware TrimUI Linux 1.1.1) duoc pysdl2 load qua ctypes + PYSDL2_DLL_PATH
-    - Sua modal cap nhat, URL payload OTA va them log kiem tra mang
+    - Nut A thay doi gia tri Cai dat, nut B luu va quay lai menu chinh
     - Giao dien tieng Viet day du dau, OTA va crash log qua GitHub Issues
 
 Luu y khi update tu v0.2.0 hoac v0.2.1: nen xoa App/Chiaki cu va giai nen

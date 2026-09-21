@@ -197,6 +197,33 @@ class LogUploaderTests(unittest.TestCase):
             screen.selected = index
             screen.render(engine)
 
+    def test_settings_a_changes_value_without_leaving_screen(self):
+        engine = mock.Mock()
+        screen = self.settings_module.SettingsScreen(engine)
+        screen.selected = next(
+            index for index, row in enumerate(screen.rows)
+            if row[0] == "auto_update"
+        )
+        original = self.settings_module.state.auto_update
+        try:
+            with mock.patch.object(self.settings_module.state, "save_settings") as save:
+                handled = screen.handle_input({"edges": ["btn_a"]})
+            self.assertTrue(handled)
+            self.assertEqual(self.settings_module.state.auto_update, not original)
+            save.assert_called_once_with()
+            engine.pop_screen.assert_not_called()
+        finally:
+            self.settings_module.state.auto_update = original
+
+    def test_settings_b_saves_and_returns_to_home(self):
+        engine = mock.Mock()
+        screen = self.settings_module.SettingsScreen(engine)
+        with mock.patch.object(self.settings_module.state, "save_settings") as save:
+            handled = screen.handle_input({"edges": ["btn_b"]})
+        self.assertTrue(handled)
+        save.assert_called_once_with()
+        engine.pop_screen.assert_called_once_with()
+
     def test_update_modal_uses_edges_and_closes_to_home(self):
         engine = types.SimpleNamespace(active_modal=None)
         modal = self.update_modal_module.UpdateModal(engine)

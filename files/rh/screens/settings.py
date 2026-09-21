@@ -39,7 +39,7 @@ class SettingsScreen(BaseScreen):
         return tr("settings")
 
     def get_footer_actions(self):
-        return [("A", tr("ok")), ("B", tr("back"))]
+        return [("A", tr("change")), ("B", tr("back"))]
 
     def _set_resolution(self, value):
         log.info("setting video_resolution=%s", value)
@@ -73,10 +73,11 @@ class SettingsScreen(BaseScreen):
                 self._change(1)
                 return True
             if "btn_a" in inputs["edges"]:
+                self._change(1)
                 self._save()
-                self.engine.pop_screen()
                 return True
             if "btn_b" in inputs["edges"] or "quit" in inputs["edges"]:
+                self._save()
                 self.engine.pop_screen()
                 return True
         return False
