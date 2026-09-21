@@ -161,6 +161,8 @@ class LogUploaderTests(unittest.TestCase):
     def test_every_settings_row_has_a_runtime_state_value(self):
         screen = self.settings_module.SettingsScreen()
         for key, _, _ in screen.rows:
+            if key == "back":
+                continue
             self.assertTrue(hasattr(self.settings_module.state, key), key)
 
     def test_settings_language_row_updates_current_lang(self):
@@ -223,6 +225,32 @@ class LogUploaderTests(unittest.TestCase):
         self.assertTrue(handled)
         save.assert_not_called()
         engine.pop_screen.assert_called_once_with()
+
+    def test_settings_back_row_exits_on_a_and_renders(self):
+        engine = mock.Mock()
+        screen = self.settings_module.SettingsScreen(engine)
+        back_index = next(
+            index for index, row in enumerate(screen.rows)
+            if row[0] == "back"
+        )
+        screen.selected = back_index
+        handled = screen.handle_input({"edges": ["btn_a"]})
+        self.assertTrue(handled)
+        engine.pop_screen.assert_called_once_with()
+        engine.reset_mock()
+        handled = screen.handle_input({"edges": ["btn_b"]})
+        self.assertTrue(handled)
+        engine.pop_screen.assert_called_once_with()
+        class FakeEngine:
+            screen_w = 1280
+            screen_h = 720
+            font_title = object()
+            font_sub = object()
+            def fill_rect(self, *args, **kwargs):
+                return None
+            def draw_text(self, *args, **kwargs):
+                return None
+        screen.render(FakeEngine())
 
     def test_home_title_includes_app_version(self):
         home_module = importlib.import_module("rh.screens.home")

@@ -1,19 +1,19 @@
 {
-  "version": "0.2.8",
+  "version": "0.2.9",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-21T09:58:02+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.2.8/files",
-  "release_tag": "v0.2.8/files",
+  "built": "2026-09-21T10:03:05+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.2.9/files",
+  "release_tag": "v0.2.9/files",
   "note": {
-    "vi": "v0.2.8: nút B chỉ thoát Cài đặt; tiêu đề hiển thị phiên bản.",
-    "en": "v0.2.8: B only exits Settings; header shows version."
+    "vi": "v0.2.9: thêm dòng Quay lại ở cuối Cài đặt để thoát ra menu chính.",
+    "en": "v0.2.9: add Back row at the end of Settings to exit to main menu."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "097f868b69e27cce143768c1dbabacac20ab1d0d69811e9eba7f6e1154fb1f45",
-      "size": 4259
+      "sha256": "59633b23619aca8197573de1db6ed587a26a41979195a6bc9bce464cb4befaac",
+      "size": 4262
     },
     {
       "path": "config.json",
@@ -92,7 +92,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "48d2499a32caec68f8f4168997a6da5e62766232244067a8a98a1e734e446d95",
+      "sha256": "5dd6c3c03a0718275e0a4a632432ed5b9d32409799d9e3e39cf8b86e5a04ac57",
       "size": 404
     },
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "635b92787e737179f5daa86cfae625e7477720f6217204e0c8219f6da48f367a",
-      "size": 4601
+      "sha256": "8d610271050a9bcd079bd477eb4d7efc8438e8fe4c3b6eb71dd3eac7b75a05fe",
+      "size": 5559
     },
     {
       "path": "rh/ui/__init__.py",
@@ -528,8 +528,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.2.8.zip",
-    "sha256": "4deccb3c75452c7325c5d6a51a10d44cae0a898e9ab5331516f1a8280bd743ba",
-    "size": 631711
+    "name": "trimui-chiaki-ng-v0.2.9.zip",
+    "sha256": "62cf2b762f04e8d5a19e29a2744d17c40f4c9b6bbae172a8bc93c101ec5704ef",
+    "size": 631889
   }
 }

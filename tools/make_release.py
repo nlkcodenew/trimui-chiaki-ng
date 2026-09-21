@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: nút B chỉ thoát Cài đặt; tiêu đề hiển thị phiên bản." % version,
-            "en": "v%s: B only exits Settings; header shows version." % version,
+            "vi": "v%s: thêm dòng Quay lại ở cuối Cài đặt để thoát ra menu chính." % version,
+            "en": "v%s: add Back row at the end of Settings to exit to main menu." % version,
         },
         "files": files,
         "remove": [],

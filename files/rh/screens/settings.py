@@ -32,6 +32,7 @@ class SettingsScreen(BaseScreen):
             ("auto_upload_logs", [True, False], None),
             ("enable_logging", [True, False], self._set_logging),
             ("current_lang", ["VI", "EN"], self._set_lang),
+            ("back", None, None),
         ]
         self.selected = 0
 
@@ -39,6 +40,9 @@ class SettingsScreen(BaseScreen):
         return tr("settings")
 
     def get_footer_actions(self):
+        key = self.rows[self.selected][0] if 0 <= self.selected < len(self.rows) else ""
+        if key == "back":
+            return [("A", tr("back")), ("B", tr("back"))]
         return [("A", tr("change")), ("B", tr("back"))]
 
     def _set_resolution(self, value):
@@ -58,6 +62,9 @@ class SettingsScreen(BaseScreen):
     def _set_lang(self, value):
         log.info("setting language=%s", value)
 
+    def _is_back_row(self):
+        return 0 <= self.selected < len(self.rows) and self.rows[self.selected][0] == "back"
+
     def handle_input(self, inputs):
         if inputs.get("edges", []):
             if "btn_up" in inputs["edges"]:
@@ -66,6 +73,14 @@ class SettingsScreen(BaseScreen):
             if "btn_down" in inputs["edges"]:
                 self.selected = (self.selected + 1) % len(self.rows)
                 return True
+            if self._is_back_row():
+                if "btn_a" in inputs["edges"] or "btn_b" in inputs["edges"] or "quit" in inputs["edges"]:
+                    self.engine.pop_screen()
+                    return True
+                if "btn_left" in inputs["edges"] or "btn_right" in inputs["edges"]:
+                    self.engine.pop_screen()
+                    return True
+                return False
             if "btn_left" in inputs["edges"]:
                 self._change(-1)
                 self._save()
@@ -84,6 +99,8 @@ class SettingsScreen(BaseScreen):
         return False
 
     def _change(self, delta):
+        if self._is_back_row():
+            return
         key, values, callback = self.rows[self.selected]
         cur = getattr(state, key)
         try:
@@ -107,13 +124,18 @@ class SettingsScreen(BaseScreen):
 
     def render(self, engine):
         engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, 13, 17, 28, 255)
-        first = max(0, min(self.selected - 4, max(0, len(self.rows) - 6)))
+        visible = 6
+        first = max(0, min(self.selected - (visible - 2), max(0, len(self.rows) - visible)))
         y = 100
-        for i in range(first, min(len(self.rows), first + 6)):
+        for i in range(first, min(len(self.rows), first + visible)):
             key, values, _ = self.rows[i]
-            cur = getattr(state, key)
-            label = tr(self.LABEL_KEYS.get(key, key))
-            value = str(cur)
+            if key == "back":
+                label = tr("back")
+                value = "→"
+            else:
+                cur = getattr(state, key)
+                label = tr(self.LABEL_KEYS.get(key, key))
+                value = str(cur)
             col = (0, 230, 150) if i == self.selected else (40, 60, 90)
             engine.fill_rect(40, y, engine.screen_w - 80, 70, col[0], col[1], col[2], 240)
             engine.draw_text(label, engine.font_title, 60, y + 8, 255, 255, 255)
