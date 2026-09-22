@@ -7,6 +7,10 @@ FFmpeg + SDL2, mặc định H264 `720p30`, bitrate `8000` kbps. Ghép nối PIN
 âm thanh Opus, gamepad, rung đơn, OTA và nhật ký native đã được nối hoàn chỉnh.
 Bản này cần kiểm thử đầu tiên trên Smart Pro S thật; PS5/Internet chưa được xác nhận.
 
+Tiếp tục dự án ở session khác: đọc `docs/NEW_SESSION_HANDOFF.md` trước. Tài liệu
+này ghi chính xác release hiện tại, kiến trúc stream, trạng thái test và danh
+sách log cần đính kèm từ thiết bị.
+
 ## Cấu hình phần cứng mục tiêu
 
 - **SoC**: Allwinner A523 8 nhân Cortex-A55 @ 2.0GHz

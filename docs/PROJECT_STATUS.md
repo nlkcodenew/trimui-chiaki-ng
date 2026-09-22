@@ -3,6 +3,8 @@
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-21.
 > v0.3.1 thêm phiên Remote Play PS4 LAN thật: libchiaki, H264 720p30,
 > FFmpeg software decode, SDL fullscreen/input, Opus audio và log native.
+>
+> Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
 ## Stream native v0.3.1
 
