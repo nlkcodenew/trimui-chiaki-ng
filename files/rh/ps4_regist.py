@@ -12,7 +12,12 @@ import time
 REGIST_PORT = 9295
 INNER_HEADER_OFFSET = 0x1E0
 HMAC_KEY_PS4 = bytes.fromhex("20d66f5904ea7c14e557ffc52e488ac8")
+HMAC_KEY_PS4_PRE10 = bytes.fromhex("ac078883c83a1fe811463af39ee3e377")
 CLIENT_TYPE = "dabfa2ec873de5839bee8d3f4c0239c4282c07c25c6077a2931afcf0adc0d34f"
+CLIENT_TYPE_PRE10 = "Windows"
+REGIST_AES_KEY_PRE10 = bytes.fromhex("3f1cc4b6dcbb3ecc50baedef9734c7c9")
+ECHO_A_PRE10 = bytes.fromhex("0149879b65398b394b3a8d48c30aef51")
+ECHO_B_PRE10 = bytes.fromhex("e1ec9c3addbd0885fc0e1d789032c004")
 
 PS4_KEYS_1 = bytes.fromhex(
     "c848c2b408eb88f75f4a092d591f09cd1c18f47a284a966db3597153757e8250"
@@ -141,13 +146,14 @@ def _aes_encrypt_block(block, key):
     return bytes(state)
 
 
-def _iv(ambassador, counter=0):
+def _iv(ambassador, counter=0, pre10=False):
     message = ambassador + int(counter).to_bytes(8, "big")
-    return hmac.new(HMAC_KEY_PS4, message, hashlib.sha256).digest()[:16]
+    key = HMAC_KEY_PS4_PRE10 if pre10 else HMAC_KEY_PS4
+    return hmac.new(key, message, hashlib.sha256).digest()[:16]
 
 
-def _aes_cfb(data, key, ambassador, decrypt=False):
-    feedback = _iv(ambassador)
+def _aes_cfb(data, key, ambassador, decrypt=False, pre10=False):
+    feedback = _iv(ambassador, pre10=pre10)
     output = bytearray()
     for offset in range(0, len(data), 16):
         chunk = data[offset:offset + 16]
@@ -171,27 +177,37 @@ def decode_account_id(value):
     return decoded, False
 
 
-def _build_payload(pin, account_id, ambassador=None):
+def _build_payload(pin, account_id, ambassador=None, pre10=False):
     ambassador = ambassador or os.urandom(16)
     payload = bytearray(b"A" * INNER_HEADER_OFFSET)
-    key_0_offset = payload[0x18D] & 0x1F
-    key_1_offset = payload[0] >> 3
-    bright = bytearray(PS4_KEYS_0[index * 0x20 + key_0_offset] for index in range(16))
-    pin_bytes = int(pin).to_bytes(4, "big")
-    for index in range(4):
-        bright[12 + index] ^= pin_bytes[index]
-    aeropause = bytes(
-        ((ambassador[index] ^ PS4_KEYS_1[index * 0x20 + key_1_offset]) + 0x29 + index) & 0xFF
-        for index in range(16)
-    )
-    payload[0xC7:0xCF] = aeropause[8:]
-    payload[0x191:0x199] = aeropause[:8]
+    if not pre10:
+        key_0_offset = payload[0x18D] & 0x1F
+        key_1_offset = payload[0] >> 3
+        bright = bytearray(PS4_KEYS_0[index * 0x20 + key_0_offset] for index in range(16))
+        pin_bytes = int(pin).to_bytes(4, "big")
+        for index in range(4):
+            bright[12 + index] ^= pin_bytes[index]
+        aeropause = bytes(
+            ((ambassador[index] ^ PS4_KEYS_1[index * 0x20 + key_1_offset]) + 0x29 + index) & 0xFF
+            for index in range(16)
+        )
+        payload[0xC7:0xCF] = aeropause[8:]
+        payload[0x191:0x199] = aeropause[:8]
+        client_type = CLIENT_TYPE
+    else:
+        bright = bytearray(REGIST_AES_KEY_PRE10)
+        pin_bytes = int(pin).to_bytes(4, "big")
+        for index in range(4):
+            bright[index] ^= pin_bytes[index]
+        aeropause = bytes(((ambassador[i] - i - 0x29) & 0xFF) ^ ECHO_B_PRE10[i] for i in range(16))
+        payload[0x11C:0x12C] = aeropause[:16]
+        client_type = CLIENT_TYPE_PRE10
     account_id_b64 = base64.b64encode(account_id).decode("ascii")
     inner = (
         "Client-Type: %s\r\nNp-AccountId: %s\r\n" %
-        (CLIENT_TYPE, account_id_b64)
+        (client_type, account_id_b64)
     ).encode("ascii")
-    payload.extend(_aes_cfb(inner, bytes(bright), ambassador))
+    payload.extend(_aes_cfb(inner, bytes(bright), ambassador, pre10=pre10))
     return bytes(payload), bytes(bright), ambassador
 
 
@@ -278,18 +294,28 @@ def _parse_result(payload):
     }
 
 
-def register(host, pin, account_id_b64="", timeout=10.0):
+def register(host, pin, account_id_b64="", timeout=10.0, target=1000):
+    """Đăng ký PS4 qua LAN.
+
+    target == 900 (FW 9.00 GoldHEN, pre-10) dùng giao thức cũ:
+      POST /sce/rp/regist, RP-Version: 9.0, Client-Type: Windows, crypto pre-10.
+    target == 1000 (FW >= 10.0) dùng giao thức mới:
+      POST /sie/ps4/rp/sess/rgst, RP-Version: 10.0.
+    """
+    pre10 = int(target or 0) == 900
     account_id, used_offline_default = decode_account_id(account_id_b64)
-    payload, bright, ambassador = _build_payload(pin, account_id)
+    payload, bright, ambassador = _build_payload(pin, account_id, pre10=pre10)
     address = _search(host, min(timeout, 3.0))
     time.sleep(0.1)
     request = (
-        "POST /sie/ps4/rp/sess/rgst HTTP/1.1\r\n HTTP/1.1\r\n"
+        "POST %s HTTP/1.1\r\n"
         "HOST: 10.0.2.15\r\n"
         "User-Agent: remoteplay Windows\r\n"
         "Connection: close\r\n"
         "Content-Length: %d\r\n"
-        "RP-Version: 10.0\r\n\r\n" % len(payload)
+        "RP-Version: %s\r\n\r\n"
+        % ("/sce/rp/regist" if pre10 else "/sie/ps4/rp/sess/rgst",
+           len(payload), "9.0" if pre10 else "10.0")
     ).encode("ascii")
     try:
         with socket.create_connection(address, timeout=min(timeout, 3.0)) as connection:
@@ -314,7 +340,7 @@ def register(host, pin, account_id_b64="", timeout=10.0):
         raise RegistError(detail)
     if not response_payload:
         raise RegistError("empty registration response from PS4")
-    decrypted = _aes_cfb(response_payload, bright, ambassador, decrypt=True)
+    decrypted = _aes_cfb(response_payload, bright, ambassador, decrypt=True, pre10=pre10)
     result = _parse_result(decrypted)
     result["used_offline_account"] = used_offline_default
     return result

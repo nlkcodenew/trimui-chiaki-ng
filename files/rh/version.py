@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Phien ban cua app. Tool release doc file nay de dat ten tag va manifest."""
 
-APP_VERSION = "0.3.1"
+APP_VERSION = "0.3.2"
 
 
 def _normalize_version(v):

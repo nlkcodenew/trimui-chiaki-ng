@@ -25,6 +25,7 @@ pending_update = ""
 pending_catalog_notice = ""
 host_name = ""
 host_addr = ""
+host_target = 0
 psn_account_id = ""
 psn_online_id = ""
 regist_key = ""
@@ -42,6 +43,7 @@ def _load():
     global wifi_awake, auto_update, enable_logging, device_id, skipped_versions
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
     global psn_account_id, psn_online_id, regist_key, rp_key, rp_key_type, server_mac
+    global host_target
     global auto_upload_logs, github_issue_repo
     if not os.path.exists(SETTINGS_FILE):
         return
@@ -65,6 +67,7 @@ def _load():
     pending_catalog_notice = cfg.get("pending_catalog_notice", pending_catalog_notice)
     host_name = cfg.get("host_name", host_name)
     host_addr = cfg.get("host_addr", host_addr)
+    host_target = int(cfg.get("host_target", host_target) or 0)
     psn_account_id = cfg.get("psn_account_id", psn_account_id)
     psn_online_id = cfg.get("psn_online_id", psn_online_id)
     regist_key = cfg.get("regist_key", regist_key)
@@ -100,6 +103,7 @@ def save_settings():
                 "pending_catalog_notice": pending_catalog_notice,
                 "host_name": host_name,
                 "host_addr": host_addr,
+                "host_target": host_target,
                 "psn_account_id": psn_account_id,
                 "psn_online_id": psn_online_id,
                 "regist_key": regist_key,

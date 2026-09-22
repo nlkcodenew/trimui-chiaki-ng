@@ -30,6 +30,7 @@ typedef struct {
     char regist_key[CHIAKI_SESSION_AUTH_SIZE];
     uint8_t morning[16];
     bool ps5;
+    unsigned int target;
     unsigned int width;
     unsigned int height;
     unsigned int fps;
@@ -124,6 +125,7 @@ static bool load_config(const char *path, StreamConfig *config)
     }
     char line[768];
     char rp_key[128] = {0};
+    config->target = 1000;
     while(fgets(line, sizeof(line), file)) {
         char *separator = strchr(line, '=');
         if(!separator) continue;
@@ -135,6 +137,7 @@ static bool load_config(const char *path, StreamConfig *config)
         else if(!strcmp(line, "regist_key")) snprintf(config->regist_key, sizeof(config->regist_key), "%s", value);
         else if(!strcmp(line, "rp_key")) snprintf(rp_key, sizeof(rp_key), "%s", value);
         else if(!strcmp(line, "ps5")) config->ps5 = !strcmp(value, "1") || !strcasecmp(value, "true");
+        else if(!strcmp(line, "target")) parse_uint(value, 0, 1000000, &config->target);
         else if(!strcmp(line, "width")) parse_uint(value, 320, 3840, &config->width);
         else if(!strcmp(line, "height")) parse_uint(value, 180, 2160, &config->height);
         else if(!strcmp(line, "fps")) parse_uint(value, 1, 120, &config->fps);
@@ -502,7 +505,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "[native] chiaki init failed: %s\n", chiaki_error_string(error));
         return 4;
     }
-    chiaki_log_init(&app.log, CHIAKI_LOG_INFO | CHIAKI_LOG_WARNING | CHIAKI_LOG_ERROR, native_log, NULL);
+    chiaki_log_init(&app.log, CHIAKI_LOG_ALL, native_log, NULL);
     if(!init_sdl(&app)) {
         cleanup(&app);
         return 5;
@@ -536,9 +539,12 @@ int main(int argc, char **argv)
     connect_info.packet_loss_max = 0.1;
     connect_info.enable_idr_on_fec_failure = true;
 
-    fprintf(stdout, "[native] starting LAN stream host=%s profile=%ux%u@%u %ukbps codec=%s\n",
+    fprintf(stdout, "[native] starting LAN stream host=%s profile=%ux%u@%u %ukbps codec=%s target=%u rp_version=%s\n",
             config.host, config.width, config.height, config.fps, config.bitrate,
-            config.ps5 ? "H265" : "H264");
+            config.ps5 ? "H265" : "H264", config.target,
+            config.target == 800 ? "8.0" :
+            config.target == 900 ? "9.0" :
+            config.target >= 1000000 ? "1.0" : "10.0");
     fflush(stdout);
     memset(config.regist_key, 0, sizeof(config.regist_key));
     memset(config.morning, 0, sizeof(config.morning));
@@ -550,6 +556,14 @@ int main(int argc, char **argv)
         fprintf(stderr, "[native] session init failed: %s\n", chiaki_error_string(error));
         cleanup(&app);
         return 7;
+    }
+    if(!config.ps5 && (config.target == 800 || config.target == 900 || config.target == 1000)) {
+        app.session.target = (ChiakiTarget)config.target;
+        fprintf(stdout, "[native] session target=%u rp_version=%s\n",
+                config.target,
+                config.target == 800 ? "8.0" :
+                config.target == 900 ? "9.0" : "10.0");
+        fflush(stdout);
     }
     app.session_initialized = true;
     ChiakiAudioSink audio_sink;

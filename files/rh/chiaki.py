@@ -88,6 +88,7 @@ def _paired_credentials(addr):
             "is_ps5": False,
             "regist_key": state.regist_key,
             "rp_key": state.rp_key,
+            "target": int(getattr(state, "host_target", 0) or 0),
         })
     for entry in entries:
         if not isinstance(entry, dict) or entry.get("addr") != addr:
@@ -108,8 +109,20 @@ def _paired_credentials(addr):
                 "is_ps5": bool(entry.get("is_ps5", False)),
                 "regist_key": regist_key,
                 "rp_key": rp_key,
+                "target": int(entry.get("target", 0) or 0),
             }
     return None
+
+def _rp_version_string(target):
+    t = int(target or 0)
+    if t == 800:
+        return "8.0"
+    if t == 900:
+        return "9.0"
+    if t >= 1000000:
+        return "1.0"
+    return "10.0"
+
 
 def prepare_stream_launch(host):
     """Chuẩn bị native stream rồi trả về (ok, thông báo)."""
@@ -121,6 +134,14 @@ def prepare_stream_launch(host):
     credentials = _paired_credentials(getattr(host, "addr", ""))
     if not credentials:
         return False, "Khóa ghép nối không hợp lệ; hãy ghép lại PS4"
+    discovered_target = int(getattr(host, "target", 0) or 0)
+    stored_target = int(credentials.get("target", 0) or 0)
+    if (discovered_target in (800, 900, 1000)
+            and stored_target in (800, 900, 1000)
+            and discovered_target != stored_target):
+        log.warning("pair target mismatch: host=%d stored=%d; re-pair required",
+                    discovered_target, stored_target)
+        return False, "Khóa pair cũ; hãy ghép lại PS4 một lần"
     profile = _video_profile_from_state()
     requested_temp = os.environ.get("CHIAKI_SESSION_DIR", "")
     temp_dir = requested_temp if requested_temp and os.path.isdir(requested_temp) else (
@@ -133,11 +154,16 @@ def prepare_stream_launch(host):
             os.fchmod(descriptor, 0o600)
         else:
             os.chmod(session_path, 0o600)
+        rp_version = _rp_version_string(credentials.get("target", 0))
         with os.fdopen(descriptor, "w", encoding="ascii", newline="\n") as handle:
             handle.write("host=%s\n" % credentials["addr"])
             handle.write("regist_key=%s\n" % credentials["regist_key"])
             handle.write("rp_key=%s\n" % credentials["rp_key"])
             handle.write("ps5=%d\n" % int(credentials["is_ps5"]))
+            handle.write("target=%d\n" % int(credentials.get("target", 0) or 0))
+            handle.write("rp_version=%s\n" % rp_version)
+            handle.write("verbose=%d\n" % int(bool(getattr(state, "enable_logging", False)) and
+                                               getattr(state, "auto_upload_logs", True)))
             handle.write("width=%d\n" % profile["width"])
             handle.write("height=%d\n" % profile["height"])
             handle.write("fps=%d\n" % profile["max_fps"])
@@ -345,6 +371,8 @@ def _target_from_version(version, ps5):
         return 0
     if ps5 and v >= 8050001:
         return 1000100  # CHIAKI_TARGET_PS5_1
+    if "09." in version or "9." in version or "0900000" in version:
+        return 900  # CHIAKI_TARGET_PS4_9
     if v >= 8000000:
         return 1000  # CHIAKI_TARGET_PS4_10
     if v >= 7000000:
@@ -449,11 +477,12 @@ def regist_with_pin(host, pin, timeout=10.0):
         return False, {"error": message}
     try:
         from .ps4_regist import register
-        result = register(addr, pin, getattr(state, "psn_account_id", ""), timeout)
+        result = register(addr, pin, getattr(state, "psn_account_id", ""), timeout,
+                          target=target)
     except Exception as exc:
         log.error("registration failed: host=%s error=%s", addr, exc)
         return False, {"error": str(exc)}
-    result.update({"addr": addr, "is_ps5": False, "target": 1000})
+    result.update({"addr": addr, "is_ps5": False, "target": target})
     log.info(
         "registration success: host=%s key_type=%s mac=%s offline_account=%s",
         addr, result.get("rp_key_type"), result.get("server_mac"),

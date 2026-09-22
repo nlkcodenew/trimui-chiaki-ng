@@ -42,10 +42,13 @@
 ## Thử stream PS4 LAN
 
 1. Đặt PS4 và Smart Pro S cùng Wi-Fi/LAN 5 GHz.
-2. Mở app, quét máy, chọn PS4 đã ghép nối và bấm **A**.
-3. Cấu hình mặc định là H264 `1280x720`, 30 FPS, 8000 kbps.
-4. Giữ **START + SELECT** khoảng 1,2 giây để thoát stream về menu app.
-5. Nếu màn hình đen hoặc tự thoát, chép cả `Chiaki-debug.log` và
+2. Với PS4 firmware 9.00 GoldHEN, không cần và không được đăng nhập PSN. Sau khi
+   cập nhật từ v0.3.1, bấm **Y** và nhập PIN lại đúng một lần để tạo khóa pre-10.
+3. Mở app, quét máy, chọn PS4 đã ghép nối và bấm **A**.
+4. Cấu hình mặc định là H264 `1280x720`, 30 FPS, 8000 kbps.
+5. Giữ **START + SELECT** khoảng 1,2 giây để thoát stream về menu app.
+6. Nếu màn hình đen hoặc tự thoát, app tự tạo GitHub Issue khi token đã được
+   cấu hình; nếu chưa, chép cả `Chiaki-debug.log` và
    `Chiaki-loi.txt`. Dòng `native stream preflight` sẽ liệt kê thư viện thiếu.
 
 ## Cập nhật OTA

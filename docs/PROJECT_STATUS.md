@@ -1,12 +1,12 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.1)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.2)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-21.
-> v0.3.1 thêm phiên Remote Play PS4 LAN thật: libchiaki, H264 720p30,
-> FFmpeg software decode, SDL fullscreen/input, Opus audio và log native.
+> v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN,
+> giữ PSN bị khóa và bật log native verbose để chẩn đoán trực tiếp.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
-## Stream native v0.3.1
+## Stream native v0.3.2
 
 - Binary `files/bin/chiaki-stream` là ELF AArch64 build bằng SDK TG5050 chính hãng.
 - Session dùng khóa thật từ `paired_hosts.json`; khóa đi qua file tạm `0600`,
@@ -43,7 +43,7 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
 ### Ghép nối PS4 thật — v0.3.0-beta
 - Xóa hoàn toàn `stub-rp-key-*`; chỉ báo thành công khi PS4 trả HTTP 200 và đủ `PS4-RegistKey`, `RP-Key`, `RP-KeyType`, MAC.
 - Thực hiện đúng handshake upstream: UDP `SRC2`/`RES2` cổng 9295, TCP `/sie/ps4/rp/sess/rgst`, `RP-Version: 10.0`, HMAC-SHA256 và AES-128-CFB.
-- Không kết nối dịch vụ PSN. Trường Account-ID 8 byte vẫn là yêu cầu của giao thức PS4 firmware 8+; app dùng Account-ID đã cấu hình hoặc thử ID offline bằng 0.
+- Không kết nối dịch vụ PSN. PS4 firmware 9.00 dùng PIN LAN, Account-ID offline 8 byte bằng 0 và giao thức pre-10 (`/sce/rp/regist`, `RP-Version: 9.0`).
 - Lưu riêng `psn_account_id`, `rp_key`, `rp_key_type`, `regist_key`, `server_mac`; tự vô hiệu dữ liệu giả của alpha.
 - Sửa enum target theo đúng upstream (`800/900/1000/1000100`) và ưu tiên protocol header để PS4 không còn bị lưu thành PS5.
 - Chưa hỗ trợ đăng ký PS5 trong beta; không tạo khóa giả khi người dùng thử PS5.
@@ -135,7 +135,7 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai trong v0.3.1
+### 4.4 P2 — Stream PS4 LAN đã triển khai trong v0.3.2
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
@@ -194,7 +194,7 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 
 ## 8. Bước kiểm thử tiếp theo
 
-1. Cập nhật v0.3.1 bằng OTA, quét và chọn PS4-896 đã ghép nối.
+1. Cập nhật v0.3.2 bằng OTA, quét PS4-896 và ghép lại bằng PIN đúng một lần.
 2. Bấm A để mở stream; xác nhận PS4 chuyển sang Remote Play, có hình/âm/input.
 3. Giữ START+SELECT 1,2 giây để thoát và xác nhận menu app mở lại.
 4. Nếu lỗi, lấy `Chiaki-debug.log` và `Chiaki-loi.txt`; tìm các dòng

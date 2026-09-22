@@ -467,8 +467,7 @@ class LogUploaderTests(unittest.TestCase):
         self.assertFalse(host.is_ps5)
         self.assertEqual(host.addr, "192.168.1.50")
         self.assertEqual(host.host_request_port, 9295)
-        # atoi("0900000") = 900000 < 7000000 -> PS4_8, giống upstream.
-        self.assertEqual(host.target, 800)
+        self.assertEqual(host.target, 900)
 
         standby = b"HTTP/1.1 620 Standby\nhost-name:PS5\nsystem-version:08050001\n"
         host5 = chiaki._parse_srch(standby, ("192.168.1.60", 9302), True)
@@ -497,6 +496,24 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(
             regist._aes_cfb(reference_cipher, reference_key, ambassador, decrypt=True),
             reference_plain,
+        )
+        pre10_payload, pre10_bright, pre10_ambassador = regist._build_payload(
+            "12345678", b"\0" * 8, ambassador, pre10=True,
+        )
+        self.assertEqual(pre10_ambassador, ambassador)
+        self.assertEqual(pre10_payload[0x11C:0x12C], bytes(
+            (((ambassador[index] - index - 0x29) & 0xFF) ^ regist.ECHO_B_PRE10[index])
+            for index in range(16)
+        ))
+        pre10_cipher = regist._aes_cfb(
+            b"remote-play", pre10_bright, pre10_ambassador, pre10=True,
+        )
+        self.assertEqual(
+            regist._aes_cfb(
+                pre10_cipher, pre10_bright, pre10_ambassador,
+                decrypt=True, pre10=True,
+            ),
+            b"remote-play",
         )
         payload, bright, used_ambassador = regist._build_payload(
             "12345678", b"\0" * 8, ambassador,
@@ -559,10 +576,11 @@ class LogUploaderTests(unittest.TestCase):
                 "addr": "192.168.1.45",
                 "name": "PS4-896",
                 "is_ps5": False,
+                "target": 900,
                 "regist_key": regist_key,
                 "rp_key": rp_key,
             }], handle)
-        host = chiaki.DiscoveredHost(name="PS4-896", addr="192.168.1.45")
+        host = chiaki.DiscoveredHost(name="PS4-896", addr="192.168.1.45", target=900)
         with mock.patch.object(chiaki, "find_chiaki_binary", return_value=binary_path), \
                 mock.patch.dict(os.environ, {
                     "CHIAKI_SESSION_DIR": work_dir,
@@ -586,9 +604,31 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("width=1280", session)
         self.assertIn("fps=30", session)
         self.assertIn("bitrate=8000", session)
+        self.assertIn("target=900", session)
+        self.assertIn("rp_version=9.0", session)
         self.assertIn(regist_key, session)
         self.assertIn(rp_key, session)
         os.remove(session_path)
+        os.remove(paired_path)
+
+    def test_native_stream_rejects_pair_from_wrong_protocol_target(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.45",
+                "name": "PS4-896",
+                "is_ps5": False,
+                "target": 1000,
+                "regist_key": "a49d08ed",
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        host = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", target=900,
+        )
+        ok, message = chiaki.prepare_stream_launch(host)
+        self.assertFalse(ok)
+        self.assertIn("ghép lại", message)
         os.remove(paired_path)
 
 

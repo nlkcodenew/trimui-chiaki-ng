@@ -2,10 +2,11 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.1 - đã có stream PS4 LAN thật bằng native `libchiaki` +
+**Trạng thái**: v0.3.2 - đã có stream PS4 LAN thật bằng native `libchiaki` +
 FFmpeg + SDL2, mặc định H264 `720p30`, bitrate `8000` kbps. Ghép nối PIN 8 số,
 âm thanh Opus, gamepad, rung đơn, OTA và nhật ký native đã được nối hoàn chỉnh.
-Bản này cần kiểm thử đầu tiên trên Smart Pro S thật; PS5/Internet chưa được xác nhận.
+Bản này sửa giao thức pre-10 cho PS4 Pro firmware 9.00 GoldHEN. Không đăng nhập
+hoặc kết nối PSN; PS5/Internet chưa được xác nhận.
 
 Tiếp tục dự án ở session khác: đọc `docs/NEW_SESSION_HANDOFF.md` trước. Tài liệu
 này ghi chính xác release hiện tại, kiến trúc stream, trạng thái test và danh
@@ -29,10 +30,13 @@ sách log cần đính kèm từ thiết bị.
 
 ## Chạy stream
 
-1. Quét LAN và chọn PS4 đã ghép nối.
-2. Bấm **A – BẮT ĐẦU CHƠI**. Menu đóng để nhường SDL cho native helper.
-3. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại menu.
-4. Nếu không có hình, gửi `Chiaki-debug.log` và `Chiaki-loi.txt` trong
+1. Sau khi cập nhật từ v0.3.1, chọn PS4 và bấm **Y – GHÉP NỐI** để nhập PIN lại
+   đúng một lần. Khóa cũ được tạo bằng giao thức 10.0 nên không dùng cho FW 9.00.
+2. Quét LAN và chọn PS4 đã ghép nối.
+3. Bấm **A – BẮT ĐẦU CHƠI**. Menu đóng để nhường SDL cho native helper.
+4. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại menu.
+5. Nếu không có hình, app tự gửi log nếu `secrets.json` đã được cấu hình; hai
+   file cục bộ vẫn nằm trong
    `Apps/Chiaki/`. Log có kết quả `ldd`, handshake, frame và exit code nhưng
    không chứa PIN, `regist_key` hoặc `rp_key`.
 

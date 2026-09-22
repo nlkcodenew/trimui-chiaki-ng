@@ -60,6 +60,7 @@ class PairScreen(BaseScreen):
             try:
                 state.host_addr = self.host.addr
                 state.host_name = info.get("name") or getattr(self.host, "name", "") or self.host.addr
+                state.host_target = int(info.get("target", 0) or 0)
                 state.regist_key = info["regist_key"]
                 state.rp_key = info["rp_key"]
                 state.rp_key_type = int(info.get("rp_key_type", 0))
@@ -77,7 +78,7 @@ class PairScreen(BaseScreen):
                     "addr": self.host.addr,
                     "name": state.host_name,
                     "is_ps5": False,
-                    "target": int(info.get("target", 1000)),
+                    "target": int(info.get("target", state.host_target or 0)),
                     "regist_key": state.regist_key,
                     "rp_key": state.rp_key,
                     "rp_key_type": state.rp_key_type,
