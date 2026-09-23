@@ -41,6 +41,11 @@
 
 ## Thử stream PS4 LAN
 
+Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
+9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
+Hiện vẫn có drop FPS thường xuyên; đây là vấn đề tối ưu hiệu năng, không phải lỗi
+pair hoặc bắt buộc PSN.
+
 1. Đặt PS4 và Smart Pro S cùng Wi-Fi/LAN 5 GHz.
 2. Với PS4 firmware 9.00 GoldHEN, không cần và không được đăng nhập PSN. Sau khi
    cập nhật từ v0.3.1, bấm **Y** và nhập PIN lại đúng một lần để tạo khóa pre-10.
@@ -72,6 +77,9 @@ GitHub yêu cầu xác thực khi tạo Issue. Tạo fine-grained token chỉ c�
 Token chỉ nằm trên thẻ nhớ; OTA và Release không đọc, ghi đè hoặc đóng gói file
 này. Khi crash, log được lọc dữ liệu nhạy cảm rồi tạo GitHub Issue. Nếu mất mạng,
 app giữ yêu cầu và thử lại ở lần mở sau.
+
+Luồng này đã được xác nhận hoạt động trên máy thật ngày 2026-09-23: thiết bị đã
+tự tạo Issue trong repo sau khi `secrets.json` được cấu hình đúng.
 
 ## File log cục bộ
 

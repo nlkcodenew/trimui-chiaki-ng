@@ -8,9 +8,15 @@ FFmpeg + SDL2, mặc định H264 `720p30`, bitrate `8000` kbps. Ghép nối PIN
 Bản này sửa giao thức pre-10 cho PS4 Pro firmware 9.00 GoldHEN. Không đăng nhập
 hoặc kết nối PSN; PS5/Internet chưa được xác nhận.
 
+**Mốc máy thật 2026-09-23:** sau khi OTA lên `v0.3.2` và ghép lại bằng PIN,
+Smart Pro S đã hiển thị màn hình PS4, nhận điều khiển và chơi game qua LAN thành
+công. Trải nghiệm ban đầu khá ổn nhưng còn drop FPS thường xuyên. Hệ thống tự gửi
+log cũng đã tạo GitHub Issue thành công. Mục tiêu kế tiếp là đo và tối ưu drop FPS,
+không còn là sửa kết nối/pair cơ bản.
+
 Tiếp tục dự án ở session khác: đọc `docs/NEW_SESSION_HANDOFF.md` trước. Tài liệu
 này ghi chính xác release hiện tại, kiến trúc stream, trạng thái test và danh
-sách log cần đính kèm từ thiết bị.
+sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
 
 ## Cấu hình phần cứng mục tiêu
 
@@ -27,6 +33,7 @@ sách log cần đính kèm từ thiết bị.
 - FPS: `30`
 - Bitrate: `8000` kbps (giảm xuống `6000` nếu thấy giật)
 - Codec: H264 cho PS4. H265/PS5 có trong helper nhưng chưa được kiểm thử.
+- Trạng thái máy thật: stream/chơi được; còn drop FPS cần tối ưu bằng log thực tế.
 
 ## Chạy stream
 

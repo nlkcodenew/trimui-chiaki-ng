@@ -14,9 +14,9 @@ pair PIN `/sce/rp/regist`, session `/sce/rp/session`, `RP-Version: 9.0`.
 - Thư mục làm việc: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`
 - Nhánh: `main`
 - Commit hiện tại: `12a89c3`
-- Tag/Release chuẩn bị phát hành: `v0.3.2`
+- Tag/Release đã phát hành và xác nhận trên máy thật: `v0.3.2`
 - Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.2`
-- `manifest.json` phải trả về đúng `0.3.2`, có
+- `manifest.json` trả về đúng `0.3.2`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 3. Phần cứng kiểm thử
@@ -40,8 +40,12 @@ tài liệu, Issue hoặc chat. Các khóa thật chỉ được giữ trên th�
 - Quét LAN tìm thấy `PS4-896` tại `192.168.1.45` từ `v0.2.11`.
 - Ghép nối PS4 thật thành công: PS4 tự đóng màn hình nhập PIN và app lưu khóa
   hợp lệ từ `v0.3.0-beta.1`.
-- Chưa có kết quả kiểm thử stream `v0.3.2` trên thiết bị thật ở thời điểm bàn
-  giao. Đây là bước đầu tiên của session kế tiếp.
+- Ngày 2026-09-23, `v0.3.2` đã stream thành công trên Smart Pro S thật: màn hình
+  PS4 xuất hiện, input hoạt động và người dùng đã chơi game qua LAN.
+- Trải nghiệm ban đầu khá ổn nhưng drop FPS xảy ra khá nhiều. Đây là ưu tiên kế
+  tiếp; pair, session pre-10 và hiển thị hình không còn là blocker.
+- `secrets.json` đã được cấu hình và uploader đã tự tạo GitHub Issue `#1`, `#2`.
+  Mục tiêu tự gửi log không cần người dùng đính kèm file thủ công đã đạt.
 
 ## 5. Luồng stream v0.3.2
 
@@ -77,20 +81,20 @@ Cấu hình mặc định:
 
 ## 7. Trạng thái kiểm thử trong sandbox
 
-- `python -m unittest discover -s tests -v`: 27/27 test đạt.
+- `python -m unittest discover -s tests -v`: 28/28 test đạt.
 - `python -m compileall -q files tools native`: đạt.
 - `bash -n files/launch.sh`: đạt.
 - `bash -n native/build-tg5050.sh`: đạt.
 - `python tools/make_release.py`: đạt.
 - `python tools/verify_release.py`: đạt.
 - ZIP có quyền `0755` cho `App/Chiaki/bin/chiaki-stream`.
-- Không thể xác nhận hình, âm thanh và độ trễ thật trong sandbox vì không có
-  Smart Pro S/PS4.
+- Sandbox không đo được hiệu năng thực tế; kết quả máy thật xác nhận stream và
+  input hoạt động, còn drop FPS cần phân tích bằng Issue log tự động.
 
-## 8. Log cần gửi ở session mới
+## 8. Log cho session tiếp theo
 
-Sau khi thử bấm A để stream, tháo thẻ nhớ và đính kèm trực tiếp hai file sau
-vào lời nhắn đầu tiên của session mới:
+Ưu tiên đọc Issue do thiết bị tự tạo trong repo. Uploader đã được xác nhận hoạt
+động end-to-end ngày 2026-09-23. Chỉ khi Issue không xuất hiện mới cần lấy tay:
 
 ```text
 Apps/Chiaki/Chiaki-debug.log
@@ -131,26 +135,20 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 ## 9. Việc session mới cần làm ngay
 
 1. Đọc file này và `docs/PROJECT_STATUS.md`.
-2. Người dùng cập nhật/cài `v0.3.2`, bật PS4 và ghép lại bằng PIN một lần.
-3. Bấm A để bắt đầu chơi, chờ ít nhất 20–30 giây.
-4. Ghi nhận PS4 có chuyển vào Remote Play hay không; có hình, âm, input hay
-   màn hình đen/tự thoát.
-5. Thử giữ `START + SELECT` 1,2 giây nếu stream mở được.
-6. Đọc hai file log thiết bị được đính kèm, xác định lỗi đầu tiên thay vì đoán.
-7. Sửa tối thiểu đúng nguyên nhân, tăng version, chạy test/build/verify, push
+2. Giữ nguyên mốc ổn định `v0.3.2`; không sửa lại pair/session nếu không có bằng chứng.
+3. Đọc GitHub Issue log của phiên stream thực tế và định lượng drop FPS.
+4. Xác định bottleneck network/decode/convert/render trước khi thay thông số.
+5. So sánh cấu hình 720p30 8000 kbps với 6000 kbps trên cùng điều kiện Wi-Fi.
+6. Sửa tối thiểu đúng nguyên nhân, tăng version, chạy test/build/verify, push
    `main`, tạo tag và xác minh GitHub Release/manifest latest trước khi yêu cầu
    người dùng OTA.
 
 ## 10. Các phần chưa xác nhận
 
-- PS4 có nhận phiên và gửi frame thật cho binary `v0.3.2` hay không.
-- Khả năng tương thích SDL video/audio/input thực tế trên firmware 1.1.1.
-- Hiệu năng software decode 720p30 và bitrate phù hợp trên RAM 1 GB.
+- Nguyên nhân chính xác của drop FPS thường xuyên ở 720p30.
+- Bitrate tối ưu cho Wi-Fi và RAM 1 GB của Smart Pro S.
 - PS5/H265.
 - Remote Play qua Internet/RUDP.
-- Tự tạo GitHub Issue chỉ hoạt động nếu người dùng tự cấu hình
-  `Apps/Chiaki/secrets.json` với token Issues; không có token thì phải gửi log
-  thủ công. Không yêu cầu người dùng chia sẻ token.
 
 ## 11. Lệnh kiểm tra nhanh
 
@@ -173,9 +171,10 @@ Không commit log runtime, `settings.json` của người dùng, khóa ghép n�
 Tiếp tục dự án trimui-chiaki-ng tại
 E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 
-Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước. Bản đang test
-là v0.3.2. PS4 Pro firmware 9.00 GoldHEN dùng pair/session pre-10, không PSN;
-nhiệm vụ hiện tại là đọc Issue log tự động hoặc log thiết bị, sửa
-lỗi stream native PS4 LAN 720p30, kiểm thử, build và phát hành bản OTA mới.
+Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước. Mốc v0.3.2 đã
+stream thành công PS4 Pro firmware 9.00 GoldHEN trên Smart Pro S: có hình, input
+và chơi được qua LAN, không PSN. Uploader GitHub Issue cũng đã hoạt động. Nhiệm
+vụ hiện tại là đọc Issue log, định lượng và tối ưu drop FPS thường xuyên mà không
+làm hỏng mốc pair/session pre-10 đang chạy tốt.
 Không tiết lộ hoặc ghi log PIN, regist_key, rp_key, Account-ID hay token.
 ```

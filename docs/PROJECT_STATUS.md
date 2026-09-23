@@ -1,8 +1,10 @@
 # trimui-chiaki-ng — Trạng thái dự án (đến v0.3.2)
 
-> Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-21.
+> Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-23.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN,
 > giữ PSN bị khóa và bật log native verbose để chẩn đoán trực tiếp.
+> **Mốc đã đạt trên máy thật:** stream có hình, nhận input và chơi được qua LAN.
+> Việc còn lại là tối ưu drop FPS thường xuyên.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
@@ -18,9 +20,10 @@
 - Menu đóng SDL trước khi chạy native và tự mở lại khi stream kết thúc.
 - Giữ START+SELECT 1,2 giây để thoát. Native stdout/stderr và `ldd` được ghi
   vào `Chiaki-debug.log`/`Chiaki-loi.txt`.
-- Đã build/link/strip thành công và unit test 27/27. Chưa thể xác nhận hình/âm
-  thanh thực tế nếu không có Smart Pro S và PS4 trong sandbox.
-- Chưa xong: kiểm thử/tune trên máy thật, PS5/H265 và Internet/RUDP.
+- Đã build/link/strip thành công và unit test 28/28.
+- Đã xác nhận trên Smart Pro S thật ngày 2026-09-23: màn hình PS4 xuất hiện,
+  điều khiển hoạt động và chơi game qua LAN được; cảm nhận ban đầu khá ổn.
+- Chưa xong: phân tích/tối ưu drop FPS thường xuyên, PS5/H265 và Internet/RUDP.
 
 ## 1. Mục tiêu
 
@@ -38,7 +41,7 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
   chặn `settings.json` mặc định có `device_id`.
 - CI: `.github/workflows/release.yml` (push tag `v*` -> checkout -> verify tag == `APP_VERSION` ->
   compileall -> make_release -> verify -> publish bằng `softprops/action-gh-release`).
-- 25 unittest pass tại `tests/test_release_and_logs.py`.
+- 28 unittest pass tại `tests/test_release_and_logs.py`.
 
 ### Ghép nối PS4 thật — v0.3.0-beta
 - Xóa hoàn toàn `stub-rp-key-*`; chỉ báo thành công khi PS4 trả HTTP 200 và đủ `PS4-RegistKey`, `RP-Key`, `RP-KeyType`, MAC.
@@ -139,9 +142,21 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
-720p30, 8000 kbps. Việc còn lại là kiểm thử và tune trên máy thật.
+720p30, 8000 kbps.
 
-### 4.5 P0 — Quét PS4/PS5 luôn trả 0 host — ĐÃ SỬA TRONG v0.2.11
+**Đã xác nhận thành công trên máy thật ngày 2026-09-23:** sau khi pair lại đúng
+protocol pre-10, Smart Pro S hiển thị màn hình PS4 Pro GoldHEN 9.00, nhận input
+và chơi game qua LAN được. Chất lượng ban đầu khá ổn nhưng drop FPS xảy ra khá
+nhiều. P2 kết nối/stream cơ bản đã đóng; công việc tiếp theo là profiling và tune
+decode/render/network để giảm drop FPS.
+
+### 4.5 P1 — Tự gửi log GitHub — ĐÃ XÁC NHẬN TRÊN MÁY THẬT
+Người dùng đã cấu hình `Apps/Chiaki/secrets.json` bằng fine-grained token chỉ có
+quyền Issues. App đã tự tạo Issue `#1` và `#2` trong repo, xác nhận marker crash,
+lọc dữ liệu và retry startup hoạt động end-to-end. Không cần gửi hai file log bằng
+tay trong các lần lỗi tiếp theo, trừ khi uploader mất token hoặc mất mạng kéo dài.
+
+### 4.6 P0 — Quét PS4/PS5 luôn trả 0 host — ĐÃ SỬA TRONG v0.2.11
 **Triệu chứng:** dù PS4 Pro bật cùng WiFi, `QUÉT MÁY PS4/PS5` luôn báo `0 host` (log 3 lần đều 0).
 **Nguyên nhân gốc (đối chiếu `E:\Trimiu Brick Pro\Project APPS\chiaki-ng-tmp\lib\include\chiaki\discovery.h`):**
 `CHIAKI_DISCOVERY_PORT_PS4=987`, `PORT_PS5=9302` là cổng **đích** gửi SRCH; `9303-9319` chỉ là cổng **nguồn** để nhận phản hồi.
@@ -192,14 +207,12 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 
-## 8. Bước kiểm thử tiếp theo
+## 8. Bước tối ưu tiếp theo
 
-1. Cập nhật v0.3.2 bằng OTA, quét PS4-896 và ghép lại bằng PIN đúng một lần.
-2. Bấm A để mở stream; xác nhận PS4 chuyển sang Remote Play, có hình/âm/input.
-3. Giữ START+SELECT 1,2 giây để thoát và xác nhận menu app mở lại.
-4. Nếu lỗi, lấy `Chiaki-debug.log` và `Chiaki-loi.txt`; tìm các dòng
-   `native stream preflight`, `Remote Play connected`, `first video frame` và
-   `native stream exit`.
-5. Nếu stream được nhưng drop, giảm bitrate 8000 xuống 6000 trước khi thử 60 FPS.
+1. Đọc Issue log tự động của một phiên chơi đủ dài và thống kê rendered/lost frame.
+2. Phân biệt drop do Wi-Fi/packet loss, software decode, swscale hay SDL render.
+3. So sánh 720p30 ở 8000 kbps và 6000 kbps; chưa thử 60 FPS trước khi ổn định 30 FPS.
+4. Giữ tắt Bluetooth và dùng Wi-Fi 5 GHz để loại trừ nhiễu vô tuyến.
+5. Chỉ phát hành bản tối ưu mới sau khi có chỉ số trước/sau rõ ràng.
 
 Lưu ý phần cứng: RAM 1GB, ưu tiên 720p30; tắt Bluetooth để giảm nhiễu Wi-Fi 5 GHz.
