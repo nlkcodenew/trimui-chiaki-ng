@@ -654,12 +654,44 @@ class LogUploaderTests(unittest.TestCase):
                 return None
 
         with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()):
-            self.assertTrue(chiaki.send_wakeup("192.168.1.45", "a49d08ed"))
+            with mock.patch.object(chiaki.time, "sleep", return_value=None):
+                self.assertTrue(chiaki.send_wakeup("192.168.1.45", "a49d08ed"))
         self.assertEqual(sent[0][1], ("192.168.1.45", 987))
+        self.assertEqual(sent[1][1], ("255.255.255.255", 987))
+        self.assertEqual(sent[2][1], ("192.168.1.45", 987))
+        self.assertEqual(sent[3][1], ("255.255.255.255", 987))
+        self.assertEqual(len(sent), 4)
         self.assertIn(b"WAKEUP * HTTP/1.1", sent[0][0])
         self.assertIn(b"device-discovery-protocol-version:00020020", sent[0][0])
         self.assertTrue(sent[0][0].endswith(b"\n\x00"))
         self.assertNotIn(b"\r", sent[0][0])
+
+    def test_ps5_wakeup_remains_unicast(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        sent = []
+
+        class FakeSocket:
+            def setsockopt(self, *args, **kwargs):
+                return None
+
+            def settimeout(self, *args, **kwargs):
+                return None
+
+            def bind(self, addr):
+                return None
+
+            def sendto(self, data, dest):
+                sent.append(dest)
+
+            def close(self):
+                return None
+
+        with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()), \
+                mock.patch.object(chiaki.time, "sleep", return_value=None):
+            self.assertTrue(
+                chiaki.send_wakeup("192.168.1.60", "a49d08ed", ps5=True),
+            )
+        self.assertEqual(sent, [("192.168.1.60", 9302)] * 2)
 
     def test_wakeup_diagnostic_is_queued_without_blocking(self):
         with mock.patch.object(self.uploader, "start_pending_upload", return_value="thread") as start:

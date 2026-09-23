@@ -43,8 +43,8 @@
 
 Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
 9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
-`v0.3.8` sửa packet WAKEUP theo upstream và tự gửi log chẩn đoán khi PS4 không
-thức dậy. `v0.3.7` thêm đánh thức PS4 đã ghép nối từ Rest Mode ngay trong danh sách máy.
+`v0.3.9` gửi WAKEUP qua cả unicast và broadcast LAN có retry. `v0.3.8` sửa
+packet theo upstream và tự gửi log timeout. `v0.3.7` thêm host offline trong danh sách.
 `v0.3.6` sửa mapping A/B/X/Y của native stream; bản này giữ nguyên pair/session.
 `v0.3.5` giữ nguyên pair/session đã chạy tốt, sửa hộp xóa log bị nháy/tự đóng,
 đồng thời kế thừa quản lý log an toàn và tổ hợp thoát stream của v0.3.4.

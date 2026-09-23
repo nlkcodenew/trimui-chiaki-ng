@@ -1,13 +1,13 @@
 {
-  "version": "0.3.8",
+  "version": "0.3.9",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-23T23:32:26+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.8/files",
-  "release_tag": "v0.3.8/files",
+  "built": "2026-09-23T23:48:37+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.9/files",
+  "release_tag": "v0.3.9/files",
   "note": {
-    "vi": "v0.3.8: sửa packet WAKEUP theo upstream và tự gửi log timeout.",
-    "en": "v0.3.8: fix upstream-compatible WAKEUP packets and upload timeout diagnostics."
+    "vi": "v0.3.9: gửi WAKEUP PS4 bằng unicast và broadcast LAN có retry.",
+    "en": "v0.3.9: send PS4 WAKEUP over unicast and LAN broadcast with retry."
   },
   "files": [
     {
@@ -47,8 +47,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "4f7e4b666686ee2d200a5fceaa28f2d0f2b86c3db8c25471f178abbe633b21f2",
-      "size": 23533
+      "sha256": "ff9c21eddcce055247f0687a7df2c041f13e901c122b789eae321e849277af70",
+      "size": 24181
     },
     {
       "path": "rh/engine.py",
@@ -102,7 +102,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "44f21e8f27adf0460e65d8c045a0705a3a37f07e49be81ade991e09ea71161d3",
+      "sha256": "15a581360fb9b39e1a260dd3784ffd9600e07175995eaed87634db96323c45ee",
       "size": 1177
     },
     {
@@ -543,8 +543,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.8.zip",
-    "sha256": "b5070afe2f7b58d1ffc23ba242822e143f7831b6eb0d9d5cd170d69a53b43153",
-    "size": 1240328
+    "name": "trimui-chiaki-ng-v0.3.9.zip",
+    "sha256": "f202bfe6861780aaada2a96f150da274dfffae213c645bd463d94bf5c62e64a3",
+    "size": 1240460
   }
 }

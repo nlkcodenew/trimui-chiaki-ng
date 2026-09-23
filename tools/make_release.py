@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: sửa packet WAKEUP theo upstream và tự gửi log timeout." % version,
-            "en": "v%s: fix upstream-compatible WAKEUP packets and upload timeout diagnostics." % version,
+            "vi": "v%s: gửi WAKEUP PS4 bằng unicast và broadcast LAN có retry." % version,
+            "en": "v%s: send PS4 WAKEUP over unicast and LAN broadcast with retry." % version,
         },
         "files": files,
         "remove": [],

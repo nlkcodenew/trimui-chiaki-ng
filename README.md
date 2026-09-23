@@ -2,13 +2,12 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.8 - sửa packet WAKEUP theo đúng định dạng upstream Chiaki
-(LF và byte NUL cuối), ghi source/destination port và tự gửi Issue chẩn đoán khi
-WAKEUP timeout. v0.3.7 thêm host đã ghép nối khi offline; v0.3.6 sửa mapping
+**Trạng thái**: v0.3.9 - sau khi log `#26/#27` xác nhận unicast WAKEUP chuẩn vẫn
+không đến PS4 đang ngủ, app gửi packet qua cả IP đã pair và broadcast LAN, lặp
+hai vòng. Timeout vẫn tự gửi Issue chẩn đoán. v0.3.8 sửa packet theo upstream;
+v0.3.7 thêm host đã ghép nối khi offline; v0.3.6 sửa mapping
 bốn nút mặt và đã được xác nhận đúng trên máy thật.
-nút A vẫn đang được giữ. Các modal chung chỉ nhận cạnh nhấn mới; hộp xác nhận tự
-đóng trước khi mở hộp kết quả. Bản này kế thừa quản lý log và thao tác thoát
-stream của v0.3.4.
+Các bản này giữ nguyên pair/session pre-10, quản lý log và thao tác thoát stream.
 
 **Nền tảng v0.3.4:** bổ sung quản lý log và sửa thao tác thoát stream trên
 TrimUI. Màn hình chính luôn hiện hướng dẫn giữ `START + SELECT` 1,2 giây; native

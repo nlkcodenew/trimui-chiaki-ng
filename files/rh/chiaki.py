@@ -577,13 +577,28 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
                "device-discovery-protocol-version:%s\n") % (credential, protocol)
         payload = pkt.encode("ascii") + b"\x00"
         port = 9302 if ps5 else 987
-        sock.sendto(payload, (addr, port))
+        destinations = [addr]
+        if not ps5 and addr != "255.255.255.255":
+            destinations.append("255.255.255.255")
+        sent = 0
+        for attempt in range(2):
+            for destination in destinations:
+                try:
+                    sock.sendto(payload, (destination, port))
+                    sent += 1
+                except OSError as exc:
+                    log.warning(
+                        "wakeup destination failed: dest=%s:%d attempt=%d error=%s",
+                        destination, port, attempt + 1, exc,
+                    )
+            if attempt == 0:
+                time.sleep(0.1)
         log.info(
             "wakeup sent: host=%s ps5=%s source_port=%d dest_port=%d "
-            "bytes=%d format=lf+nul",
-            addr, ps5, source_port, port, len(payload),
+            "destinations=%s packets=%d bytes=%d format=lf+nul",
+            addr, ps5, source_port, port, destinations, sent, len(payload),
         )
-        return True
+        return sent > 0
     except OSError as exc:
         log.error("wakeup failed: %s", exc)
         return False
