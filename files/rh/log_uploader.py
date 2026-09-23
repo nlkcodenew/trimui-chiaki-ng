@@ -130,6 +130,8 @@ def _issue_body(sections, reason, fingerprint):
     reason = _sanitize(str(reason).replace("`", ""))[:80]
     if reason == "native_stream_quality":
         summary = "Báo cáo chất lượng stream được gửi tự động từ TrimUI Smart Pro S."
+    elif reason.startswith("wakeup_"):
+        summary = "Báo cáo chẩn đoán đánh thức PlayStation được gửi tự động."
     elif reason.endswith("_retry"):
         summary = "Báo cáo đang chờ được gửi lại khi ứng dụng thoát."
     else:
@@ -240,6 +242,17 @@ def start_pending_upload(reason="startup"):
     )
     thread.start()
     return thread
+
+
+def queue_diagnostic(reason):
+    """Mark a non-crash diagnostic and upload it without blocking the UI."""
+    try:
+        with open(PENDING_FILE, "a", encoding="ascii"):
+            pass
+    except OSError as exc:
+        log.warning("cannot queue diagnostic %s: %s", reason, exc)
+        return None
+    return start_pending_upload(reason)
 
 
 def main(argv=None):

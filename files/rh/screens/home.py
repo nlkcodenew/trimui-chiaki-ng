@@ -157,8 +157,10 @@ class HomeScreen(BaseScreen):
         if self.scanning:
             return
         if not chiaki.wake_paired_host(host):
+            log.error("wakeup send failed: host=%s state=%s", host.addr, host.state)
             self.toast = tr("wake_failed")
             self.toast_until = time.time() + 4
+            self._report_wakeup("wakeup_send_failed")
             return
         host.state = "waking"
         self.scanning = True
@@ -168,10 +170,12 @@ class HomeScreen(BaseScreen):
 
     def _wait_for_wakeup(self, addr):
         try:
-            for _ in range(6):
+            for attempt in range(1, 7):
                 hosts = chiaki.paired_hosts_for_discovery(
                     chiaki.discovery_broadcast(timeout=2.0))
                 self.hosts = hosts
+                states = [host.state for host in hosts if host.addr == addr]
+                log.info("wakeup probe: attempt=%d/6 states=%s", attempt, states)
                 for host in hosts:
                     if host.addr == addr and host.state == "ready":
                         self.host_selected = hosts.index(host)
@@ -179,14 +183,25 @@ class HomeScreen(BaseScreen):
                         self.toast_until = time.time() + 8
                         return
                 time.sleep(1.0)
+            log.error("wakeup timeout: attempts=6 final_state=offline")
             self.toast = tr("wake_timeout")
             self.toast_until = time.time() + 6
+            self._report_wakeup("wakeup_timeout")
         except Exception as exc:
             log.error("wakeup scan failed: %s", exc)
             self.toast = tr("wake_failed")
             self.toast_until = time.time() + 4
+            self._report_wakeup("wakeup_exception")
         finally:
             self.scanning = False
+
+    @staticmethod
+    def _report_wakeup(reason):
+        try:
+            from ..log_uploader import queue_diagnostic
+            queue_diagnostic(reason)
+        except Exception as exc:
+            log.warning("cannot upload wakeup diagnostic: %s", exc)
 
     def handle_input(self, inputs):
         if not inputs:

@@ -635,6 +635,12 @@ class LogUploaderTests(unittest.TestCase):
         sent = []
 
         class FakeSocket:
+            def bind(self, addr):
+                self.bound = addr
+
+            def getsockname(self):
+                return ("0.0.0.0", getattr(self, "bound", ("", 9303))[1])
+
             def setsockopt(self, *args, **kwargs):
                 return None
 
@@ -652,6 +658,22 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(sent[0][1], ("192.168.1.45", 987))
         self.assertIn(b"WAKEUP * HTTP/1.1", sent[0][0])
         self.assertIn(b"device-discovery-protocol-version:00020020", sent[0][0])
+        self.assertTrue(sent[0][0].endswith(b"\n\x00"))
+        self.assertNotIn(b"\r", sent[0][0])
+
+    def test_wakeup_diagnostic_is_queued_without_blocking(self):
+        with mock.patch.object(self.uploader, "start_pending_upload", return_value="thread") as start:
+            self.assertEqual(self.uploader.queue_diagnostic("wakeup_timeout"), "thread")
+        self.assertTrue(os.path.exists(self.uploader.PENDING_FILE))
+        start.assert_called_once_with("wakeup_timeout")
+
+    def test_wakeup_report_is_described_as_diagnostic(self):
+        body = self.uploader._issue_body(
+            [("Chiaki-debug.log", "wakeup timeout: attempts=6")],
+            "wakeup_timeout", "a" * 64,
+        )
+        self.assertIn("chẩn đoán đánh thức", body)
+        self.assertNotIn("sau khi ứng dụng lỗi", body)
 
     def test_ps4_registration_crypto_roundtrip_and_response_parse(self):
         regist = importlib.import_module("rh.ps4_regist")

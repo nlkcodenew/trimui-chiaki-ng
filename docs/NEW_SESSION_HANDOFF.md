@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.7
+# Bàn giao session mới — trimui-chiaki-ng v0.3.8
 
 > Cập nhật: 2026-09-23. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
@@ -12,6 +12,8 @@ Kiểm thử thật v0.3.5 đã có thêm hai phiên quan trọng: 540p60/15000 
 packet loss/FEC và IDR nặng; 720p30/4000 chạy ổn định. `v0.3.6` sửa mapping
 A/B/X/Y ở native SDL GameController và đã được xác nhận đúng trên máy thật.
 `v0.3.7` thêm host paired offline và nút đánh thức PS4 từ Rest Mode.
+`v0.3.8` sửa packet WAKEUP theo upstream: LF-only, byte NUL cuối, bind source
+port 9303–9319; timeout tự tạo Issue chẩn đoán `wakeup_timeout`.
 
 ## 2. Repo và bản phát hành
 
@@ -19,9 +21,9 @@ A/B/X/Y ở native SDL GameController và đã được xác nhận đúng trên
 - Thư mục làm việc: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
-- Bản stream/mapping đã kiểm thử máy thật: `v0.3.6`
-- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.7`
-- `manifest.json` phải trả về đúng `0.3.7`, có
+- Bản stream/mapping đã kiểm thử máy thật: `v0.3.6`; bản WAKEUP cần test thật: `v0.3.8`
+- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.8`
+- `manifest.json` phải trả về đúng `0.3.8`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 3. Phần cứng kiểm thử
@@ -108,7 +110,7 @@ Quản lý log/thoát stream v0.3.4:
 
 ## 7. Trạng thái kiểm thử trong sandbox
 
-- `python -m unittest discover -s tests -v`: 47/47 test đạt.
+- `python -m unittest discover -s tests -v`: 49/49 test đạt.
 - `python -m compileall -q files tools native`: đạt.
 - `bash -n files/launch.sh`: đạt.
 - `bash -n native/build-tg5050.sh`: đạt.
@@ -205,7 +207,8 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 
 ## 10. Các phần chưa xác nhận
 
-- Xác nhận WAKEUP của `v0.3.7` từ Rest Mode trên máy thật.
+- Xác nhận WAKEUP của `v0.3.8` từ Rest Mode trên máy thật; nếu fail, đọc Issue
+  `wakeup_timeout` chứa source port, payload format, probe states và lỗi mạng.
 - Tối ưu decoder/render để 720p60 ổn định hơn.
 - Bitrate tối ưu cho Wi-Fi và RAM 1 GB của Smart Pro S.
 - Khả năng chạy 1080p30/1080p60 trên A523.

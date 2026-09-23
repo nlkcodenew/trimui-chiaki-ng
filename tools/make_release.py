@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: hiện máy đã ghép nối khi offline và đánh thức PS4 từ Rest Mode." % version,
-            "en": "v%s: show paired offline consoles and wake PS4 from Rest Mode." % version,
+            "vi": "v%s: sửa packet WAKEUP theo upstream và tự gửi log timeout." % version,
+            "en": "v%s: fix upstream-compatible WAKEUP packets and upload timeout diagnostics." % version,
         },
         "files": files,
         "remove": [],

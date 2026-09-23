@@ -1,13 +1,13 @@
 {
-  "version": "0.3.7",
+  "version": "0.3.8",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-23T23:11:55+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.7/files",
-  "release_tag": "v0.3.7/files",
+  "built": "2026-09-23T23:32:26+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.8/files",
+  "release_tag": "v0.3.8/files",
   "note": {
-    "vi": "v0.3.7: hiện máy đã ghép nối khi offline và đánh thức PS4 từ Rest Mode.",
-    "en": "v0.3.7: show paired offline consoles and wake PS4 from Rest Mode."
+    "vi": "v0.3.8: sửa packet WAKEUP theo upstream và tự gửi log timeout.",
+    "en": "v0.3.8: fix upstream-compatible WAKEUP packets and upload timeout diagnostics."
   },
   "files": [
     {
@@ -47,8 +47,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "5c45f81a90300e63306189a29d0363a113682e0861f35341900213108386504f",
-      "size": 22946
+      "sha256": "4f7e4b666686ee2d200a5fceaa28f2d0f2b86c3db8c25471f178abbe633b21f2",
+      "size": 23533
     },
     {
       "path": "rh/engine.py",
@@ -72,8 +72,8 @@
     },
     {
       "path": "rh/log_uploader.py",
-      "sha256": "84047b88ed18126b3acfb9d4b04db36483a86ef5955172c07911051b812f1362",
-      "size": 8480
+      "sha256": "87583cc84926d306d682804e64dbfe724057b221f41d325983965fb2db04f12b",
+      "size": 8963
     },
     {
       "path": "rh/logger.py",
@@ -102,7 +102,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "a2de72f85da3cd46b9a3b7fd27c701fa1a54b60d182ba001fcb4b35f619fe68c",
+      "sha256": "44f21e8f27adf0460e65d8c045a0705a3a37f07e49be81ade991e09ea71161d3",
       "size": 1177
     },
     {
@@ -137,8 +137,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "630f5bd4da1291228d0f1160cd16003622590a6e65dee81154698f2075a05483",
-      "size": 11443
+      "sha256": "5f8ee69fbb4c744ab1d231a67f1a5f096c1b7feeb59a928ff048dfa598e588f1",
+      "size": 12182
     },
     {
       "path": "rh/screens/pair.py",
@@ -543,8 +543,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.7.zip",
-    "sha256": "ac77595d6451cbb3dede2ea2207d443633cc233bfdde72144465c88385e2a8f4",
-    "size": 1239823
+    "name": "trimui-chiaki-ng-v0.3.8.zip",
+    "sha256": "b5070afe2f7b58d1ffc23ba242822e143f7831b6eb0d9d5cd170d69a53b43153",
+    "size": 1240328
   }
 }

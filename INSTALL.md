@@ -43,7 +43,8 @@
 
 Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
 9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
-`v0.3.7` thêm đánh thức PS4 đã ghép nối từ Rest Mode ngay trong danh sách máy.
+`v0.3.8` sửa packet WAKEUP theo upstream và tự gửi log chẩn đoán khi PS4 không
+thức dậy. `v0.3.7` thêm đánh thức PS4 đã ghép nối từ Rest Mode ngay trong danh sách máy.
 `v0.3.6` sửa mapping A/B/X/Y của native stream; bản này giữ nguyên pair/session.
 `v0.3.5` giữ nguyên pair/session đã chạy tốt, sửa hộp xóa log bị nháy/tự đóng,
 đồng thời kế thừa quản lý log an toàn và tổ hợp thoát stream của v0.3.4.
@@ -57,6 +58,7 @@ Luồng này đã được xác nhận thành công trên Smart Pro S thật v�
    Mở app và quét; chọn host `[offline]`, bấm **A – ĐÁNH THỨC**, chờ thông báo
    sẵn sàng rồi bấm A lần nữa. Nếu PS4 đã bật, chọn máy và bấm A như trước.
    PS4 đã tắt hoàn toàn vẫn cần nút nguồn hoặc tay cầm thật để bật.
+   Khi timeout, giữ nguyên Issue/log để chẩn đoán; không cần gửi token hoặc khóa.
 4. Bắt đầu bằng profile đã xác nhận tốt `720p`, 30 FPS, 4000 kbps. Nếu cần giảm
    tải, dùng `540p`, 30 FPS, 4000 kbps. Chỉ thử profile khác để so sánh; không
    dùng 15000 kbps làm cấu hình thường xuyên vì test thực tế cho thấy

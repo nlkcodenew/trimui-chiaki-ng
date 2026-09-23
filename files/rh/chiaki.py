@@ -554,18 +554,35 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.settimeout(timeout)
+        source_port = 0
+        for local_port in range(LOCAL_PORT_MIN, LOCAL_PORT_MAX + 1):
+            try:
+                sock.bind(("", local_port))
+                source_port = local_port
+                break
+            except OSError:
+                continue
+        if not source_port:
+            sock.bind(("", 0))
+            source_port = sock.getsockname()[1]
         protocol = "00030010" if ps5 else "00020020"
-        pkt = ("WAKEUP * HTTP/1.1\r\n"
-               "client-type:vr\r\n"
-               "auth-type:R\r\n"
-               "model:w\r\n"
-               "app-type:r\r\n"
-               "user-credential:%d\r\n"
-               "device-discovery-protocol-version:%s\r\n\r\n") % (credential, protocol)
+        pkt = ("WAKEUP * HTTP/1.1\n"
+               "client-type:vr\n"
+               "auth-type:R\n"
+               "model:w\n"
+               "app-type:r\n"
+               "user-credential:%d\n"
+               "device-discovery-protocol-version:%s\n") % (credential, protocol)
+        payload = pkt.encode("ascii") + b"\x00"
         port = 9302 if ps5 else 987
-        sock.sendto(pkt.encode("ascii"), (addr, port))
-        log.info("wakeup sent: %s ps5=%s port=%d", addr, ps5, port)
+        sock.sendto(payload, (addr, port))
+        log.info(
+            "wakeup sent: host=%s ps5=%s source_port=%d dest_port=%d "
+            "bytes=%d format=lf+nul",
+            addr, ps5, source_port, port, len(payload),
+        )
         return True
     except OSError as exc:
         log.error("wakeup failed: %s", exc)
