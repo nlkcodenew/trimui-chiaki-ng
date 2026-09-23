@@ -25,6 +25,7 @@ class LogUploaderTests(unittest.TestCase):
         cls.updater = importlib.import_module("rh.updater")
         cls.inputs = importlib.import_module("rh.inputs")
         cls.logger_module = importlib.import_module("rh.logger")
+        cls.common_modals = importlib.import_module("rh.modals.common")
         cls.settings_module = importlib.import_module("rh.screens.settings")
         cls.update_modal_module = importlib.import_module("rh.modals.update")
 
@@ -314,6 +315,39 @@ class LogUploaderTests(unittest.TestCase):
         name, data = engine.open_modal.call_args.args
         self.assertEqual(name, "confirm")
         self.assertTrue(callable(data["on_yes"]))
+
+    def test_clear_log_result_modal_waits_for_new_button_edge(self):
+        engine = types.SimpleNamespace(active_modal=None)
+        info = self.common_modals.InfoModal(engine)
+        confirm = self.common_modals.ConfirmModal(engine)
+
+        def show_result():
+            info.open({"title": "XÓA LOG CŨ", "message": "Đã xóa"})
+            engine.active_modal = info
+
+        confirm.open({"title": "XÓA LOG CŨ", "on_yes": show_result})
+        engine.active_modal = confirm
+        self.assertFalse(confirm.handle_input({"btn_a": True, "edges": []}))
+        self.assertIs(engine.active_modal, confirm)
+
+        self.assertTrue(confirm.handle_input({"btn_a": True, "edges": ["btn_a"]}))
+        self.assertIs(engine.active_modal, info)
+        self.assertTrue(info.active)
+
+        self.assertFalse(info.handle_input({"btn_a": True, "edges": []}))
+        self.assertIs(engine.active_modal, info)
+        self.assertTrue(info.handle_input({"edges": ["btn_a"]}))
+        self.assertIsNone(engine.active_modal)
+
+    def test_common_modals_ignore_held_buttons_without_edges(self):
+        engine = types.SimpleNamespace(active_modal=None)
+        loading = self.common_modals.StreamLoadingModal(engine)
+        loading.open({})
+        engine.active_modal = loading
+        self.assertFalse(loading.handle_input({"btn_b": True, "edges": []}))
+        self.assertIs(engine.active_modal, loading)
+        self.assertTrue(loading.handle_input({"edges": ["btn_b"]}))
+        self.assertIsNone(engine.active_modal)
 
     def test_clear_runtime_logs_protects_pending_report(self):
         error_path = os.path.join(self.work_dir, "error.log")

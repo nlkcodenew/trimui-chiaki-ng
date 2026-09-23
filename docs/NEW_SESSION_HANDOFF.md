@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.4
+# Bàn giao session mới — trimui-chiaki-ng v0.3.5
 
 > Cập nhật: 2026-09-23. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
@@ -7,6 +7,7 @@
 Kiểm thử hiệu năng Remote Play PS4 qua LAN trên TrimUI Smart Pro S TG5050.
 `v0.3.2` là mốc stream thật ổn định về chức năng; `v0.3.3` tối ưu I/O/render.
 `v0.3.4` quản lý log an toàn và sửa đường thoát stream START+SELECT trên TrimUI.
+`v0.3.5` sửa hộp xóa log bị nháy rồi tự đóng do nhận lại nút A đang giữ.
 
 ## 2. Repo và bản phát hành
 
@@ -14,9 +15,9 @@ Kiểm thử hiệu năng Remote Play PS4 qua LAN trên TrimUI Smart Pro S TG505
 - Thư mục làm việc: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
-- Bản cần kiểm thử máy thật: `v0.3.4`
-- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.4`
-- `manifest.json` phải trả về đúng `0.3.4`, có
+- Bản cần kiểm thử máy thật: `v0.3.5`
+- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.5`
+- `manifest.json` phải trả về đúng `0.3.5`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 3. Phần cứng kiểm thử
@@ -47,7 +48,7 @@ tài liệu, Issue hoặc chat. Các khóa thật chỉ được giữ trên th�
 - `secrets.json` đã được cấu hình và uploader đã tự tạo GitHub Issue `#1`, `#2`.
   Mục tiêu tự gửi log không cần người dùng đính kèm file thủ công đã đạt.
 
-## 5. Luồng stream v0.3.4
+## 5. Luồng stream v0.3.5
 
 1. `files/rh/screens/home.py` gọi `prepare_stream_launch()`.
 2. `files/rh/chiaki.py` đọc credential của đúng host, kiểm tra RP key 16 byte,
@@ -84,6 +85,8 @@ Quản lý log/thoát stream v0.3.4:
   `.pending_crash` để không mất report chưa gửi.
 - Launcher cap log sau stream và khi đóng app. Khi chọn **THOÁT**, pending report
   được retry ngay; không có pending thì không tạo Issue mới.
+- v0.3.5: `InfoModal`, `ConfirmModal`, `StreamLoadingModal` chỉ xử lý `edges`;
+  Confirm tự đóng trước callback để hộp kết quả không bị đóng bởi A đang giữ.
 
 ## 6. Binary và build
 
@@ -101,7 +104,7 @@ Quản lý log/thoát stream v0.3.4:
 
 ## 7. Trạng thái kiểm thử trong sandbox
 
-- `python -m unittest discover -s tests -v`: 38/38 test đạt.
+- `python -m unittest discover -s tests -v`: 40/40 test đạt.
 - `python -m compileall -q files tools native`: đạt.
 - `bash -n files/launch.sh`: đạt.
 - `bash -n native/build-tg5050.sh`: đạt.
@@ -109,7 +112,7 @@ Quản lý log/thoát stream v0.3.4:
 - `python tools/verify_release.py`: đạt.
 - ZIP có quyền `0755` cho `App/Chiaki/bin/chiaki-stream`.
 - Sandbox không đo được hiệu năng thực tế; kết quả máy thật xác nhận stream và
-  input hoạt động; hiệu năng và đường thoát stream v0.3.4 cần kiểm thử máy thật.
+  input hoạt động; modal v0.3.5 và hiệu năng cần kiểm thử máy thật.
 
 ## 8. Log cho session tiếp theo
 
@@ -158,7 +161,7 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 
 1. Đọc file này và `docs/PROJECT_STATUS.md`.
 2. Giữ nguyên pair/session pre-10 của mốc `v0.3.2` nếu không có bằng chứng lỗi.
-3. Đọc các Issue `native_stream_quality` của v0.3.4, so sánh FPS/FEC/lost.
+3. Đọc các Issue `native_stream_quality` của v0.3.5, so sánh FPS/FEC/lost.
 4. Test theo thứ tự `720p30/4000`, `720p30/6000`, `720p60/6000`,
    `1080p30/6000`; mỗi mức 1–2 phút trong cùng điều kiện mạng.
 5. Nếu renderer software hoặc FPS thấp nhưng FEC/lost bằng 0, tối ưu decode/render.
@@ -195,9 +198,8 @@ E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước. Mốc v0.3.2 đã
 stream thành công PS4 Pro firmware 9.00 GoldHEN trên Smart Pro S, không PSN.
-v0.3.4 thêm xóa/cap log an toàn, retry Issue pending khi Thoát và fallback nút
-START+SELECT để về menu mà không tắt PS4. Nhiệm vụ hiện tại là kiểm thử tổ hợp
-thoát và đọc Issue native_stream_quality theo ma trận test mà không làm hỏng
-pair/session pre-10 đang chạy tốt.
+v0.3.5 sửa modal xóa log bị nháy/tự đóng; kế thừa xóa/cap log an toàn, retry
+Issue pending khi Thoát và START+SELECT để về menu mà không tắt PS4. Nhiệm vụ
+hiện tại là kiểm thử modal, tổ hợp thoát và đọc Issue native_stream_quality.
 Không tiết lộ hoặc ghi log PIN, regist_key, rp_key, Account-ID hay token.
 ```

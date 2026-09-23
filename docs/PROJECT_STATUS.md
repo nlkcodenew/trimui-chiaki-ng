@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.4)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.5)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-23.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
@@ -7,6 +7,8 @@
 > lượng 5 giây, bitrate 3000 kbps và lựa chọn 1080p để đo giới hạn máy thật.
 > v0.3.4 thêm xóa/giới hạn log an toàn, retry Issue pending khi Thoát và fallback
 > nút vật lý START/SELECT để trở về menu mà không cần tắt PS4.
+> v0.3.5 sửa modal xóa log bị nháy/tự đóng: mọi modal chung dùng button edge và
+> Confirm đóng trước khi callback mở hộp kết quả.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
@@ -40,7 +42,7 @@
   không có pending marker thì không tạo Issue mới không cần thiết.
 - Đã xác nhận trên Smart Pro S thật ngày 2026-09-23: màn hình PS4 xuất hiện,
   điều khiển hoạt động và chơi game qua LAN được; cảm nhận ban đầu khá ổn.
-- Chưa xong: xác nhận v0.3.4 trên máy thật, PS5/H265 và Internet/RUDP.
+- Chưa xong: xác nhận v0.3.5 trên máy thật, PS5/H265 và Internet/RUDP.
 
 ## 1. Mục tiêu
 
@@ -58,7 +60,7 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
   chặn `settings.json` mặc định có `device_id`.
 - CI: `.github/workflows/release.yml` (push tag `v*` -> checkout -> verify tag == `APP_VERSION` ->
   compileall -> make_release -> verify -> publish bằng `softprops/action-gh-release`).
-- 38 unittest pass tại `tests/test_release_and_logs.py`.
+- 40 unittest pass tại `tests/test_release_and_logs.py`.
 
 ### Ghép nối PS4 thật — v0.3.0-beta
 - Xóa hoàn toàn `stub-rp-key-*`; chỉ báo thành công khi PS4 trả HTTP 200 và đủ `PS4-RegistKey`, `RP-Key`, `RP-KeyType`, MAC.
@@ -156,7 +158,7 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.4 đang kiểm thử
+### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.5 đang kiểm thử
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
@@ -228,11 +230,11 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `files/rh/updater.py` — OTA + log mạng
 - `files/rh/log_uploader.py` — auto Issue
 - `tools/make_release.py` / `tools/verify_release.py` — build gate
-- `tests/test_release_and_logs.py` — 38 tests
+- `tests/test_release_and_logs.py` — 40 tests
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 
-## 8. Bước kiểm thử v0.3.4
+## 8. Bước kiểm thử v0.3.5
 
 1. Nếu muốn bài test sạch, vào **Cài đặt → XÓA LOG CŨ → A → Có**.
 2. Mỗi cấu hình chơi 1–2 phút rồi giữ START+SELECT 1,2 giây để về menu; không

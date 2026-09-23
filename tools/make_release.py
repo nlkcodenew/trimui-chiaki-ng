@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: thêm xóa/giới hạn log an toàn, retry Issue khi thoát và sửa START+SELECT để về menu." % version,
-            "en": "v%s: safely clear/cap logs, retry pending Issues on exit, and improve START+SELECT stream exit." % version,
+            "vi": "v%s: sửa hộp xác nhận xóa log bị nháy và tự đóng do nhận lại nút A đang giữ." % version,
+            "en": "v%s: fix the clear-log confirmation/result dialog immediately closing from a held A button." % version,
         },
         "files": files,
         "remove": [],

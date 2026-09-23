@@ -2,7 +2,12 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.4 - bổ sung quản lý log và sửa thao tác thoát stream trên
+**Trạng thái**: v0.3.5 - vá hộp xác nhận/kết quả xóa log bị nháy rồi tự đóng vì
+nút A vẫn đang được giữ. Các modal chung chỉ nhận cạnh nhấn mới; hộp xác nhận tự
+đóng trước khi mở hộp kết quả. Bản này kế thừa quản lý log và thao tác thoát
+stream của v0.3.4.
+
+**Nền tảng v0.3.4:** bổ sung quản lý log và sửa thao tác thoát stream trên
 TrimUI. Màn hình chính luôn hiện hướng dẫn giữ `START + SELECT` 1,2 giây; native
 nhận cả sự kiện GameController lẫn nút vật lý 8/9 để quay về menu mà không cần
 tắt PS4. Pair/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN được giữ nguyên;

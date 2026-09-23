@@ -1,13 +1,13 @@
 {
-  "version": "0.3.4",
+  "version": "0.3.5",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-23T09:37:54+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.4/files",
-  "release_tag": "v0.3.4/files",
+  "built": "2026-09-23T10:39:58+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.5/files",
+  "release_tag": "v0.3.5/files",
   "note": {
-    "vi": "v0.3.4: thêm xóa/giới hạn log an toàn, retry Issue khi thoát và sửa START+SELECT để về menu.",
-    "en": "v0.3.4: safely clear/cap logs, retry pending Issues on exit, and improve START+SELECT stream exit."
+    "vi": "v0.3.5: sửa hộp xác nhận xóa log bị nháy và tự đóng do nhận lại nút A đang giữ.",
+    "en": "v0.3.5: fix the clear-log confirmation/result dialog immediately closing from a held A button."
   },
   "files": [
     {
@@ -102,7 +102,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "f3d573fcd0476a5f759a06c3b9267adc9676eb46d5adc13c0b0b033b846dee6a",
+      "sha256": "50bbc3db10611a992832cf5f7b268ae25a570537097aaef99b9cd4c44309e4c4",
       "size": 1177
     },
     {
@@ -117,8 +117,8 @@
     },
     {
       "path": "rh/modals/common.py",
-      "sha256": "cc16d2cb8aa8ed76e064e052d2506b65a7faf64fa0d6f33a9882f05ce11cc953",
-      "size": 4305
+      "sha256": "7b4250251dbbc99adc9a32010e6d2332f7df8f33f1c2401073b12266d856ebfa",
+      "size": 4461
     },
     {
       "path": "rh/modals/update.py",
@@ -543,8 +543,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.4.zip",
-    "sha256": "372d0e1a143950d3767941595c169adb16165a503a77bd3b21909ec7848acc52",
-    "size": 1238568
+    "name": "trimui-chiaki-ng-v0.3.5.zip",
+    "sha256": "aa0b89b6fc265d181a3a4ffc828d31a6aa94a7de5c020384bd6495426eede3ca",
+    "size": 1238639
   }
 }

@@ -15,7 +15,8 @@ class InfoModal(BaseModal):
         self.message = (self.data or {}).get("message", "")
 
     def handle_input(self, inputs):
-        if inputs.get("btn_a") or inputs.get("btn_b") or inputs.get("quit"):
+        edges = inputs.get("edges", [])
+        if any(key in edges for key in ("btn_a", "btn_b", "quit")):
             self.close()
             return True
         return False
@@ -48,21 +49,24 @@ class ConfirmModal(BaseModal):
         self.on_no = (self.data or {}).get("on_no")
 
     def handle_input(self, inputs):
-        if inputs.get("btn_a"):
-            if self.on_yes:
+        edges = inputs.get("edges", [])
+        if "btn_a" in edges:
+            callback = self.on_yes
+            self.close()
+            if callback:
                 try:
-                    self.on_yes()
+                    callback()
                 except Exception:
                     pass
-            self.close()
             return True
-        if inputs.get("btn_b") or inputs.get("quit"):
-            if self.on_no:
+        if "btn_b" in edges or "quit" in edges:
+            callback = self.on_no
+            self.close()
+            if callback:
                 try:
-                    self.on_no()
+                    callback()
                 except Exception:
                     pass
-            self.close()
             return True
         return False
 
@@ -96,7 +100,8 @@ class StreamLoadingModal(BaseModal):
             self.message = message
 
     def handle_input(self, inputs):
-        if inputs.get("btn_b") or inputs.get("quit"):
+        edges = inputs.get("edges", [])
+        if "btn_b" in edges or "quit" in edges:
             self.close()
             return True
         return False

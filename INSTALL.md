@@ -43,8 +43,9 @@
 
 Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
 9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
-`v0.3.4` giữ nguyên pair/session đã chạy tốt, thêm quản lý log an toàn và tăng độ
-tin cậy của tổ hợp thoát stream. Ứng dụng không cần PSN.
+`v0.3.5` giữ nguyên pair/session đã chạy tốt, sửa hộp xóa log bị nháy/tự đóng,
+đồng thời kế thừa quản lý log an toàn và tổ hợp thoát stream của v0.3.4.
+Ứng dụng không cần PSN.
 
 1. Đặt PS4 và Smart Pro S cùng Wi-Fi/LAN 5 GHz.
 2. Với PS4 firmware 9.00 GoldHEN, không cần và không được đăng nhập PSN. Sau khi
