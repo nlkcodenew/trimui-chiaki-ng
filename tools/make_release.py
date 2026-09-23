@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: thêm stream PS4 LAN H264 720p30 bằng libchiaki, FFmpeg, SDL2; có âm thanh, gamepad và log native." % version,
-            "en": "v%s: add PS4 LAN H264 720p30 streaming with libchiaki, FFmpeg, SDL2, audio, gamepad and native logs." % version,
+            "vi": "v%s: tối ưu drop FPS, giảm tải log/render, thêm báo cáo chất lượng và tùy chọn 1080p." % version,
+            "en": "v%s: reduce logging/render overhead, add stream quality reports and an experimental 1080p option." % version,
         },
         "files": files,
         "remove": [],

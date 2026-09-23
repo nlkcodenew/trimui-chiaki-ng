@@ -162,8 +162,9 @@ def prepare_stream_launch(host):
             handle.write("ps5=%d\n" % int(credentials["is_ps5"]))
             handle.write("target=%d\n" % int(credentials.get("target", 0) or 0))
             handle.write("rp_version=%s\n" % rp_version)
-            handle.write("verbose=%d\n" % int(bool(getattr(state, "enable_logging", False)) and
-                                               getattr(state, "auto_upload_logs", True)))
+            native_verbose = os.environ.get("CHIAKI_NATIVE_VERBOSE", "").lower() in (
+                "1", "true", "yes", "on")
+            handle.write("verbose=%d\n" % int(native_verbose))
             handle.write("width=%d\n" % profile["width"])
             handle.write("height=%d\n" % profile["height"])
             handle.write("fps=%d\n" % profile["max_fps"])

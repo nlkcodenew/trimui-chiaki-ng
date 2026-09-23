@@ -95,6 +95,9 @@ while true; do
             echo "native stream failed: exit $STREAM_EXIT_CODE" >> "$ERRLOG"
             touch "$APP/.pending_crash" 2>/dev/null
             "$PY" -m rh.log_uploader --reason "native_stream_$STREAM_EXIT_CODE" >> "$ERRLOG" 2>&1 || true
+        else
+            touch "$APP/.pending_crash" 2>/dev/null
+            "$PY" -m rh.log_uploader --reason "native_stream_quality" >> "$ERRLOG" 2>&1 || true
         fi
         touch /tmp/stay_alive 2>/dev/null
     else

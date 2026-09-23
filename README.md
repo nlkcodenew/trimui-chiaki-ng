@@ -2,17 +2,18 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.2 - đã có stream PS4 LAN thật bằng native `libchiaki` +
-FFmpeg + SDL2, mặc định H264 `720p30`, bitrate `8000` kbps. Ghép nối PIN 8 số,
-âm thanh Opus, gamepad, rung đơn, OTA và nhật ký native đã được nối hoàn chỉnh.
-Bản này sửa giao thức pre-10 cho PS4 Pro firmware 9.00 GoldHEN. Không đăng nhập
-hoặc kết nối PSN; PS5/Internet chưa được xác nhận.
+**Trạng thái**: v0.3.3 - tối ưu bản stream PS4 LAN đã chạy thật trên `v0.3.2`.
+Bản mới giảm mạnh ghi log theo từng packet/frame, bỏ `fflush` mỗi dòng, giảm thao
+tác render thừa, ghi thống kê chất lượng mỗi 5 giây và thêm lựa chọn `1080p` cùng
+bitrate `3000` kbps. Pair/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN được
+giữ nguyên; ứng dụng không đăng nhập hoặc kết nối PSN.
 
 **Mốc máy thật 2026-09-23:** sau khi OTA lên `v0.3.2` và ghép lại bằng PIN,
 Smart Pro S đã hiển thị màn hình PS4, nhận điều khiển và chơi game qua LAN thành
 công. Trải nghiệm ban đầu khá ổn nhưng còn drop FPS thường xuyên. Hệ thống tự gửi
-log cũng đã tạo GitHub Issue thành công. Mục tiêu kế tiếp là đo và tối ưu drop FPS,
-không còn là sửa kết nối/pair cơ bản.
+log cũng đã tạo GitHub Issue thành công. Log Issue cho thấy đường truyền chỉ đạt
+khoảng 2–3 Mbps, RTT gần 1 giây và có nhiều lỗi FEC, nên v0.3.3 ưu tiên giảm tải
+ghi log và cho phép thử bitrate thấp để tách nghẽn mạng khỏi giới hạn giải mã.
 
 Tiếp tục dự án ở session khác: đọc `docs/NEW_SESSION_HANDOFF.md` trước. Tài liệu
 này ghi chính xác release hiện tại, kiến trúc stream, trạng thái test và danh
@@ -27,13 +28,16 @@ sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
 - **Wi-Fi**: 802.11 a/b/g/n/ac/ax băng tần kép
 - **Firmware**: TrimUI Linux custom 1.1.1 (TG5050 Smart Pro S)
 
-## Cấu hình stream hiện tại
+## Cấu hình stream và thứ tự thử
 
 - Độ phân giải: `720p` (native, không tốn scaler)
 - FPS: `30`
-- Bitrate: `8000` kbps (giảm xuống `6000` nếu thấy giật)
+- Bitrate mặc định: `8000` kbps; nên thử `4000` rồi `6000` để giảm packet loss.
+- Tùy chọn thử nghiệm: `1080p` ở 30/60 FPS. Màn hình máy chỉ 1280×720 nên 1080p
+  dùng để đo sức giải mã/GPU, không làm tăng độ phân giải vật lý của màn hình.
 - Codec: H264 cho PS4. H265/PS5 có trong helper nhưng chưa được kiểm thử.
-- Trạng thái máy thật: stream/chơi được; còn drop FPS cần tối ưu bằng log thực tế.
+- Thứ tự khuyến nghị: `720p30/4000`, `720p30/6000`, `720p60/6000`,
+  `1080p30/6000`, sau đó mới thử bitrate cao hơn hoặc `1080p60`.
 
 ## Chạy stream
 
@@ -42,8 +46,9 @@ sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
 2. Quét LAN và chọn PS4 đã ghép nối.
 3. Bấm **A – BẮT ĐẦU CHƠI**. Menu đóng để nhường SDL cho native helper.
 4. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại menu.
-5. Nếu không có hình, app tự gửi log nếu `secrets.json` đã được cấu hình; hai
-   file cục bộ vẫn nằm trong
+5. Khi thoát stream bình thường, app tự gửi Issue `native_stream_quality` chứa
+   FPS/rendered/lost/FEC nếu `secrets.json` đã được cấu hình. Nếu không có hình,
+   app gửi log lỗi như trước; hai file cục bộ vẫn nằm trong
    `Apps/Chiaki/`. Log có kết quả `ldd`, handshake, frame và exit code nhưng
    không chứa PIN, `regist_key` hoặc `rp_key`.
 
@@ -89,10 +94,10 @@ Không gửi token qua chat và không commit file này. `secrets.json` bị lo�
 Git, manifest OTA và ZIP Release.
 
 Khi app thoát do lỗi, launcher tạo `.pending_crash` và gửi log trong lần hiện
-tại hoặc lần khởi động tiếp theo nếu mạng đang mất. Trước khi gửi, app lọc token,
-password, khóa đăng ký, PSN ID, địa chỉ IP nội bộ và địa chỉ MAC. Fingerprint
-được lưu cục bộ để cùng một crash không tạo Issue lặp lại. Có thể tắt bằng mục
-**Tự gửi log lỗi** trong **Cài đặt**.
+tại hoặc lần khởi động tiếp theo nếu mạng đang mất. Từ v0.3.3, phiên stream thoát
+bình thường cũng gửi báo cáo `native_stream_quality` để đo drop FPS từ xa. Trước
+khi gửi, app lọc token, password, khóa đăng ký, PSN ID, địa chỉ IP nội bộ và địa
+chỉ MAC. Fingerprint ngăn tạo Issue lặp lại. Có thể tắt trong **Cài đặt**.
 
 ## File log
 
@@ -169,7 +174,7 @@ mới; sau khi lên v0.2.3, app ưu tiên manifest của GitHub Releases.
 - Cần SDL2 + SDL2_ttf. Có sẵn trong `/usr/lib64` của firmware.
 - Ghép nối PS4 dùng AES-128-CFB thuần Python, không cần `openssl` hay thư viện ngoài.
 - Nên **tắt Bluetooth** trước khi stream để tránh nhiễu Wi-Fi (khuyến cáo của hãng).
-- Bitrate mặc định `8000` kbps; nếu thấy giật thì giảm xuống `6000`.
+- Khi đo drop FPS, thử `720p30/4000` trước; chỉ tăng bitrate nếu FEC/lost thấp.
 - Native helper dùng ABI của SDK TG5050: SDL2 2.32, FFmpeg 6, Opus và OpenSSL 1.1.
 - Stream hiện chỉ nhắm LAN; Internet/RUDP và PS5 cần kiểm thử sau.
 

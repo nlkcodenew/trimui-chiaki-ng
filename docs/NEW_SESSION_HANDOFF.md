@@ -1,22 +1,22 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.2
+# Bàn giao session mới — trimui-chiaki-ng v0.3.3
 
-> Cập nhật: 2026-09-22. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
+> Cập nhật: 2026-09-23. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
 ## 1. Mục tiêu hiện tại
 
-Kiểm thử và hoàn thiện Remote Play PS4 qua LAN trên TrimUI Smart Pro S TG5050.
-Bản `v0.3.2` sửa toàn bộ luồng PS4 firmware 9.00 GoldHEN sang protocol pre-10:
-pair PIN `/sce/rp/regist`, session `/sce/rp/session`, `RP-Version: 9.0`.
+Kiểm thử hiệu năng Remote Play PS4 qua LAN trên TrimUI Smart Pro S TG5050.
+`v0.3.2` là mốc stream thật ổn định về chức năng; `v0.3.3` giữ pair/session
+pre-10 và tối ưu I/O/render, thêm báo cáo chất lượng cùng lựa chọn 1080p.
 
 ## 2. Repo và bản phát hành
 
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`
 - Thư mục làm việc: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`
 - Nhánh: `main`
-- Commit hiện tại: `12a89c3`
-- Tag/Release đã phát hành và xác nhận trên máy thật: `v0.3.2`
-- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.2`
-- `manifest.json` trả về đúng `0.3.2`, có
+- Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
+- Bản tối ưu cần kiểm thử máy thật: `v0.3.3`
+- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.3`
+- `manifest.json` phải trả về đúng `0.3.3`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 3. Phần cứng kiểm thử
@@ -47,7 +47,7 @@ tài liệu, Issue hoặc chat. Các khóa thật chỉ được giữ trên th�
 - `secrets.json` đã được cấu hình và uploader đã tự tạo GitHub Issue `#1`, `#2`.
   Mục tiêu tự gửi log không cần người dùng đính kèm file thủ công đã đạt.
 
-## 5. Luồng stream v0.3.2
+## 5. Luồng stream v0.3.3
 
 1. `files/rh/screens/home.py` gọi `prepare_stream_launch()`.
 2. `files/rh/chiaki.py` đọc credential của đúng host, kiểm tra RP key 16 byte,
@@ -61,15 +61,24 @@ tài liệu, Issue hoặc chat. Các khóa thật chỉ được giữ trên th�
 Cấu hình mặc định:
 
 - PS4 H264, 1280×720, 30 FPS.
-- Bitrate 8000 kbps; nếu drop thì thử 6000 kbps.
+- Bitrate mặc định 8000 kbps; menu có 3000/4000 để thử đường truyền yếu.
+- Độ phân giải có 360p/540p/720p/1080p; 1080p được scale về màn 720p.
 - Âm thanh Opus qua SDL queued audio.
 - Giữ `START + SELECT` khoảng 1,2 giây để kết thúc stream.
+
+Tối ưu v0.3.3:
+
+- Tắt TRACE packet/frame mặc định; chỉ bật bằng `CHIAKI_NATIVE_VERBOSE=1`.
+- Buffer stdout, chỉ flush lỗi và báo cáo chất lượng 5 giây.
+- Cache destination SDL và bỏ clear thừa khi hình phủ kín màn.
+- Ghi renderer/accelerated/vsync, FPS thực, lost frame và FEC failure.
+- Tự gửi `native_stream_quality` cả khi phiên stream thoát bình thường.
 
 ## 6. Binary và build
 
 - Binary phát hành: `files/bin/chiaki-stream`.
 - Kiến trúc: ELF64 AArch64 PIE, interpreter `/lib/ld-linux-aarch64.so.1`.
-- SHA-256 binary: `fe0d5ee63a3eba28f15a43f336f1844de930e63e1473c2d9226752de96d8ae1f`.
+- SHA-256 binary v0.3.3: `443f78554e559f16382dd97487d398a8e376b18e70f84f54fd240f7c750b9bbb`.
 - Build bằng SDK TG5050 chính hãng, GCC 10.3.1, glibc 2.33.
 - ABI phụ thuộc đã đối chiếu với SDK: SDL2 2.32, FFmpeg 6
   (`libavcodec.so.60`, `libavutil.so.58`, `libswscale.so.7`), Opus,
@@ -81,7 +90,7 @@ Cấu hình mặc định:
 
 ## 7. Trạng thái kiểm thử trong sandbox
 
-- `python -m unittest discover -s tests -v`: 28/28 test đạt.
+- `python -m unittest discover -s tests -v`: 31/31 test đạt.
 - `python -m compileall -q files tools native`: đạt.
 - `bash -n files/launch.sh`: đạt.
 - `bash -n native/build-tg5050.sh`: đạt.
@@ -89,7 +98,7 @@ Cấu hình mặc định:
 - `python tools/verify_release.py`: đạt.
 - ZIP có quyền `0755` cho `App/Chiaki/bin/chiaki-stream`.
 - Sandbox không đo được hiệu năng thực tế; kết quả máy thật xác nhận stream và
-  input hoạt động, còn drop FPS cần phân tích bằng Issue log tự động.
+  input hoạt động; hiệu năng v0.3.3 cần người dùng kiểm thử thật.
 
 ## 8. Log cho session tiếp theo
 
@@ -120,6 +129,8 @@ native stream preflight
 Remote Play connected
 first video frame
 audio ready
+renderer=
+quality: rendered=
 session quit
 native stream exit=
 native stream failed
@@ -135,18 +146,18 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 ## 9. Việc session mới cần làm ngay
 
 1. Đọc file này và `docs/PROJECT_STATUS.md`.
-2. Giữ nguyên mốc ổn định `v0.3.2`; không sửa lại pair/session nếu không có bằng chứng.
-3. Đọc GitHub Issue log của phiên stream thực tế và định lượng drop FPS.
-4. Xác định bottleneck network/decode/convert/render trước khi thay thông số.
-5. So sánh cấu hình 720p30 8000 kbps với 6000 kbps trên cùng điều kiện Wi-Fi.
-6. Sửa tối thiểu đúng nguyên nhân, tăng version, chạy test/build/verify, push
-   `main`, tạo tag và xác minh GitHub Release/manifest latest trước khi yêu cầu
-   người dùng OTA.
+2. Giữ nguyên pair/session pre-10 của mốc `v0.3.2` nếu không có bằng chứng lỗi.
+3. Đọc các Issue `native_stream_quality` của v0.3.3, so sánh FPS/FEC/lost.
+4. Test theo thứ tự `720p30/4000`, `720p30/6000`, `720p60/6000`,
+   `1080p30/6000`; mỗi mức 1–2 phút trong cùng điều kiện mạng.
+5. Nếu renderer software hoặc FPS thấp nhưng FEC/lost bằng 0, tối ưu decode/render.
+   Nếu FEC/lost cao, xử lý Wi-Fi/bitrate trước.
 
 ## 10. Các phần chưa xác nhận
 
-- Nguyên nhân chính xác của drop FPS thường xuyên ở 720p30.
+- Mức cải thiện thực tế của v0.3.3 và phần drop còn lại do mạng hay decode/render.
 - Bitrate tối ưu cho Wi-Fi và RAM 1 GB của Smart Pro S.
+- Khả năng chạy 1080p30/1080p60 trên A523.
 - PS5/H265.
 - Remote Play qua Internet/RUDP.
 
@@ -172,9 +183,9 @@ Tiếp tục dự án trimui-chiaki-ng tại
 E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước. Mốc v0.3.2 đã
-stream thành công PS4 Pro firmware 9.00 GoldHEN trên Smart Pro S: có hình, input
-và chơi được qua LAN, không PSN. Uploader GitHub Issue cũng đã hoạt động. Nhiệm
-vụ hiện tại là đọc Issue log, định lượng và tối ưu drop FPS thường xuyên mà không
-làm hỏng mốc pair/session pre-10 đang chạy tốt.
+stream thành công PS4 Pro firmware 9.00 GoldHEN trên Smart Pro S, không PSN.
+v0.3.3 giảm log/render thừa, thêm báo cáo chất lượng 5 giây và 1080p. Nhiệm vụ
+hiện tại là đọc Issue native_stream_quality theo ma trận test và tiếp tục tối ưu
+mà không làm hỏng pair/session pre-10 đang chạy tốt.
 Không tiết lộ hoặc ghi log PIN, regist_key, rp_key, Account-ID hay token.
 ```

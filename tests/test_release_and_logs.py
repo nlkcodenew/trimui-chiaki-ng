@@ -99,6 +99,15 @@ class LogUploaderTests(unittest.TestCase):
             self.assertFalse(self.uploader.upload_pending("exit_1"))
         self.assertTrue(os.path.exists(self.uploader.PENDING_FILE))
 
+    def test_quality_report_is_not_described_as_crash(self):
+        body = self.uploader._issue_body(
+            [("Chiaki-debug.log", "quality: rendered=150 lost=0 fec=0 fps=30.0")],
+            "native_stream_quality",
+            "a" * 64,
+        )
+        self.assertIn("Báo cáo chất lượng stream", body)
+        self.assertNotIn("sau khi ứng dụng lỗi", body)
+
     def test_updater_ignores_user_settings(self):
         manifest = {
             "files": [{"path": "settings.json", "sha256": "0" * 64}]
@@ -630,6 +639,26 @@ class LogUploaderTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("ghép lại", message)
         os.remove(paired_path)
+
+    def test_video_profiles_include_1080p(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        state = importlib.import_module("rh.state")
+        old_resolution = state.video_resolution
+        try:
+            state.video_resolution = "1080p"
+            profile = chiaki._video_profile_from_state()
+        finally:
+            state.video_resolution = old_resolution
+        self.assertEqual(profile["width"], 1920)
+        self.assertEqual(profile["height"], 1080)
+
+    def test_settings_offer_1080p_and_low_bitrate(self):
+        screen = self.settings_module.SettingsScreen.__new__(
+            self.settings_module.SettingsScreen)
+        screen.__init__()
+        rows = {key: values for key, values, _ in screen.rows if values}
+        self.assertIn("1080p", rows["video_resolution"])
+        self.assertIn(3000, rows["video_bitrate"])
 
 
 if __name__ == "__main__":

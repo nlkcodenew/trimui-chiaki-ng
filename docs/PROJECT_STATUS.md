@@ -1,14 +1,14 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.2)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.3)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-23.
-> v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN,
-> giữ PSN bị khóa và bật log native verbose để chẩn đoán trực tiếp.
+> v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
 > **Mốc đã đạt trên máy thật:** stream có hình, nhận input và chơi được qua LAN.
-> Việc còn lại là tối ưu drop FPS thường xuyên.
+> v0.3.3 giữ nguyên giao thức đã chạy tốt, giảm tải log/render, thêm báo cáo chất
+> lượng 5 giây, bitrate 3000 kbps và lựa chọn 1080p để đo giới hạn máy thật.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
-## Stream native v0.3.2
+## Stream native v0.3.3
 
 - Binary `files/bin/chiaki-stream` là ELF AArch64 build bằng SDK TG5050 chính hãng.
 - Session dùng khóa thật từ `paired_hosts.json`; khóa đi qua file tạm `0600`,
@@ -20,10 +20,17 @@
 - Menu đóng SDL trước khi chạy native và tự mở lại khi stream kết thúc.
 - Giữ START+SELECT 1,2 giây để thoát. Native stdout/stderr và `ldd` được ghi
   vào `Chiaki-debug.log`/`Chiaki-loi.txt`.
-- Đã build/link/strip thành công và unit test 28/28.
+- Trace packet/frame native không còn bật theo `enable_logging`; mặc định chỉ ghi
+  INFO/WARNING/ERROR, buffer stdout 64 KB và không `fflush` từng dòng.
+- Renderer cache đích hiển thị, bỏ clear toàn màn hình khi frame phủ kín 1280×720
+  và ghi tên renderer/accelerated/vsync để phát hiện fallback software.
+- Mỗi 5 giây ghi `rendered`, `lost`, `fec`, FPS thực và số log bị lược; khi thoát
+  bình thường launcher tự gửi Issue `native_stream_quality`.
+- Cài đặt có thêm bitrate 3000 kbps và 1080p. 1080p được decode rồi scale về màn
+  1280×720, chỉ dùng để thử sức decoder/GPU.
 - Đã xác nhận trên Smart Pro S thật ngày 2026-09-23: màn hình PS4 xuất hiện,
   điều khiển hoạt động và chơi game qua LAN được; cảm nhận ban đầu khá ổn.
-- Chưa xong: phân tích/tối ưu drop FPS thường xuyên, PS5/H265 và Internet/RUDP.
+- Chưa xong: xác nhận mức cải thiện v0.3.3 trên máy thật, PS5/H265 và Internet/RUDP.
 
 ## 1. Mục tiêu
 
@@ -138,7 +145,7 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai trong v0.3.2
+### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.3 đang tối ưu
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
@@ -149,6 +156,13 @@ protocol pre-10, Smart Pro S hiển thị màn hình PS4 Pro GoldHEN 9.00, nhậ
 và chơi game qua LAN được. Chất lượng ban đầu khá ổn nhưng drop FPS xảy ra khá
 nhiều. P2 kết nối/stream cơ bản đã đóng; công việc tiếp theo là profiling và tune
 decode/render/network để giảm drop FPS.
+
+Issue `#2` cho thấy phiên kết nối thành công có `rendered=338`, `lost=21`, bitrate
+mục tiêu 8000 kbps nhưng bitrate đo được chỉ khoảng 1,96–2,89 Mbps, RTT khoảng
+946–988 ms, kèm nhiều FEC failure/missing unit/IDR request. Bằng chứng hiện tại
+nghiêng mạnh về packet loss/độ trễ mạng; đồng thời `CHIAKI_LOG_ALL` và `fflush`
+từng dòng xuống thẻ SD là tải phụ đáng kể. v0.3.3 xử lý phần tải log/render có thể
+sửa trong app và bổ sung số đo để kiểm chứng phần mạng trên thiết bị.
 
 ### 4.5 P1 — Tự gửi log GitHub — ĐÃ XÁC NHẬN TRÊN MÁY THẬT
 Người dùng đã cấu hình `Apps/Chiaki/secrets.json` bằng fine-grained token chỉ có
@@ -207,12 +221,12 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 
-## 8. Bước tối ưu tiếp theo
+## 8. Bước kiểm thử v0.3.3
 
-1. Đọc Issue log tự động của một phiên chơi đủ dài và thống kê rendered/lost frame.
-2. Phân biệt drop do Wi-Fi/packet loss, software decode, swscale hay SDL render.
-3. So sánh 720p30 ở 8000 kbps và 6000 kbps; chưa thử 60 FPS trước khi ổn định 30 FPS.
-4. Giữ tắt Bluetooth và dùng Wi-Fi 5 GHz để loại trừ nhiễu vô tuyến.
-5. Chỉ phát hành bản tối ưu mới sau khi có chỉ số trước/sau rõ ràng.
+1. Mỗi cấu hình chơi 1–2 phút rồi thoát bằng START+SELECT để gửi Issue chất lượng.
+2. Thử lần lượt `720p30/4000`, `720p30/6000`, `720p60/6000`, `1080p30/6000`.
+3. Chỉ thử 1080p60 hoặc 8000–15000 kbps khi `fec/lost` ở cấu hình trước gần 0.
+4. So sánh `fps`, `fec`, `lost` và renderer; không chỉ đánh giá bằng cảm giác.
+5. Dùng Wi-Fi 5 GHz, tắt Bluetooth và nếu có thể nối PS4 bằng Ethernet vào router.
 
-Lưu ý phần cứng: RAM 1GB, ưu tiên 720p30; tắt Bluetooth để giảm nhiễu Wi-Fi 5 GHz.
+Lưu ý phần cứng: RAM 1 GB và màn 720p, nên 720p30 vẫn là cấu hình ưu tiên.

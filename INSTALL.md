@@ -43,17 +43,23 @@
 
 Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
 9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
-Hiện vẫn có drop FPS thường xuyên; đây là vấn đề tối ưu hiệu năng, không phải lỗi
-pair hoặc bắt buộc PSN.
+`v0.3.3` giữ nguyên pair/session đã chạy tốt, giảm tải log/render và thêm phép đo
+chất lượng cùng tùy chọn 1080p. Ứng dụng không cần PSN.
 
 1. Đặt PS4 và Smart Pro S cùng Wi-Fi/LAN 5 GHz.
 2. Với PS4 firmware 9.00 GoldHEN, không cần và không được đăng nhập PSN. Sau khi
    cập nhật từ v0.3.1, bấm **Y** và nhập PIN lại đúng một lần để tạo khóa pre-10.
 3. Mở app, quét máy, chọn PS4 đã ghép nối và bấm **A**.
-4. Cấu hình mặc định là H264 `1280x720`, 30 FPS, 8000 kbps.
+4. Vào **Cài đặt** và thử lần lượt, mỗi cấu hình chơi ít nhất 1–2 phút:
+   - `720p`, 30 FPS, 4000 kbps
+   - `720p`, 30 FPS, 6000 kbps
+   - `720p`, 60 FPS, 6000 kbps
+   - `1080p`, 30 FPS, 6000 kbps
+   - Chỉ sau đó mới thử 1080p/60 FPS hoặc bitrate 8000–15000 kbps.
 5. Giữ **START + SELECT** khoảng 1,2 giây để thoát stream về menu app.
-6. Nếu màn hình đen hoặc tự thoát, app tự tạo GitHub Issue khi token đã được
-   cấu hình; nếu chưa, chép cả `Chiaki-debug.log` và
+6. Sau khi thoát bình thường, app tự tạo Issue `native_stream_quality` khi token
+   đã được cấu hình. Issue có thống kê 5 giây gồm `fps`, `rendered`, `lost`, `fec`
+   và renderer. Nếu chưa có token, chép cả `Chiaki-debug.log` và
    `Chiaki-loi.txt`. Dòng `native stream preflight` sẽ liệt kê thư viện thiếu.
 
 ## Cập nhật OTA
@@ -88,13 +94,27 @@ Khi app chạy, 2 file log nằm ngay trong `Apps/Chiaki/`:
 - `Chiaki-loi.txt` - lỗi + cảnh báo, xoay vòng 3 file backup 256 KB
 - `Chiaki-debug.log` - toàn bộ hoạt động, xoay vòng 1 file backup 512 KB
 
-Native stream ghi handshake, trạng thái audio/video, số frame mất và exit code
-vào hai file trên. PIN và khóa ghép nối không được ghi vào log.
+Native stream ghi handshake, trạng thái audio/video, số frame mất, FEC, FPS và
+exit code vào hai file trên. Log packet/frame lặp lại bị tắt mặc định để tránh I/O
+thẻ nhớ làm giảm FPS. PIN và khóa ghép nối không được ghi vào log.
 
 Format mỗi dòng: `[YYYY-MM-DD HH:MM:SS.mmm] [LEVEL] [Thread] module - message`
 
-Để bật log debug, sửa `settings.json` đổi `"enable_logging": false` thành `true`.
-Nếu không cấu hình tự gửi, copy hai file này để gửi thủ công.
+`enable_logging` chỉ điều khiển debug Python. Chỉ đặt biến môi trường
+`CHIAKI_NATIVE_VERBOSE=1` khi thật sự cần trace native đầy đủ vì chế độ này có thể
+làm giảm FPS. Nếu không cấu hình tự gửi, copy hai file để gửi thủ công.
+
+## Đọc báo cáo chất lượng
+
+Mỗi dòng `quality` bao phủ khoảng 5 giây:
+
+```text
+[native] quality: rendered=150 lost=0 fec=0 fps=30.0 suppressed=0 totals=...
+```
+
+- `fps` gần mức đặt và `fec/lost=0`: decode/render đang theo kịp.
+- `fec` hoặc `lost` tăng: ưu tiên giảm bitrate, dùng Wi-Fi 5 GHz và tắt Bluetooth.
+- 1080p vẫn được thu nhỏ về màn 1280×720; đây là bài test tải decoder/GPU.
 
 ## Gỡ lỗi nhanh
 

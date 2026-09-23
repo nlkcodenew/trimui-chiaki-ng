@@ -30,6 +30,7 @@ typedef struct {
     char regist_key[CHIAKI_SESSION_AUTH_SIZE];
     uint8_t morning[16];
     bool ps5;
+    bool verbose;
     unsigned int target;
     unsigned int width;
     unsigned int height;
@@ -47,6 +48,8 @@ typedef struct {
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Texture *texture;
+    SDL_Rect destination;
+    bool destination_ready;
     SDL_GameController *controller;
     SDL_Joystick *joystick;
     SDL_AudioDeviceID audio_device;
@@ -61,10 +64,18 @@ typedef struct {
     bool session_started;
     bool decoder_initialized;
     bool opus_initialized;
+    bool verbose_logs;
     bool start_select_held;
     uint32_t start_select_since;
     uint64_t rendered_frames;
     uint64_t lost_frames;
+    atomic_uint_fast64_t fec_failures;
+    atomic_uint_fast64_t suppressed_logs;
+    uint32_t last_stats_ticks;
+    uint64_t stats_rendered_frames;
+    uint64_t stats_lost_frames;
+    uint64_t stats_fec_failures;
+    uint64_t stats_suppressed_logs;
     uint32_t audio_channels;
 } StreamApp;
 
@@ -72,14 +83,28 @@ static StreamApp *signal_app;
 
 static void native_log(ChiakiLogLevel level, const char *message, void *user)
 {
-    (void)user;
+    StreamApp *app = user;
+    if(app && !app->verbose_logs && message && (
+            strstr(message, "Frame Processor received") ||
+            strstr(message, "FEC failed") ||
+            strstr(message, "FEC successful") ||
+            strstr(message, "Missing unit") ||
+            strstr(message, "Skipping P-frame") ||
+            strstr(message, "missing or corrupt frame") ||
+            strstr(message, "reporting corrupt frame") ||
+            strstr(message, "could not flush frame") ||
+            strstr(message, "waiting for IDR") ||
+            strstr(message, "already waiting for requested IDR"))) {
+        atomic_fetch_add(&app->suppressed_logs, 1);
+        return;
+    }
     const char *name = "INFO";
     if(level == CHIAKI_LOG_ERROR) name = "ERROR";
     else if(level == CHIAKI_LOG_WARNING) name = "WARN";
     else if(level == CHIAKI_LOG_DEBUG) name = "DEBUG";
     else if(level == CHIAKI_LOG_VERBOSE) name = "TRACE";
     fprintf(stdout, "[native] [%s] %s\n", name, message ? message : "");
-    fflush(stdout);
+    if(level == CHIAKI_LOG_ERROR) fflush(stdout);
 }
 
 static void stop_signal(int signal_number)
@@ -137,6 +162,7 @@ static bool load_config(const char *path, StreamConfig *config)
         else if(!strcmp(line, "regist_key")) snprintf(config->regist_key, sizeof(config->regist_key), "%s", value);
         else if(!strcmp(line, "rp_key")) snprintf(rp_key, sizeof(rp_key), "%s", value);
         else if(!strcmp(line, "ps5")) config->ps5 = !strcmp(value, "1") || !strcasecmp(value, "true");
+        else if(!strcmp(line, "verbose")) config->verbose = !strcmp(value, "1") || !strcasecmp(value, "true");
         else if(!strcmp(line, "target")) parse_uint(value, 0, 1000000, &config->target);
         else if(!strcmp(line, "width")) parse_uint(value, 320, 3840, &config->width);
         else if(!strcmp(line, "height")) parse_uint(value, 180, 2160, &config->height);
@@ -225,10 +251,16 @@ static void session_event(ChiakiEvent *event, void *user)
             if(chiaki_quit_reason_is_error(event->quit.reason)) atomic_store(&app->exit_code, 11);
             atomic_store(&app->running, false);
             break;
-        case CHIAKI_EVENT_VIDEO_FEC_FAILURE:
-            fprintf(stderr, "[native] video FEC failure frame=%d idr=%d\n",
-                    event->video_fec_failure.frame_index, event->video_fec_failure.idr_request_sent);
+        case CHIAKI_EVENT_VIDEO_FEC_FAILURE: {
+            uint64_t fec_failures = atomic_fetch_add(&app->fec_failures, 1) + 1;
+            if(fec_failures <= 3 || fec_failures % 50 == 0) {
+                fprintf(stderr, "[native] video FEC failure count=%llu frame=%d idr=%d\n",
+                        (unsigned long long)fec_failures,
+                        event->video_fec_failure.frame_index,
+                        event->video_fec_failure.idr_request_sent);
+            }
             break;
+        }
         default:
             break;
     }
@@ -386,6 +418,20 @@ static bool render_frame(StreamApp *app)
             av_frame_free(&frame);
             return false;
         }
+        int output_w = 0;
+        int output_h = 0;
+        SDL_GetRendererOutputSize(app->renderer, &output_w, &output_h);
+        app->destination = (SDL_Rect){0, 0, output_w, output_h};
+        double source_ratio = (double)display->width / display->height;
+        double output_ratio = (double)output_w / output_h;
+        if(output_ratio > source_ratio) {
+            app->destination.w = (int)(output_h * source_ratio);
+            app->destination.x = (output_w - app->destination.w) / 2;
+        } else if(output_ratio < source_ratio) {
+            app->destination.h = (int)(output_w / source_ratio);
+            app->destination.y = (output_h - app->destination.h) / 2;
+        }
+        app->destination_ready = true;
         fprintf(stdout, "[native] first video frame: %dx%d format=%d\n", display->width, display->height, frame->format);
         fflush(stdout);
     }
@@ -397,21 +443,15 @@ static bool render_frame(StreamApp *app)
         av_frame_free(&frame);
         return false;
     }
-    int output_w = 0, output_h = 0;
-    SDL_GetRendererOutputSize(app->renderer, &output_w, &output_h);
-    SDL_Rect destination = {0, 0, output_w, output_h};
-    double source_ratio = (double)display->width / display->height;
-    double output_ratio = (double)output_w / output_h;
-    if(output_ratio > source_ratio) {
-        destination.w = (int)(output_h * source_ratio);
-        destination.x = (output_w - destination.w) / 2;
-    } else if(output_ratio < source_ratio) {
-        destination.h = (int)(output_w / source_ratio);
-        destination.y = (output_h - destination.h) / 2;
+    bool fills_output = app->destination_ready && app->destination.x == 0 &&
+                        app->destination.y == 0 &&
+                        app->destination.w == SCREEN_WIDTH &&
+                        app->destination.h == SCREEN_HEIGHT;
+    if(!fills_output) {
+        SDL_SetRenderDrawColor(app->renderer, 0, 0, 0, 255);
+        SDL_RenderClear(app->renderer);
     }
-    SDL_SetRenderDrawColor(app->renderer, 0, 0, 0, 255);
-    SDL_RenderClear(app->renderer);
-    SDL_RenderCopy(app->renderer, app->texture, NULL, &destination);
+    SDL_RenderCopy(app->renderer, app->texture, NULL, &app->destination);
     SDL_RenderPresent(app->renderer);
     app->rendered_frames++;
     av_frame_free(&frame);
@@ -437,6 +477,14 @@ static bool init_sdl(StreamApp *app)
     if(!app->renderer) {
         fprintf(stderr, "[native] SDL renderer failed: %s\n", SDL_GetError());
         return false;
+    }
+    SDL_RendererInfo renderer_info;
+    if(SDL_GetRendererInfo(app->renderer, &renderer_info) == 0) {
+        fprintf(stdout, "[native] renderer=%s accelerated=%d vsync=%d max_texture=%dx%d\n",
+                renderer_info.name ? renderer_info.name : "unknown",
+                !!(renderer_info.flags & SDL_RENDERER_ACCELERATED),
+                !!(renderer_info.flags & SDL_RENDERER_PRESENTVSYNC),
+                renderer_info.max_texture_width, renderer_info.max_texture_height);
     }
     SDL_SetRenderDrawColor(app->renderer, 0, 0, 0, 255);
     SDL_RenderClear(app->renderer);
@@ -482,6 +530,7 @@ static void cleanup(StreamApp *app)
 
 int main(int argc, char **argv)
 {
+    setvbuf(stdout, NULL, _IOFBF, 64 * 1024);
     if(argc != 2) {
         fprintf(stderr, "usage: chiaki-stream SESSION_FILE\n");
         return 2;
@@ -496,6 +545,9 @@ int main(int argc, char **argv)
     atomic_init(&app.running, true);
     atomic_init(&app.connected, false);
     atomic_init(&app.exit_code, 0);
+    atomic_init(&app.fec_failures, 0);
+    atomic_init(&app.suppressed_logs, 0);
+    app.verbose_logs = config.verbose;
     signal_app = &app;
     signal(SIGINT, stop_signal);
     signal(SIGTERM, stop_signal);
@@ -505,7 +557,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "[native] chiaki init failed: %s\n", chiaki_error_string(error));
         return 4;
     }
-    chiaki_log_init(&app.log, CHIAKI_LOG_ALL, native_log, NULL);
+    ChiakiLogLevel log_mask = config.verbose
+        ? CHIAKI_LOG_ALL
+        : CHIAKI_LOG_INFO | CHIAKI_LOG_WARNING | CHIAKI_LOG_ERROR;
+    chiaki_log_init(&app.log, log_mask, native_log, &app);
     if(!init_sdl(&app)) {
         cleanup(&app);
         return 5;
@@ -566,6 +621,11 @@ int main(int argc, char **argv)
         fflush(stdout);
     }
     app.session_initialized = true;
+    app.last_stats_ticks = SDL_GetTicks();
+    app.stats_rendered_frames = 0;
+    app.stats_lost_frames = 0;
+    app.stats_fec_failures = 0;
+    app.stats_suppressed_logs = 0;
     ChiakiAudioSink audio_sink;
     chiaki_opus_decoder_get_sink(&app.opus, &audio_sink);
     chiaki_session_set_audio_sink(&app.session, &audio_sink);
@@ -606,6 +666,31 @@ int main(int argc, char **argv)
         if(atomic_exchange(&app.frame_ready, false) && !render_frame(&app)) {
             atomic_store(&app.exit_code, 10);
             atomic_store(&app.running, false);
+        }
+        uint32_t now_ticks = SDL_GetTicks();
+        if(now_ticks - app.last_stats_ticks >= 5000) {
+            uint64_t rendered_delta = app.rendered_frames - app.stats_rendered_frames;
+            uint64_t lost_delta = app.lost_frames - app.stats_lost_frames;
+            uint64_t fec_total = atomic_load(&app.fec_failures);
+            uint64_t suppressed_total = atomic_load(&app.suppressed_logs);
+            uint64_t fec_delta = fec_total - app.stats_fec_failures;
+            uint64_t suppressed_delta = suppressed_total - app.stats_suppressed_logs;
+            double interval_seconds = (double)(now_ticks - app.last_stats_ticks) / 1000.0;
+            fprintf(stdout, "[native] quality: rendered=%llu lost=%llu fec=%llu fps=%.1f suppressed=%llu totals=%llu/%llu/%llu\n",
+                    (unsigned long long)rendered_delta,
+                    (unsigned long long)lost_delta,
+                    (unsigned long long)fec_delta,
+                    interval_seconds > 0.0 ? (double)rendered_delta / interval_seconds : 0.0,
+                    (unsigned long long)suppressed_delta,
+                    (unsigned long long)app.rendered_frames,
+                    (unsigned long long)app.lost_frames,
+                    (unsigned long long)fec_total);
+            fflush(stdout);
+            app.last_stats_ticks = now_ticks;
+            app.stats_rendered_frames = app.rendered_frames;
+            app.stats_lost_frames = app.lost_frames;
+            app.stats_fec_failures = fec_total;
+            app.stats_suppressed_logs = suppressed_total;
         }
         SDL_Delay(2);
     }
