@@ -43,8 +43,8 @@
 
 Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
 9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
-`v0.3.3` giữ nguyên pair/session đã chạy tốt, giảm tải log/render và thêm phép đo
-chất lượng cùng tùy chọn 1080p. Ứng dụng không cần PSN.
+`v0.3.4` giữ nguyên pair/session đã chạy tốt, thêm quản lý log an toàn và tăng độ
+tin cậy của tổ hợp thoát stream. Ứng dụng không cần PSN.
 
 1. Đặt PS4 và Smart Pro S cùng Wi-Fi/LAN 5 GHz.
 2. Với PS4 firmware 9.00 GoldHEN, không cần và không được đăng nhập PSN. Sau khi
@@ -57,6 +57,7 @@ chất lượng cùng tùy chọn 1080p. Ứng dụng không cần PSN.
    - `1080p`, 30 FPS, 6000 kbps
    - Chỉ sau đó mới thử 1080p/60 FPS hoặc bitrate 8000–15000 kbps.
 5. Giữ **START + SELECT** khoảng 1,2 giây để thoát stream về menu app.
+   Dòng hướng dẫn màu xanh luôn hiện trên màn hình chính. Không cần tắt PS4.
 6. Sau khi thoát bình thường, app tự tạo Issue `native_stream_quality` khi token
    đã được cấu hình. Issue có thống kê 5 giây gồm `fps`, `rendered`, `lost`, `fec`
    và renderer. Nếu chưa có token, chép cả `Chiaki-debug.log` và
@@ -97,6 +98,11 @@ Khi app chạy, 2 file log nằm ngay trong `Apps/Chiaki/`:
 Native stream ghi handshake, trạng thái audio/video, số frame mất, FEC, FPS và
 exit code vào hai file trên. Log packet/frame lặp lại bị tắt mặc định để tránh I/O
 thẻ nhớ làm giảm FPS. PIN và khóa ghép nối không được ghi vào log.
+
+App đã có xoay vòng log. Từ v0.3.4, launcher còn giới hạn lại kích thước sau mỗi
+phiên native. Để có log sạch cho một bài test, vào **Cài đặt → XÓA LOG CŨ → A →
+Có**. App không cho xóa nếu `.pending_crash` cho biết vẫn còn báo cáo chưa gửi.
+Khi chọn **THOÁT**, launcher thử gửi lại report pending trước khi đóng ứng dụng.
 
 Format mỗi dòng: `[YYYY-MM-DD HH:MM:SS.mmm] [LEVEL] [Thread] module - message`
 

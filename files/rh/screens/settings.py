@@ -10,7 +10,7 @@ import sys
 import time
 from .. import state
 from ..i18n import tr
-from ..logger import get_logger
+from ..logger import clear_runtime_logs, get_logger, runtime_log_size
 from .base import BaseScreen
 
 log = get_logger()
@@ -32,6 +32,7 @@ class SettingsScreen(BaseScreen):
             ("auto_upload_logs", [True, False], None),
             ("enable_logging", [True, False], self._set_logging),
             ("current_lang", ["VI", "EN"], self._set_lang),
+            ("clear_logs", None, None),
             ("back", None, None),
         ]
         self.selected = 0
@@ -43,6 +44,8 @@ class SettingsScreen(BaseScreen):
         key = self.rows[self.selected][0] if 0 <= self.selected < len(self.rows) else ""
         if key == "back":
             return [("A", tr("back")), ("B", tr("back"))]
+        if self._is_action_row():
+            return [("A", tr("select")), ("B", tr("back"))]
         return [("A", tr("change")), ("B", tr("back"))]
 
     def _set_resolution(self, value):
@@ -65,6 +68,35 @@ class SettingsScreen(BaseScreen):
     def _is_back_row(self):
         return 0 <= self.selected < len(self.rows) and self.rows[self.selected][0] == "back"
 
+    def _is_action_row(self):
+        return 0 <= self.selected < len(self.rows) and self.rows[self.selected][1] is None
+
+    def _clear_logs(self):
+        ok, reason, removed_bytes = clear_runtime_logs(protect_pending=True)
+        if ok:
+            message = tr("clear_logs_done") % max(1, int(removed_bytes / 1024))
+        elif reason == "pending":
+            message = tr("clear_logs_pending")
+        else:
+            message = tr("clear_logs_failed")
+        self.engine.open_modal("info", {
+            "title": tr("clear_logs"),
+            "message": message,
+        })
+
+    def _confirm_clear_logs(self):
+        if runtime_log_size() <= 0:
+            self.engine.open_modal("info", {
+                "title": tr("clear_logs"),
+                "message": tr("clear_logs_empty"),
+            })
+            return
+        self.engine.open_modal("confirm", {
+            "title": tr("clear_logs"),
+            "message": tr("clear_logs_confirm"),
+            "on_yes": self._clear_logs,
+        })
+
     def handle_input(self, inputs):
         if inputs.get("edges", []):
             if "btn_up" in inputs["edges"]:
@@ -83,6 +115,11 @@ class SettingsScreen(BaseScreen):
             if self._is_back_row():
                 if any(k in edges for k in ("btn_a", "btn_left", "btn_right")):
                     self.engine.pop_screen()
+                    return True
+                return False
+            if self._is_action_row():
+                if "btn_a" in edges:
+                    self._confirm_clear_logs()
                     return True
                 return False
             if "btn_left" in edges:
@@ -130,8 +167,8 @@ class SettingsScreen(BaseScreen):
         y = 100
         for i in range(first, min(len(self.rows), first + visible)):
             key, values, _ = self.rows[i]
-            if key == "back":
-                label = tr("back")
+            if values is None:
+                label = tr(key)
                 value = "→"
             else:
                 cur = getattr(state, key)

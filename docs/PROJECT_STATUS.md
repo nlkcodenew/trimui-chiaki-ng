@@ -1,14 +1,16 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.3)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.4)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-23.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
 > **Mốc đã đạt trên máy thật:** stream có hình, nhận input và chơi được qua LAN.
 > v0.3.3 giữ nguyên giao thức đã chạy tốt, giảm tải log/render, thêm báo cáo chất
 > lượng 5 giây, bitrate 3000 kbps và lựa chọn 1080p để đo giới hạn máy thật.
+> v0.3.4 thêm xóa/giới hạn log an toàn, retry Issue pending khi Thoát và fallback
+> nút vật lý START/SELECT để trở về menu mà không cần tắt PS4.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
-## Stream native v0.3.3
+## Stream native v0.3.4
 
 - Binary `files/bin/chiaki-stream` là ELF AArch64 build bằng SDK TG5050 chính hãng.
 - Session dùng khóa thật từ `paired_hosts.json`; khóa đi qua file tạm `0600`,
@@ -28,9 +30,17 @@
   bình thường launcher tự gửi Issue `native_stream_quality`.
 - Cài đặt có thêm bitrate 3000 kbps và 1080p. 1080p được decode rồi scale về màn
   1280×720, chỉ dùng để thử sức decoder/GPU.
+- Màn hình chính hiện rõ `giữ START + SELECT 1,2 giây để về menu`. Native nhận
+  cả GameController và raw joystick button 8/9 cho riêng tổ hợp thoát, tránh lỗi
+  mapping khiến người dùng trước đây phải tắt PS4 mới quay lại menu. Khi đủ tổ
+  hợp, native nhả OPTIONS/SHARE khỏi input gửi sang PS4 để tránh tác dụng phụ.
+- **Cài đặt → XÓA LOG CŨ** có xác nhận; không xóa nếu còn `.pending_crash` để
+  bảo vệ report chưa gửi. Launcher cắt giữ phần cuối log native sau mỗi phiên.
+- Khi chọn **THOÁT**, launcher retry report pending đồng bộ rồi mới đóng; nếu
+  không có pending marker thì không tạo Issue mới không cần thiết.
 - Đã xác nhận trên Smart Pro S thật ngày 2026-09-23: màn hình PS4 xuất hiện,
   điều khiển hoạt động và chơi game qua LAN được; cảm nhận ban đầu khá ổn.
-- Chưa xong: xác nhận mức cải thiện v0.3.3 trên máy thật, PS5/H265 và Internet/RUDP.
+- Chưa xong: xác nhận v0.3.4 trên máy thật, PS5/H265 và Internet/RUDP.
 
 ## 1. Mục tiêu
 
@@ -48,7 +58,7 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
   chặn `settings.json` mặc định có `device_id`.
 - CI: `.github/workflows/release.yml` (push tag `v*` -> checkout -> verify tag == `APP_VERSION` ->
   compileall -> make_release -> verify -> publish bằng `softprops/action-gh-release`).
-- 28 unittest pass tại `tests/test_release_and_logs.py`.
+- 38 unittest pass tại `tests/test_release_and_logs.py`.
 
 ### Ghép nối PS4 thật — v0.3.0-beta
 - Xóa hoàn toàn `stub-rp-key-*`; chỉ báo thành công khi PS4 trả HTTP 200 và đủ `PS4-RegistKey`, `RP-Key`, `RP-KeyType`, MAC.
@@ -79,10 +89,12 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
 - v0.2.10: **Sửa tận gốc bug P0 "A và B đều chỉnh sửa"** (chi tiết ở mục 4.1).
 
 ### Ghi log
-- `files/rh/logger.py`: 2 file `Chiaki-loi.txt` (WARNING+) và `Chiaki-debug.log` (DEBUG khi `enable_logging`), xoay vòng.
-- `files/launch.sh`: giữ log khi có `.pending_crash`, xuất `CHIAKI_STDERR_LOG`, tạo `.pending_crash` khi app exit != 0 và gọi uploader.
+- `files/rh/logger.py`: 2 file `Chiaki-loi.txt` (WARNING+) và `Chiaki-debug.log`
+  (DEBUG khi `enable_logging`), xoay vòng; hỗ trợ xóa an toàn và cap log native.
+- `files/launch.sh`: giữ log khi có `.pending_crash`, xuất `CHIAKI_STDERR_LOG`,
+  gửi quality sau stream, retry pending khi Thoát và cap kích thước log.
 
-## 3. Tự động gửi log về GitHub — đã hoàn thiện về mã, chưa hoàn thiện về vận hành
+## 3. Tự động gửi log về GitHub — ĐÃ XÁC NHẬN TRÊN MÁY THẬT
 
 **Mã đã xong:**
 - `files/rh/log_uploader.py`: đọc `secrets.json` hoặc env `CHIAKI_GITHUB_TOKEN`, lọc token/PSN/IP/MAC,
@@ -92,10 +104,9 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
 - `files/launch.sh` gọi `python -m rh.log_uploader` khi crash.
 - `files/secrets.example.json` mẫu, `.gitignore` loại trừ `secrets.json`.
 
-**Tại sao chưa thấy Issue nào:**
-- GitHub không cho tạo Issue ẩn danh. Máy bạn chưa có token nên log chỉ ghi
-  `WARNING log upload pending: missing secrets.json github_token` (đã thấy trong mọi `Chiaki-loi.txt`).
-- Chưa cấu hình token -> pipeline log hoạt động đúng nhưng bị gate ở bước lấy token.
+Người dùng đã cấu hình fine-grained token chỉ có quyền Issues cho repo này và
+thiết bị đã tạo Issue `#1`, `#2`. Từ v0.3.4, nút xóa log bảo vệ marker pending;
+launcher retry report khi người dùng chọn Thoát.
   Đây là thiết kế bảo mật, không phải bug.
 
 **Để kích hoạt:**
@@ -145,7 +156,7 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.3 đang tối ưu
+### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.4 đang kiểm thử
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
@@ -217,16 +228,17 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `files/rh/updater.py` — OTA + log mạng
 - `files/rh/log_uploader.py` — auto Issue
 - `tools/make_release.py` / `tools/verify_release.py` — build gate
-- `tests/test_release_and_logs.py` — 20 tests
+- `tests/test_release_and_logs.py` — 38 tests
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 
-## 8. Bước kiểm thử v0.3.3
+## 8. Bước kiểm thử v0.3.4
 
-1. Mỗi cấu hình chơi 1–2 phút rồi thoát bằng START+SELECT để gửi Issue chất lượng.
-2. Thử lần lượt `720p30/4000`, `720p30/6000`, `720p60/6000`, `1080p30/6000`.
-3. Chỉ thử 1080p60 hoặc 8000–15000 kbps khi `fec/lost` ở cấu hình trước gần 0.
-4. So sánh `fps`, `fec`, `lost` và renderer; không chỉ đánh giá bằng cảm giác.
-5. Dùng Wi-Fi 5 GHz, tắt Bluetooth và nếu có thể nối PS4 bằng Ethernet vào router.
+1. Nếu muốn bài test sạch, vào **Cài đặt → XÓA LOG CŨ → A → Có**.
+2. Mỗi cấu hình chơi 1–2 phút rồi giữ START+SELECT 1,2 giây để về menu; không
+   tắt PS4. Xác nhận app quay về menu và Issue chất lượng xuất hiện.
+3. Thử lần lượt `720p30/4000`, `720p30/6000`, `720p60/6000`, `1080p30/6000`.
+4. Chỉ thử 1080p60 hoặc 8000–15000 kbps khi `fec/lost` ở cấu hình trước gần 0.
+5. So sánh `fps`, `fec`, `lost` và renderer; dùng Wi-Fi 5 GHz, tắt Bluetooth.
 
 Lưu ý phần cứng: RAM 1 GB và màn 720p, nên 720p30 vẫn là cấu hình ưu tiên.

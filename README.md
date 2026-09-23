@@ -2,11 +2,11 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.3 - tối ưu bản stream PS4 LAN đã chạy thật trên `v0.3.2`.
-Bản mới giảm mạnh ghi log theo từng packet/frame, bỏ `fflush` mỗi dòng, giảm thao
-tác render thừa, ghi thống kê chất lượng mỗi 5 giây và thêm lựa chọn `1080p` cùng
-bitrate `3000` kbps. Pair/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN được
-giữ nguyên; ứng dụng không đăng nhập hoặc kết nối PSN.
+**Trạng thái**: v0.3.4 - bổ sung quản lý log và sửa thao tác thoát stream trên
+TrimUI. Màn hình chính luôn hiện hướng dẫn giữ `START + SELECT` 1,2 giây; native
+nhận cả sự kiện GameController lẫn nút vật lý 8/9 để quay về menu mà không cần
+tắt PS4. Pair/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN được giữ nguyên;
+ứng dụng không đăng nhập hoặc kết nối PSN.
 
 **Mốc máy thật 2026-09-23:** sau khi OTA lên `v0.3.2` và ghép lại bằng PIN,
 Smart Pro S đã hiển thị màn hình PS4, nhận điều khiển và chơi game qua LAN thành
@@ -46,6 +46,7 @@ sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
 2. Quét LAN và chọn PS4 đã ghép nối.
 3. Bấm **A – BẮT ĐẦU CHƠI**. Menu đóng để nhường SDL cho native helper.
 4. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại menu.
+   Không cần tắt, rest mode hoặc khởi động lại PS4.
 5. Khi thoát stream bình thường, app tự gửi Issue `native_stream_quality` chứa
    FPS/rendered/lost/FEC nếu `secrets.json` đã được cấu hình. Nếu không có hình,
    app gửi log lỗi như trước; hai file cục bộ vẫn nằm trong
@@ -105,6 +106,12 @@ App ghi log rolling vào hai file nằm ngay trong thư mục `Apps/Chiaki/`:
 
 - `Chiaki-loi.txt` - chỉ warning + error, xoay vòng tối đa 3 file backup 256 KB
 - `Chiaki-debug.log` - toàn bộ info + debug, xoay vòng 1 file backup 512 KB
+
+Từ v0.3.4, launcher còn cắt giữ phần cuối log sau mỗi phiên stream để log native
+không tăng vô hạn. Trong **Cài đặt → XÓA LOG CŨ**, bấm A và xác nhận để xóa log
+cùng backup trước một bài test mới. Nếu còn báo cáo chờ gửi GitHub, app từ chối
+xóa để không làm mất bằng chứng. Khi chọn **THOÁT**, launcher retry báo cáo đang
+chờ trước khi đóng; nó không tạo Issue mới nếu không có report pending.
 
 Định dạng mỗi dòng:
 

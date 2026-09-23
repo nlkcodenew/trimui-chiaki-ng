@@ -1,19 +1,19 @@
 {
-  "version": "0.3.3",
+  "version": "0.3.4",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-23T08:36:41+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.3/files",
-  "release_tag": "v0.3.3/files",
+  "built": "2026-09-23T09:37:54+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.4/files",
+  "release_tag": "v0.3.4/files",
   "note": {
-    "vi": "v0.3.3: tối ưu drop FPS, giảm tải log/render, thêm báo cáo chất lượng và tùy chọn 1080p.",
-    "en": "v0.3.3: reduce logging/render overhead, add stream quality reports and an experimental 1080p option."
+    "vi": "v0.3.4: thêm xóa/giới hạn log an toàn, retry Issue khi thoát và sửa START+SELECT để về menu.",
+    "en": "v0.3.4: safely clear/cap logs, retry pending Issues on exit, and improve START+SELECT stream exit."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "44d33ae0952d87b339428899efed95eb882cfd3448e22e583215927835832490",
-      "size": 4151
+      "sha256": "75bad8332a40836ed6f552a55b7751835f367311ffcb9d9f2222af5b37bf12e3",
+      "size": 4246
     },
     {
       "path": "config.json",
@@ -27,8 +27,8 @@
     },
     {
       "path": "launch.sh",
-      "sha256": "a3af0ff0bd3a3cf60f7cbef7c4e02e756d23b57537c0b171f074f4c0ca8258f2",
-      "size": 3549
+      "sha256": "eeaf325a3ac5fe76b31375eee69aa617098200d1849aa70d9dfa2cbbe4dbabe0",
+      "size": 4018
     },
     {
       "path": "secrets.example.json",
@@ -42,8 +42,8 @@
     },
     {
       "path": "bin/chiaki-stream",
-      "sha256": "443f78554e559f16382dd97487d398a8e376b18e70f84f54fd240f7c750b9bbb",
-      "size": 1245752
+      "sha256": "d9ad23bc35a1cb78dbf6958718f79099996225bc30f2bf3f6b20490b12952f37",
+      "size": 1253944
     },
     {
       "path": "rh/chiaki.py",
@@ -62,8 +62,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "915d93626a00050ced9509da62c582c42de2edbebc10cd8ca80947a146e0b6c4",
-      "size": 6147
+      "sha256": "033c63a90cd69d0f06924290d84ba28acb31736d71336b0c24d1f9478a65744c",
+      "size": 7050
     },
     {
       "path": "rh/inputs.py",
@@ -72,13 +72,13 @@
     },
     {
       "path": "rh/log_uploader.py",
-      "sha256": "f0c2b15836784b5de9f0c73d77c40d78aac95a316d66e5f95bf8999a62006be0",
-      "size": 8356
+      "sha256": "84047b88ed18126b3acfb9d4b04db36483a86ef5955172c07911051b812f1362",
+      "size": 8480
     },
     {
       "path": "rh/logger.py",
-      "sha256": "b6cb1121f065594709f00c16d7da6366669f812833a5267902d48ec7d1b3fe31",
-      "size": 7250
+      "sha256": "3f9ffe42f379d02ba147aec83e54b8df4a0009cf4356e0a39dea638ee8bbf67c",
+      "size": 11732
     },
     {
       "path": "rh/paths.py",
@@ -102,7 +102,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "dc15513c946e3f794f2a632fe7195383c7e225e07d99dca9422f910de7a7d938",
+      "sha256": "f3d573fcd0476a5f759a06c3b9267adc9676eb46d5adc13c0b0b033b846dee6a",
       "size": 1177
     },
     {
@@ -137,8 +137,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "373d881e09112984c2a0f731cd4b2d43d755cee582179c739943e39d9c3fbae1",
-      "size": 9350
+      "sha256": "006e8d62585f3f2a9d349534c2b01890f2bea5d8301874d21e1b25a8b4420fb3",
+      "size": 9439
     },
     {
       "path": "rh/screens/pair.py",
@@ -147,8 +147,8 @@
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "8884c4dd443423187a0f9dced76e24bd215d79ddcae7d5bec84677075b1a335c",
-      "size": 5578
+      "sha256": "86db1672795e3793cb5223a847fbec76d7f9bfef84ede40e1e699aa799670e37",
+      "size": 6945
     },
     {
       "path": "rh/ui/__init__.py",
@@ -543,8 +543,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.3.zip",
-    "sha256": "6c871cf282b6019f73f8837623d45bc4e264c201517ad725c89dc560006adafa",
-    "size": 1235807
+    "name": "trimui-chiaki-ng-v0.3.4.zip",
+    "sha256": "372d0e1a143950d3767941595c169adb16165a503a77bd3b21909ec7848acc52",
+    "size": 1238568
   }
 }

@@ -213,6 +213,7 @@ class HomeScreen(BaseScreen):
     def render(self, engine):
         engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, 13, 17, 28, 255)
         engine.draw_text(tr("app_subtitle"), engine.font_sub, 40, 90, 180, 195, 215)
+        engine.draw_text(tr("stream_exit_guide"), engine.font_sub, 40, 125, 0, 230, 150)
         if self.hosts:
             self._render_hosts(engine)
         else:

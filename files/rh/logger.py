@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Logger rolling 2 file cho trimui-chiaki-ng.
 
-Hai file log, moi file < 256 KB, xoay vong khi qua nguong:
+Hai file log duoc xoay vong khi qua nguong:
 
     $APP_DIR/Chiaki-loi.txt   - error + warning (giu lau, toi da 3 file backup)
     $APP_DIR/Chiaki-debug.log - info + debug (xoay vong, chi giu 1 file)
@@ -30,10 +30,17 @@ from .paths import APP_DIR
 
 _DEFAULT_ERR = os.path.join(APP_DIR, "Chiaki-loi.txt")
 _DEFAULT_DBG = os.path.join(APP_DIR, "Chiaki-debug.log")
+_PENDING_LOG_UPLOAD = os.path.join(APP_DIR, ".pending_crash")
+_ERR_MAX_BYTES = 256 * 1024
+_DBG_MAX_BYTES = 512 * 1024
+_ERR_BACKUPS = 3
+_DBG_BACKUPS = 1
 
 _init_lock = threading.Lock()
+_file_lock = threading.RLock()
 _inited = False
 _logger = None
+_trim_files = []
 
 
 
@@ -95,18 +102,19 @@ class _TrimFile:
             self._fh = None
 
     def write(self, msg):
-        if self._fh is None:
-            return
-        try:
-            self._fh.write(msg)
-            self._fh.flush()
-        except OSError:
-            return
-        try:
-            if self._fh.tell() > self.max_bytes:
-                self._rotate()
-        except OSError:
-            pass
+        with _file_lock:
+            if self._fh is None:
+                return
+            try:
+                self._fh.write(msg)
+                self._fh.flush()
+            except OSError:
+                return
+            try:
+                if self._fh.tell() > self.max_bytes:
+                    self._rotate()
+            except OSError:
+                pass
 
     def _rotate(self):
         try:
@@ -136,18 +144,33 @@ class _TrimFile:
             self._fh = None
 
     def close(self):
-        if self._fh:
+        with _file_lock:
+            if self._fh:
+                try:
+                    self._fh.close()
+                except OSError:
+                    pass
+                self._fh = None
+
+    def clear(self):
+        with _file_lock:
+            self.close()
+            for index in range(1, self.backups + 2):
+                try:
+                    os.remove("%s.%d" % (self.path, index))
+                except OSError:
+                    pass
             try:
-                self._fh.close()
+                self._fh = open(self.path, "w", encoding="utf-8")
             except OSError:
-                pass
+                self._fh = None
 
 
 _lock = threading.Lock()
 
 
 def init_logger():
-    global _inited, _logger
+    global _inited, _logger, _trim_files
     with _init_lock:
         if _inited:
             return
@@ -164,8 +187,9 @@ def init_logger():
         for h in list(root.handlers):
             root.removeHandler(h)
 
-        err_fh = _TrimFile(err_path, max_bytes=256 * 1024, backups=3)
-        dbg_fh = _TrimFile(dbg_path, max_bytes=512 * 1024, backups=1)
+        err_fh = _TrimFile(err_path, max_bytes=_ERR_MAX_BYTES, backups=_ERR_BACKUPS)
+        dbg_fh = _TrimFile(dbg_path, max_bytes=_DBG_MAX_BYTES, backups=_DBG_BACKUPS)
+        _trim_files = [err_fh, dbg_fh]
 
         class _FanOut:
             def __init__(self, err, dbg):
@@ -226,7 +250,116 @@ def log(*args, level=logging.INFO):
     log_obj.log(level, " ".join(str(a) for a in args))
 
 
+def _file_size(path):
+    try:
+        return os.path.getsize(path)
+    except OSError:
+        return 0
+
+
+def _log_candidates():
+    err_path, dbg_path = _detect_log_paths()
+    paths = [(err_path, _ERR_BACKUPS), (dbg_path, _DBG_BACKUPS)]
+    stderr_path = os.environ.get("CHIAKI_STDERR_LOG", "")
+    known = {os.path.abspath(err_path), os.path.abspath(dbg_path)}
+    if stderr_path and os.path.abspath(stderr_path) not in known:
+        paths.append((stderr_path, _ERR_BACKUPS))
+    return paths
+
+
+def runtime_log_size():
+    total = 0
+    for path, backups in _log_candidates():
+        total += _file_size(path)
+        for index in range(1, backups + 2):
+            total += _file_size("%s.%d" % (path, index))
+    return total
+
+
+def _truncate_path(path):
+    absolute = os.path.abspath(path)
+    try:
+        stderr_target = os.path.abspath(os.path.realpath("/proc/self/fd/2"))
+    except OSError:
+        stderr_target = ""
+    if stderr_target == absolute:
+        try:
+            os.ftruncate(2, 0)
+            os.lseek(2, 0, os.SEEK_SET)
+            return True
+        except OSError:
+            pass
+    try:
+        with open(path, "w", encoding="utf-8"):
+            pass
+        return True
+    except OSError:
+        return False
+
+
+def clear_runtime_logs(protect_pending=True):
+    """Xoa log va backup, nhung khong lam mat report dang cho upload."""
+    if protect_pending and os.path.exists(_PENDING_LOG_UPLOAD):
+        return False, "pending", 0
+    removed_bytes = runtime_log_size()
+    active_paths = set()
+    with _file_lock:
+        for trim_file in _trim_files:
+            active_paths.add(os.path.abspath(trim_file.path))
+            trim_file.clear()
+        for path, backups in _log_candidates():
+            if os.path.abspath(path) not in active_paths:
+                _truncate_path(path)
+            for index in range(1, backups + 2):
+                try:
+                    os.remove("%s.%d" % (path, index))
+                except OSError:
+                    pass
+    get_logger().info("logs cleared by user; removed_bytes=%d", removed_bytes)
+    return True, "cleared", removed_bytes
+
+
+def _keep_tail(path, max_bytes):
+    temp = path + ".trim"
+    try:
+        if os.path.getsize(path) <= max_bytes:
+            return False
+        with open(path, "rb") as handle:
+            handle.seek(-max_bytes, os.SEEK_END)
+            data = handle.read()
+        newline = data.find(b"\n")
+        if newline >= 0:
+            data = data[newline + 1:]
+        with open(temp, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp, path)
+        return True
+    except OSError:
+        try:
+            os.remove(temp)
+        except OSError:
+            pass
+        return False
+
+
+def cap_runtime_logs():
+    """Giu phan cuoi log native sau stream de file khong tang vo han."""
+    err_path, dbg_path = _detect_log_paths()
+    limits = {
+        os.path.abspath(err_path): _ERR_MAX_BYTES,
+        os.path.abspath(dbg_path): _DBG_MAX_BYTES,
+    }
+    changed = False
+    for path, _ in _log_candidates():
+        max_bytes = limits.get(os.path.abspath(path), _ERR_MAX_BYTES)
+        changed = _keep_tail(path, max_bytes) or changed
+    return changed
+
+
 def shutdown():
+    global _inited, _logger, _trim_files
     log = get_logger()
     for h in list(log.handlers):
         try:
@@ -234,3 +367,21 @@ def shutdown():
         except Exception:
             pass
         log.removeHandler(h)
+    for trim_file in _trim_files:
+        trim_file.close()
+    _trim_files = []
+    _logger = None
+    _inited = False
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv == ["--cap-runtime"]:
+        cap_runtime_logs()
+        return 0
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

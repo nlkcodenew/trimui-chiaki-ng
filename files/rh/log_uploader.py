@@ -128,9 +128,12 @@ def _device_hash():
 
 def _issue_body(sections, reason, fingerprint):
     reason = _sanitize(str(reason).replace("`", ""))[:80]
-    summary = ("Báo cáo chất lượng stream được gửi tự động từ TrimUI Smart Pro S."
-               if reason == "native_stream_quality" else
-               "Log được gửi tự động từ TrimUI Smart Pro S sau khi ứng dụng lỗi.")
+    if reason == "native_stream_quality":
+        summary = "Báo cáo chất lượng stream được gửi tự động từ TrimUI Smart Pro S."
+    elif reason.endswith("_retry"):
+        summary = "Báo cáo đang chờ được gửi lại khi ứng dụng thoát."
+    else:
+        summary = "Log được gửi tự động từ TrimUI Smart Pro S sau khi ứng dụng lỗi."
     lines = [
         summary,
         "",

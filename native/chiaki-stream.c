@@ -66,6 +66,8 @@ typedef struct {
     bool opus_initialized;
     bool verbose_logs;
     bool start_select_held;
+    bool exit_start_pressed;
+    bool exit_select_pressed;
     uint32_t start_select_since;
     uint64_t rendered_frames;
     uint64_t lost_frames;
@@ -298,9 +300,12 @@ static void handle_controller_event(StreamApp *app, SDL_Event *event)
 {
     bool changed = false;
     if(event->type == SDL_CONTROLLERBUTTONDOWN || event->type == SDL_CONTROLLERBUTTONUP) {
+        bool pressed = event->type == SDL_CONTROLLERBUTTONDOWN;
+        if(event->cbutton.button == SDL_CONTROLLER_BUTTON_START) app->exit_start_pressed = pressed;
+        else if(event->cbutton.button == SDL_CONTROLLER_BUTTON_BACK) app->exit_select_pressed = pressed;
         uint32_t button = controller_button(event->cbutton.button);
         if(button) {
-            set_button(app, button, event->type == SDL_CONTROLLERBUTTONDOWN);
+            set_button(app, button, pressed);
             changed = true;
         }
     } else if(event->type == SDL_CONTROLLERAXISMOTION) {
@@ -347,6 +352,8 @@ static void handle_joystick_event(StreamApp *app, SDL_Event *event)
     bool changed = false;
     if(event->type == SDL_JOYBUTTONDOWN || event->type == SDL_JOYBUTTONUP) {
         bool pressed = event->type == SDL_JOYBUTTONDOWN;
+        if(event->jbutton.button == 8) app->exit_select_pressed = pressed;
+        else if(event->jbutton.button == 9) app->exit_start_pressed = pressed;
         if(event->jbutton.button == 6) app->controller_state.l2_state = pressed ? 255 : 0;
         else if(event->jbutton.button == 7) app->controller_state.r2_state = pressed ? 255 : 0;
         else {
@@ -373,6 +380,14 @@ static void handle_joystick_event(StreamApp *app, SDL_Event *event)
     }
     if(changed && app->session_initialized)
         chiaki_session_set_controller_state(&app->session, &app->controller_state);
+}
+
+static void handle_exit_joystick_button(StreamApp *app, SDL_Event *event)
+{
+    if(event->type != SDL_JOYBUTTONDOWN && event->type != SDL_JOYBUTTONUP) return;
+    bool pressed = event->type == SDL_JOYBUTTONDOWN;
+    if(event->jbutton.button == 8) app->exit_select_pressed = pressed;
+    else if(event->jbutton.button == 9) app->exit_start_pressed = pressed;
 }
 
 static bool render_frame(StreamApp *app)
@@ -648,15 +663,20 @@ int main(int argc, char **argv)
                 atomic_store(&app.running, false);
             } else if(app.controller && (event.type == SDL_CONTROLLERBUTTONDOWN || event.type == SDL_CONTROLLERBUTTONUP || event.type == SDL_CONTROLLERAXISMOTION)) {
                 handle_controller_event(&app, &event);
+            } else if(app.controller && (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP)) {
+                handle_exit_joystick_button(&app, &event);
             } else if(!app.controller && app.joystick && (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP || event.type == SDL_JOYAXISMOTION || event.type == SDL_JOYHATMOTION)) {
                 handle_joystick_event(&app, &event);
             }
         }
-        bool start_select = (app.controller_state.buttons & CHIAKI_CONTROLLER_BUTTON_OPTIONS) &&
-                            (app.controller_state.buttons & CHIAKI_CONTROLLER_BUTTON_SHARE);
+        bool start_select = app.exit_start_pressed && app.exit_select_pressed;
         if(start_select && !app.start_select_held) {
             app.start_select_held = true;
             app.start_select_since = SDL_GetTicks();
+            set_button(&app, CHIAKI_CONTROLLER_BUTTON_OPTIONS, false);
+            set_button(&app, CHIAKI_CONTROLLER_BUTTON_SHARE, false);
+            if(app.session_initialized)
+                chiaki_session_set_controller_state(&app.session, &app.controller_state);
         } else if(!start_select) {
             app.start_select_held = false;
         } else if(SDL_GetTicks() - app.start_select_since >= 1200) {

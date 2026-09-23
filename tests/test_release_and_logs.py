@@ -24,6 +24,7 @@ class LogUploaderTests(unittest.TestCase):
         cls.uploader = importlib.import_module("rh.log_uploader")
         cls.updater = importlib.import_module("rh.updater")
         cls.inputs = importlib.import_module("rh.inputs")
+        cls.logger_module = importlib.import_module("rh.logger")
         cls.settings_module = importlib.import_module("rh.screens.settings")
         cls.update_modal_module = importlib.import_module("rh.modals.update")
 
@@ -106,6 +107,15 @@ class LogUploaderTests(unittest.TestCase):
             "a" * 64,
         )
         self.assertIn("Báo cáo chất lượng stream", body)
+        self.assertNotIn("sau khi ứng dụng lỗi", body)
+
+    def test_exit_retry_is_described_as_pending_report(self):
+        body = self.uploader._issue_body(
+            [("Chiaki-debug.log", "quality: rendered=150 lost=0 fec=0 fps=30.0")],
+            "user_exit_retry",
+            "a" * 64,
+        )
+        self.assertIn("đang chờ được gửi lại", body)
         self.assertNotIn("sau khi ứng dụng lỗi", body)
 
     def test_updater_ignores_user_settings(self):
@@ -286,9 +296,82 @@ class LogUploaderTests(unittest.TestCase):
     def test_every_settings_row_has_a_runtime_state_value(self):
         screen = self.settings_module.SettingsScreen()
         for key, _, _ in screen.rows:
-            if key == "back":
+            if key in ("back", "clear_logs"):
                 continue
             self.assertTrue(hasattr(self.settings_module.state, key), key)
+
+    def test_clear_logs_requires_confirmation(self):
+        engine = mock.Mock()
+        screen = self.settings_module.SettingsScreen(engine)
+        screen.selected = next(
+            index for index, row in enumerate(screen.rows)
+            if row[0] == "clear_logs"
+        )
+        with mock.patch.object(self.settings_module, "runtime_log_size", return_value=2048):
+            handled = screen.handle_input({"edges": ["btn_a"]})
+        self.assertTrue(handled)
+        engine.open_modal.assert_called_once()
+        name, data = engine.open_modal.call_args.args
+        self.assertEqual(name, "confirm")
+        self.assertTrue(callable(data["on_yes"]))
+
+    def test_clear_runtime_logs_protects_pending_report(self):
+        error_path = os.path.join(self.work_dir, "error.log")
+        debug_path = os.path.join(self.work_dir, "debug.log")
+        pending_path = os.path.join(self.work_dir, "pending-clear")
+        for path in (error_path, debug_path, error_path + ".1", debug_path + ".1"):
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("old log")
+        with open(pending_path, "w", encoding="utf-8"):
+            pass
+        with mock.patch.object(self.logger_module, "_detect_log_paths",
+                               return_value=(error_path, debug_path)), \
+                mock.patch.object(self.logger_module, "_PENDING_LOG_UPLOAD", pending_path), \
+                mock.patch.object(self.logger_module, "_trim_files", []):
+            ok, reason, _ = self.logger_module.clear_runtime_logs()
+            self.assertFalse(ok)
+            self.assertEqual(reason, "pending")
+            self.assertTrue(os.path.getsize(debug_path) > 0)
+            os.remove(pending_path)
+            ok, reason, removed = self.logger_module.clear_runtime_logs()
+        self.assertTrue(ok)
+        self.assertEqual(reason, "cleared")
+        self.assertGreater(removed, 0)
+        self.assertEqual(os.path.getsize(error_path), 0)
+        self.assertEqual(os.path.getsize(debug_path), 0)
+        self.assertFalse(os.path.exists(error_path + ".1"))
+        self.assertFalse(os.path.exists(debug_path + ".1"))
+
+    def test_cap_runtime_log_keeps_tail(self):
+        path = os.path.join(self.work_dir, "large.log")
+        with open(path, "wb") as handle:
+            handle.write((b"old-line\n" * 100) + b"last-line\n")
+        self.assertTrue(self.logger_module._keep_tail(path, 80))
+        with open(path, "rb") as handle:
+            data = handle.read()
+        self.assertLessEqual(len(data), 80)
+        self.assertTrue(data.endswith(b"last-line\n"))
+
+    def test_launcher_retries_pending_report_on_user_exit(self):
+        launch_path = os.path.join(self.app_dir, "launch.sh")
+        with open(launch_path, encoding="utf-8") as handle:
+            script = handle.read()
+        self.assertIn('--reason "user_exit_retry"', script)
+        self.assertIn('-m rh.logger --cap-runtime', script)
+        self.assertIn('grep -q "native stream preflight"', script)
+        self.assertIn('if [ $IS_STREAM -eq 0 ]', script)
+
+    def test_native_source_supports_trimui_exit_button_fallback(self):
+        root = os.path.dirname(os.path.dirname(__file__))
+        with open(os.path.join(root, "native", "chiaki-stream.c"),
+                  encoding="utf-8") as handle:
+            source = handle.read()
+        self.assertIn("exit_start_pressed", source)
+        self.assertIn("exit_select_pressed", source)
+        self.assertIn("event->jbutton.button == 8", source)
+        self.assertIn("event->jbutton.button == 9", source)
+        self.assertIn("CHIAKI_CONTROLLER_BUTTON_OPTIONS, false", source)
+        self.assertIn("CHIAKI_CONTROLLER_BUTTON_SHARE, false", source)
 
     def test_settings_language_row_updates_current_lang(self):
         screen = self.settings_module.SettingsScreen()
@@ -383,6 +466,12 @@ class LogUploaderTests(unittest.TestCase):
         screen = home_module.HomeScreen()
         self.assertIn(version, screen.get_header_title())
         self.assertTrue(screen.get_header_title().startswith("CHIAKI-NG"))
+
+    def test_home_shows_stream_exit_guide(self):
+        i18n = importlib.import_module("rh.i18n")
+        guide = i18n.TEXTS["VI"]["stream_exit_guide"]
+        self.assertIn("START + SELECT", guide)
+        self.assertIn("1,2 giây", guide)
 
     def test_beta_patch_is_newer_for_ota(self):
         version = importlib.import_module("rh.version")

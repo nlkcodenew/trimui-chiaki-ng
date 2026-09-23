@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: tối ưu drop FPS, giảm tải log/render, thêm báo cáo chất lượng và tùy chọn 1080p." % version,
-            "en": "v%s: reduce logging/render overhead, add stream quality reports and an experimental 1080p option." % version,
+            "vi": "v%s: thêm xóa/giới hạn log an toàn, retry Issue khi thoát và sửa START+SELECT để về menu." % version,
+            "en": "v%s: safely clear/cap logs, retry pending Issues on exit, and improve START+SELECT stream exit." % version,
         },
         "files": files,
         "remove": [],

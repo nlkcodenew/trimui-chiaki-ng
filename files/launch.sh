@@ -88,10 +88,16 @@ while true; do
         "$PY" -m rh.log_uploader --reason "exit_$APP_EXIT_CODE" >> "$ERRLOG" 2>&1 || true
     fi
     if [ -f /tmp/launch_game.sh ]; then
+        IS_STREAM=0
+        if grep -q "native stream preflight" /tmp/launch_game.sh 2>/dev/null; then
+            IS_STREAM=1
+        fi
         sh /tmp/launch_game.sh
         STREAM_EXIT_CODE=$?
         rm -f /tmp/launch_game.sh
-        if [ $STREAM_EXIT_CODE -ne 0 ]; then
+        if [ $IS_STREAM -eq 0 ]; then
+            :
+        elif [ $STREAM_EXIT_CODE -ne 0 ]; then
             echo "native stream failed: exit $STREAM_EXIT_CODE" >> "$ERRLOG"
             touch "$APP/.pending_crash" 2>/dev/null
             "$PY" -m rh.log_uploader --reason "native_stream_$STREAM_EXIT_CODE" >> "$ERRLOG" 2>&1 || true
@@ -99,8 +105,13 @@ while true; do
             touch "$APP/.pending_crash" 2>/dev/null
             "$PY" -m rh.log_uploader --reason "native_stream_quality" >> "$ERRLOG" 2>&1 || true
         fi
+        "$PY" -m rh.logger --cap-runtime >/dev/null 2>&1 || true
         touch /tmp/stay_alive 2>/dev/null
     else
+        if [ -f "$APP/.pending_crash" ]; then
+            "$PY" -m rh.log_uploader --reason "user_exit_retry" >> "$ERRLOG" 2>&1 || true
+        fi
+        "$PY" -m rh.logger --cap-runtime >/dev/null 2>&1 || true
         break
     fi
 done

@@ -1,12 +1,12 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.3
+# Bàn giao session mới — trimui-chiaki-ng v0.3.4
 
 > Cập nhật: 2026-09-23. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
 ## 1. Mục tiêu hiện tại
 
 Kiểm thử hiệu năng Remote Play PS4 qua LAN trên TrimUI Smart Pro S TG5050.
-`v0.3.2` là mốc stream thật ổn định về chức năng; `v0.3.3` giữ pair/session
-pre-10 và tối ưu I/O/render, thêm báo cáo chất lượng cùng lựa chọn 1080p.
+`v0.3.2` là mốc stream thật ổn định về chức năng; `v0.3.3` tối ưu I/O/render.
+`v0.3.4` quản lý log an toàn và sửa đường thoát stream START+SELECT trên TrimUI.
 
 ## 2. Repo và bản phát hành
 
@@ -14,9 +14,9 @@ pre-10 và tối ưu I/O/render, thêm báo cáo chất lượng cùng lựa ch�
 - Thư mục làm việc: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
-- Bản tối ưu cần kiểm thử máy thật: `v0.3.3`
-- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.3`
-- `manifest.json` phải trả về đúng `0.3.3`, có
+- Bản cần kiểm thử máy thật: `v0.3.4`
+- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.4`
+- `manifest.json` phải trả về đúng `0.3.4`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 3. Phần cứng kiểm thử
@@ -47,7 +47,7 @@ tài liệu, Issue hoặc chat. Các khóa thật chỉ được giữ trên th�
 - `secrets.json` đã được cấu hình và uploader đã tự tạo GitHub Issue `#1`, `#2`.
   Mục tiêu tự gửi log không cần người dùng đính kèm file thủ công đã đạt.
 
-## 5. Luồng stream v0.3.3
+## 5. Luồng stream v0.3.4
 
 1. `files/rh/screens/home.py` gọi `prepare_stream_launch()`.
 2. `files/rh/chiaki.py` đọc credential của đúng host, kiểm tra RP key 16 byte,
@@ -65,6 +65,7 @@ Cấu hình mặc định:
 - Độ phân giải có 360p/540p/720p/1080p; 1080p được scale về màn 720p.
 - Âm thanh Opus qua SDL queued audio.
 - Giữ `START + SELECT` khoảng 1,2 giây để kết thúc stream.
+- Màn hình chính luôn hiển thị tổ hợp này. Không cần tắt hoặc rest mode PS4.
 
 Tối ưu v0.3.3:
 
@@ -74,11 +75,21 @@ Tối ưu v0.3.3:
 - Ghi renderer/accelerated/vsync, FPS thực, lost frame và FEC failure.
 - Tự gửi `native_stream_quality` cả khi phiên stream thoát bình thường.
 
+Quản lý log/thoát stream v0.3.4:
+
+- Native đọc thêm raw joystick button 8/9 cho START/SELECT khi SDL cũng mở
+  GameController; raw event chỉ dùng phát hiện tổ hợp thoát, không gửi input đôi.
+  Khi đủ tổ hợp, OPTIONS/SHARE được nhả khỏi state gửi PS4 để tránh tác dụng phụ.
+- **Cài đặt → XÓA LOG CŨ** xóa log/backup sau xác nhận nhưng từ chối nếu còn
+  `.pending_crash` để không mất report chưa gửi.
+- Launcher cap log sau stream và khi đóng app. Khi chọn **THOÁT**, pending report
+  được retry ngay; không có pending thì không tạo Issue mới.
+
 ## 6. Binary và build
 
 - Binary phát hành: `files/bin/chiaki-stream`.
 - Kiến trúc: ELF64 AArch64 PIE, interpreter `/lib/ld-linux-aarch64.so.1`.
-- SHA-256 binary v0.3.3: `443f78554e559f16382dd97487d398a8e376b18e70f84f54fd240f7c750b9bbb`.
+- SHA-256 binary v0.3.4: `d9ad23bc35a1cb78dbf6958718f79099996225bc30f2bf3f6b20490b12952f37`.
 - Build bằng SDK TG5050 chính hãng, GCC 10.3.1, glibc 2.33.
 - ABI phụ thuộc đã đối chiếu với SDK: SDL2 2.32, FFmpeg 6
   (`libavcodec.so.60`, `libavutil.so.58`, `libswscale.so.7`), Opus,
@@ -90,7 +101,7 @@ Tối ưu v0.3.3:
 
 ## 7. Trạng thái kiểm thử trong sandbox
 
-- `python -m unittest discover -s tests -v`: 31/31 test đạt.
+- `python -m unittest discover -s tests -v`: 38/38 test đạt.
 - `python -m compileall -q files tools native`: đạt.
 - `bash -n files/launch.sh`: đạt.
 - `bash -n native/build-tg5050.sh`: đạt.
@@ -98,7 +109,7 @@ Tối ưu v0.3.3:
 - `python tools/verify_release.py`: đạt.
 - ZIP có quyền `0755` cho `App/Chiaki/bin/chiaki-stream`.
 - Sandbox không đo được hiệu năng thực tế; kết quả máy thật xác nhận stream và
-  input hoạt động; hiệu năng v0.3.3 cần người dùng kiểm thử thật.
+  input hoạt động; hiệu năng và đường thoát stream v0.3.4 cần kiểm thử máy thật.
 
 ## 8. Log cho session tiếp theo
 
@@ -147,7 +158,7 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 
 1. Đọc file này và `docs/PROJECT_STATUS.md`.
 2. Giữ nguyên pair/session pre-10 của mốc `v0.3.2` nếu không có bằng chứng lỗi.
-3. Đọc các Issue `native_stream_quality` của v0.3.3, so sánh FPS/FEC/lost.
+3. Đọc các Issue `native_stream_quality` của v0.3.4, so sánh FPS/FEC/lost.
 4. Test theo thứ tự `720p30/4000`, `720p30/6000`, `720p60/6000`,
    `1080p30/6000`; mỗi mức 1–2 phút trong cùng điều kiện mạng.
 5. Nếu renderer software hoặc FPS thấp nhưng FEC/lost bằng 0, tối ưu decode/render.
@@ -155,7 +166,7 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 
 ## 10. Các phần chưa xác nhận
 
-- Mức cải thiện thực tế của v0.3.3 và phần drop còn lại do mạng hay decode/render.
+- Mức cải thiện thực tế và phần drop còn lại do mạng hay decode/render.
 - Bitrate tối ưu cho Wi-Fi và RAM 1 GB của Smart Pro S.
 - Khả năng chạy 1080p30/1080p60 trên A523.
 - PS5/H265.
@@ -184,8 +195,9 @@ E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước. Mốc v0.3.2 đã
 stream thành công PS4 Pro firmware 9.00 GoldHEN trên Smart Pro S, không PSN.
-v0.3.3 giảm log/render thừa, thêm báo cáo chất lượng 5 giây và 1080p. Nhiệm vụ
-hiện tại là đọc Issue native_stream_quality theo ma trận test và tiếp tục tối ưu
-mà không làm hỏng pair/session pre-10 đang chạy tốt.
+v0.3.4 thêm xóa/cap log an toàn, retry Issue pending khi Thoát và fallback nút
+START+SELECT để về menu mà không tắt PS4. Nhiệm vụ hiện tại là kiểm thử tổ hợp
+thoát và đọc Issue native_stream_quality theo ma trận test mà không làm hỏng
+pair/session pre-10 đang chạy tốt.
 Không tiết lộ hoặc ghi log PIN, regist_key, rp_key, Account-ID hay token.
 ```
