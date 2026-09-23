@@ -113,6 +113,55 @@ def _paired_credentials(addr):
             }
     return None
 
+
+def paired_hosts_for_discovery(discovered=None):
+    """Merge saved paired hosts into discovery without exposing credentials."""
+    from .paths import APP_DIR
+
+    hosts = list(discovered or [])
+    seen = {getattr(host, "addr", "") for host in hosts}
+    entries = []
+    paired_path = os.path.join(APP_DIR, "paired_hosts.json")
+    try:
+        with open(paired_path, "r", encoding="utf-8") as handle:
+            value = json.load(handle)
+        if isinstance(value, list):
+            entries.extend(value)
+    except (OSError, ValueError, TypeError):
+        pass
+    if getattr(state, "host_addr", ""):
+        entries.append({
+            "addr": state.host_addr,
+            "name": state.host_name,
+            "is_ps5": False,
+            "target": int(getattr(state, "host_target", 0) or 0),
+        })
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        addr = str(entry.get("addr") or "")
+        if not addr or addr in seen or not _paired_credentials(addr):
+            continue
+        hosts.append(DiscoveredHost(
+            name=str(entry.get("name") or addr),
+            addr=addr,
+            state="offline",
+            is_ps5=bool(entry.get("is_ps5", False)),
+            target=int(entry.get("target", 0) or 0),
+        ))
+        seen.add(addr)
+    return hosts
+
+
+def wake_paired_host(host):
+    """Wake a saved host using its private registration credential."""
+    credentials = _paired_credentials(getattr(host, "addr", ""))
+    if not credentials:
+        return False
+    return send_wakeup(
+        credentials["addr"], credentials["regist_key"], credentials["is_ps5"],
+    )
+
 def _rp_version_string(target):
     t = int(target or 0)
     if t == 800:
@@ -499,8 +548,8 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
     """
     try:
         credential = int(regist_key, 16)
-    except ValueError:
-        log.error("regist_key khong phai hex: %r", regist_key)
+    except (TypeError, ValueError):
+        log.error("wakeup credential is invalid")
         return False
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -512,7 +561,7 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
                "auth-type:R\r\n"
                "model:w\r\n"
                "app-type:r\r\n"
-               "user-credential:%llu\r\n"
+               "user-credential:%d\r\n"
                "device-discovery-protocol-version:%s\r\n\r\n") % (credential, protocol)
         port = 9302 if ps5 else 987
         sock.sendto(pkt.encode("ascii"), (addr, port))

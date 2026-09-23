@@ -64,8 +64,11 @@ class HomeScreen(BaseScreen):
 
     def get_footer_actions(self):
         if self.hosts:
-            paired = self._is_paired(self.hosts[self.host_selected]) if self.hosts else False
+            host = self.hosts[self.host_selected]
+            paired = self._is_paired(host) if self.hosts else False
             if paired:
+                if getattr(host, "state", "") in ("offline", "standby", "waking"):
+                    return [("A", tr("wake")), ("Y", tr("pair")), ("B", tr("back"))]
                 return [("A", tr("connect")), ("Y", tr("pair")), ("B", tr("back"))]
             return [("A", tr("pair")), ("B", tr("back"))]
         return [("A", tr("select"))]
@@ -81,16 +84,20 @@ class HomeScreen(BaseScreen):
 
     def _do_scan(self):
         try:
-            hosts = chiaki.discovery_broadcast(timeout=3.0)
+            discovered = chiaki.discovery_broadcast(timeout=3.0)
+            hosts = chiaki.paired_hosts_for_discovery(discovered)
         except Exception as exc:
             log.error("scan exception: %s", exc)
-            hosts = []
+            hosts = chiaki.paired_hosts_for_discovery([])
         self.hosts = hosts
         self.scanning = False
-        if hosts:
+        if any(getattr(host, "state", "") != "offline" for host in hosts):
             self.toast = tr("scan_done") % len(hosts)
             log.info("scan: %d host(s) %s",
                      len(hosts), [h.addr for h in hosts])
+        elif hosts:
+            self.toast = tr("scan_paired_offline")
+            log.info("scan: paired host offline %s", [host.addr for host in hosts])
         else:
             self.toast = tr("scan_none")
             log.info("scan: khong thay host")
@@ -136,12 +143,50 @@ class HomeScreen(BaseScreen):
             self.toast = tr("pair_required") if "pair_required" in tr("pair_required") else "Chưa ghép - bấm Y để nhập PIN"
             self._open_pair(host)
             return
+        if getattr(host, "state", "") in ("offline", "standby", "waking"):
+            self._wake_host(host)
+            return
         log.info("home: yeu cau stream toi %s (%s)", host.name or host.addr, host.addr)
         ok, message = chiaki.prepare_stream_launch(host)
         self.toast = message
         self.toast_until = time.time() + 4
         if ok:
             self.engine.quit("stream_launch")
+
+    def _wake_host(self, host):
+        if self.scanning:
+            return
+        if not chiaki.wake_paired_host(host):
+            self.toast = tr("wake_failed")
+            self.toast_until = time.time() + 4
+            return
+        host.state = "waking"
+        self.scanning = True
+        self.toast = tr("wake_sent")
+        self.toast_until = time.time() + 20
+        threading.Thread(target=self._wait_for_wakeup, args=(host.addr,), daemon=True).start()
+
+    def _wait_for_wakeup(self, addr):
+        try:
+            for _ in range(6):
+                hosts = chiaki.paired_hosts_for_discovery(
+                    chiaki.discovery_broadcast(timeout=2.0))
+                self.hosts = hosts
+                for host in hosts:
+                    if host.addr == addr and host.state == "ready":
+                        self.host_selected = hosts.index(host)
+                        self.toast = tr("wake_ready")
+                        self.toast_until = time.time() + 8
+                        return
+                time.sleep(1.0)
+            self.toast = tr("wake_timeout")
+            self.toast_until = time.time() + 6
+        except Exception as exc:
+            log.error("wakeup scan failed: %s", exc)
+            self.toast = tr("wake_failed")
+            self.toast_until = time.time() + 4
+        finally:
+            self.scanning = False
 
     def handle_input(self, inputs):
         if not inputs:

@@ -1,13 +1,13 @@
 {
-  "version": "0.3.6",
+  "version": "0.3.7",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-23T21:25:05+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.6/files",
-  "release_tag": "v0.3.6/files",
+  "built": "2026-09-23T23:11:55+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.7/files",
+  "release_tag": "v0.3.7/files",
   "note": {
-    "vi": "v0.3.6: sửa mapping A/B/X/Y khi native stream dùng SDL GameController.",
-    "en": "v0.3.6: fix A/B/X/Y mapping for native streaming with SDL GameController."
+    "vi": "v0.3.7: hiện máy đã ghép nối khi offline và đánh thức PS4 từ Rest Mode.",
+    "en": "v0.3.7: show paired offline consoles and wake PS4 from Rest Mode."
   },
   "files": [
     {
@@ -47,8 +47,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "72978db62ddb05da13a0aba86f18e793b850b69985cffc76120944fb9f9095e4",
-      "size": 21293
+      "sha256": "5c45f81a90300e63306189a29d0363a113682e0861f35341900213108386504f",
+      "size": 22946
     },
     {
       "path": "rh/engine.py",
@@ -62,8 +62,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "033c63a90cd69d0f06924290d84ba28acb31736d71336b0c24d1f9478a65744c",
-      "size": 7050
+      "sha256": "cd5d57a1f6d98c50392942169cd1381e3c67e398675442964470c6ec787a0cfd",
+      "size": 7913
     },
     {
       "path": "rh/inputs.py",
@@ -102,7 +102,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "83fbf530c628d73a985fa08d77da290585dd31c42e7d1e66baa021bd16366ce3",
+      "sha256": "a2de72f85da3cd46b9a3b7fd27c701fa1a54b60d182ba001fcb4b35f619fe68c",
       "size": 1177
     },
     {
@@ -137,8 +137,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "006e8d62585f3f2a9d349534c2b01890f2bea5d8301874d21e1b25a8b4420fb3",
-      "size": 9439
+      "sha256": "630f5bd4da1291228d0f1160cd16003622590a6e65dee81154698f2075a05483",
+      "size": 11443
     },
     {
       "path": "rh/screens/pair.py",
@@ -543,8 +543,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.6.zip",
-    "sha256": "659cfd46379143faf961ef08254d8a732f5448535574ebce420dbb47d066eb67",
-    "size": 1238697
+    "name": "trimui-chiaki-ng-v0.3.7.zip",
+    "sha256": "ac77595d6451cbb3dede2ea2207d443633cc233bfdde72144465c88385e2a8f4",
+    "size": 1239823
   }
 }

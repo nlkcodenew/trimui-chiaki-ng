@@ -2,8 +2,10 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.6 - sửa mapping bốn nút mặt khi native stream dùng SDL GameController;
-v0.3.5 vá hộp xác nhận/kết quả xóa log bị nháy rồi tự đóng vì
+**Trạng thái**: v0.3.7 - máy PS4 đã ghép nối vẫn xuất hiện khi đang Rest Mode;
+bấm **A – ĐÁNH THỨC** để gửi WAKEUP, app tự quét chờ PS4 sẵn sàng. v0.3.6 sửa
+mapping bốn nút mặt khi native stream dùng SDL GameController và đã được xác
+nhận đúng trên máy thật. v0.3.5 vá hộp xác nhận/kết quả xóa log bị nháy vì
 nút A vẫn đang được giữ. Các modal chung chỉ nhận cạnh nhấn mới; hộp xác nhận tự
 đóng trước khi mở hộp kết quả. Bản này kế thừa quản lý log và thao tác thoát
 stream của v0.3.4.
@@ -58,11 +60,15 @@ sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
 
 1. Sau khi cập nhật từ v0.3.1, chọn PS4 và bấm **Y – GHÉP NỐI** để nhập PIN lại
    đúng một lần. Khóa cũ được tạo bằng giao thức 10.0 nên không dùng cho FW 9.00.
-2. Quét LAN và chọn PS4 đã ghép nối.
-3. Bấm **A – BẮT ĐẦU CHƠI**. Menu đóng để nhường SDL cho native helper.
-4. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại menu.
+2. Để bật từ xa, trên PS4 bật Internet và bật máy qua mạng trong Rest Mode, bật
+   auto-login, rồi đưa PS4 vào Rest Mode thay vì tắt hoàn toàn.
+3. Quét LAN. Nếu PS4 đang nghỉ, host đã ghép nối vẫn hiện `[offline]`; chọn host
+   và bấm **A – ĐÁNH THỨC**. Khi app báo sẵn sàng, bấm A lần nữa để chơi.
+   Tính năng này chỉ hoạt động từ Rest Mode, không bật được PS4 đã tắt hoàn toàn.
+4. Nếu PS4 đã `ready`, bấm **A – BẮT ĐẦU CHƠI** như trước.
+5. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại menu.
    Không cần tắt, rest mode hoặc khởi động lại PS4.
-5. Khi thoát stream bình thường, app tự gửi Issue `native_stream_quality` chứa
+6. Khi thoát stream bình thường, app tự gửi Issue `native_stream_quality` chứa
    FPS/rendered/lost/FEC nếu `secrets.json` đã được cấu hình. Nếu không có hình,
    app gửi log lỗi như trước; hai file cục bộ vẫn nằm trong
    `Apps/Chiaki/`. Log có kết quả `ldd`, handshake, frame và exit code nhưng

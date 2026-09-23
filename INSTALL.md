@@ -43,6 +43,7 @@
 
 Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
 9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
+`v0.3.7` thêm đánh thức PS4 đã ghép nối từ Rest Mode ngay trong danh sách máy.
 `v0.3.6` sửa mapping A/B/X/Y của native stream; bản này giữ nguyên pair/session.
 `v0.3.5` giữ nguyên pair/session đã chạy tốt, sửa hộp xóa log bị nháy/tự đóng,
 đồng thời kế thừa quản lý log an toàn và tổ hợp thoát stream của v0.3.4.
@@ -51,7 +52,11 @@ Luồng này đã được xác nhận thành công trên Smart Pro S thật v�
 1. Đặt PS4 và Smart Pro S cùng Wi-Fi/LAN 5 GHz.
 2. Với PS4 firmware 9.00 GoldHEN, không cần và không được đăng nhập PSN. Sau khi
    cập nhật từ v0.3.1, bấm **Y** và nhập PIN lại đúng một lần để tạo khóa pre-10.
-3. Mở app, quét máy, chọn PS4 đã ghép nối và bấm **A**.
+3. Muốn bật PS4 không cần tay cầm: bật `Stay Connected to the Internet`,
+   `Enable Turning On PS4 from Network` và auto-login, rồi đưa PS4 vào Rest Mode.
+   Mở app và quét; chọn host `[offline]`, bấm **A – ĐÁNH THỨC**, chờ thông báo
+   sẵn sàng rồi bấm A lần nữa. Nếu PS4 đã bật, chọn máy và bấm A như trước.
+   PS4 đã tắt hoàn toàn vẫn cần nút nguồn hoặc tay cầm thật để bật.
 4. Bắt đầu bằng profile đã xác nhận tốt `720p`, 30 FPS, 4000 kbps. Nếu cần giảm
    tải, dùng `540p`, 30 FPS, 4000 kbps. Chỉ thử profile khác để so sánh; không
    dùng 15000 kbps làm cấu hình thường xuyên vì test thực tế cho thấy

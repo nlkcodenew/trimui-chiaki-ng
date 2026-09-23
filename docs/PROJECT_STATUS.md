@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.6)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.7)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-23.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
@@ -9,8 +9,8 @@
 > nút vật lý START/SELECT để trở về menu mà không cần tắt PS4.
 > v0.3.5 sửa modal xóa log bị nháy/tự đóng: mọi modal chung dùng button edge và
 > Confirm đóng trước khi callback mở hộp kết quả.
-> Kiểm thử máy thật v0.3.5 có thêm #20/#21: 540p60/15000 bị FEC/lost/IDR nặng;
-> 720p30/4000 ổn định gần 30 FPS với FEC bằng 0.
+> v0.3.6 mapping A/B/X/Y đã được xác nhận đúng. v0.3.7 thêm host paired offline
+> và gửi WAKEUP để bật PS4 từ Rest Mode; pair/session pre-10 giữ nguyên.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
@@ -44,7 +44,7 @@
   không có pending marker thì không tạo Issue mới không cần thiết.
 - Đã xác nhận trên Smart Pro S thật ngày 2026-09-23: màn hình PS4 xuất hiện,
   điều khiển hoạt động và chơi game qua LAN được; cảm nhận ban đầu khá ổn.
-- Chưa xong: xác nhận mapping A/B/X/Y của v0.3.6 trên máy thật, PS5/H265 và
+- Chưa xong: xác nhận WAKEUP v0.3.7 trên máy thật, PS5/H265 và
   Internet/RUDP.
 
 ## 1. Mục tiêu
@@ -161,7 +161,7 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.5/v0.3.6 đang xác nhận
+### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.7 thêm Rest Mode WAKEUP
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
@@ -270,7 +270,7 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `files/rh/updater.py` — OTA + log mạng
 - `files/rh/log_uploader.py` — auto Issue
 - `tools/make_release.py` / `tools/verify_release.py` — build gate
-- `tests/test_release_and_logs.py` — 41 tests
+- `tests/test_release_and_logs.py` — 47 tests
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 
@@ -281,8 +281,8 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
    START+SELECT 1,2 giây.
 3. Sau khi về menu, chờ khoảng hai phút trước khi bắt đầu profile khác để PS4
    nhả lease Remote Play; không pair lại và không tắt PS4.
-4. Sau khi nhận `v0.3.6`, kiểm tra riêng A/B/X/Y; test profile chỉ khi cần so sánh.
-   `720p30/4000` đã có kết quả tốt; không cần lặp lại nếu không đổi môi trường.
+4. Sau khi nhận `v0.3.7`, quét khi PS4 ở Rest Mode, chọn host `[offline]`, bấm
+   **A – ĐÁNH THỨC**, chờ `ready` rồi bấm A để stream.
 5. Không ưu tiên 1080p hoặc 15000 kbps trên màn 720p; số liệu v0.3.5 đã chứng
    minh chúng tăng tải mà không đem lại độ phân giải hiển thị cao hơn.
 

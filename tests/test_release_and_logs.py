@@ -630,6 +630,29 @@ class LogUploaderTests(unittest.TestCase):
         self.assertTrue(host5.is_ps5)
         self.assertEqual(host5.target, 1000100)  # PS5_1
 
+    def test_ps4_wakeup_packet_uses_discovery_port(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        sent = []
+
+        class FakeSocket:
+            def setsockopt(self, *args, **kwargs):
+                return None
+
+            def settimeout(self, *args, **kwargs):
+                return None
+
+            def sendto(self, data, dest):
+                sent.append((data, dest))
+
+            def close(self):
+                return None
+
+        with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()):
+            self.assertTrue(chiaki.send_wakeup("192.168.1.45", "a49d08ed"))
+        self.assertEqual(sent[0][1], ("192.168.1.45", 987))
+        self.assertIn(b"WAKEUP * HTTP/1.1", sent[0][0])
+        self.assertIn(b"device-discovery-protocol-version:00020020", sent[0][0])
+
     def test_ps4_registration_crypto_roundtrip_and_response_parse(self):
         regist = importlib.import_module("rh.ps4_regist")
         self.assertEqual(len(regist.PS4_KEYS_0), 512)
@@ -784,6 +807,103 @@ class LogUploaderTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("ghép lại", message)
         os.remove(paired_path)
+
+    def test_saved_paired_host_remains_visible_when_discovery_is_empty(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.45",
+                "name": "PS4-896",
+                "is_ps5": False,
+                "target": 900,
+                "regist_key": "a49d08ed",
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        try:
+            hosts = chiaki.paired_hosts_for_discovery([])
+        finally:
+            os.remove(paired_path)
+        self.assertEqual(len(hosts), 1)
+        self.assertEqual(hosts[0].addr, "192.168.1.45")
+        self.assertEqual(hosts[0].state, "offline")
+        self.assertFalse(hasattr(hosts[0], "regist_key"))
+
+    def test_discovered_host_wins_over_saved_offline_host(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.45",
+                "name": "PS4-896",
+                "is_ps5": False,
+                "target": 900,
+                "regist_key": "a49d08ed",
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        ready = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", state="ready", target=900,
+        )
+        try:
+            hosts = chiaki.paired_hosts_for_discovery([ready])
+        finally:
+            os.remove(paired_path)
+        self.assertEqual(hosts, [ready])
+
+    def test_wake_paired_host_uses_saved_credential(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        regist_key = "a49d08ed"
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.45",
+                "name": "PS4-896",
+                "is_ps5": False,
+                "target": 900,
+                "regist_key": regist_key,
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        host = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", state="offline", target=900,
+        )
+        try:
+            with mock.patch.object(chiaki, "send_wakeup", return_value=True) as wake:
+                self.assertTrue(chiaki.wake_paired_host(host))
+        finally:
+            os.remove(paired_path)
+        wake.assert_called_once_with("192.168.1.45", regist_key, False)
+
+    def test_home_offline_host_wakes_instead_of_starting_stream(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        home = importlib.import_module("rh.screens.home")
+        screen = home.HomeScreen(mock.Mock())
+        host = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", state="offline", target=900,
+        )
+        with mock.patch.object(screen, "_is_paired", return_value=True), \
+                mock.patch.object(screen, "_wake_host") as wake, \
+                mock.patch.object(chiaki, "prepare_stream_launch") as prepare:
+            screen._start_stream(host)
+        wake.assert_called_once_with(host)
+        prepare.assert_not_called()
+
+    def test_home_ready_host_starts_stream_without_wakeup(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        home = importlib.import_module("rh.screens.home")
+        engine = mock.Mock()
+        screen = home.HomeScreen(engine)
+        host = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", state="ready", target=900,
+        )
+        with mock.patch.object(screen, "_is_paired", return_value=True), \
+                mock.patch.object(screen, "_wake_host") as wake, \
+                mock.patch.object(
+                    chiaki, "prepare_stream_launch", return_value=(True, "ok"),
+                ) as prepare:
+            screen._start_stream(host)
+        prepare.assert_called_once_with(host)
+        wake.assert_not_called()
+        engine.quit.assert_called_once_with("stream_launch")
 
     def test_video_profiles_include_1080p(self):
         chiaki = importlib.import_module("rh.chiaki")
