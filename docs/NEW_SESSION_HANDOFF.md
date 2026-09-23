@@ -8,6 +8,8 @@ Kiểm thử hiệu năng Remote Play PS4 qua LAN trên TrimUI Smart Pro S TG505
 `v0.3.2` là mốc stream thật ổn định về chức năng; `v0.3.3` tối ưu I/O/render.
 `v0.3.4` quản lý log an toàn và sửa đường thoát stream START+SELECT trên TrimUI.
 `v0.3.5` sửa hộp xóa log bị nháy rồi tự đóng do nhận lại nút A đang giữ.
+Kiểm thử thật v0.3.5 đã hoàn tất; 540p30/4000 ổn định nhất và renderer GLES2 có
+acceleration. 720p60/1080p bị cả decoder backlog lẫn packet loss/FEC.
 
 ## 2. Repo và bản phát hành
 
@@ -15,7 +17,7 @@ Kiểm thử hiệu năng Remote Play PS4 qua LAN trên TrimUI Smart Pro S TG505
 - Thư mục làm việc: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
-- Bản cần kiểm thử máy thật: `v0.3.5`
+- Bản đã kiểm thử máy thật: `v0.3.5`
 - Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.5`
 - `manifest.json` phải trả về đúng `0.3.5`, có
   `bin/chiaki-stream` và không có `settings.json`.
@@ -111,8 +113,32 @@ Quản lý log/thoát stream v0.3.4:
 - `python tools/make_release.py`: đạt.
 - `python tools/verify_release.py`: đạt.
 - ZIP có quyền `0755` cho `App/Chiaki/bin/chiaki-stream`.
-- Sandbox không đo được hiệu năng thực tế; kết quả máy thật xác nhận stream và
-  input hoạt động; modal v0.3.5 và hiệu năng cần kiểm thử máy thật.
+- Máy thật xác nhận modal xóa log, START+SELECT, stream/input và uploader hoạt
+  động. Không có release mới sau v0.3.5 vì kết quả chưa chứng minh cần sửa pair
+  hoặc session pre-10.
+
+### Kết quả Issue v0.3.5
+
+- `#4`: 540p30/4000, totals `5304/0/0`, chủ yếu 29–30 FPS.
+- `#5`: 540p60/6000, totals `8142/20/0`, chủ yếu 57–60 FPS; FEC=0 nhưng decoder
+  đôi lúc đầy, nên drop nhỏ nằm ở decode/render.
+- `#6`: 720p30/4000, phiên riêng khoảng `2731/0/0`, chủ yếu gần 30 FPS.
+- `#15`: 720p60, totals `4897/343/47`, trung bình khoảng 51,5 FPS; network/FEC
+  và decode backlog cùng góp phần.
+- `#17`: 1080p30, totals `1672/391/88`, trung bình khoảng 19,6 FPS; decode/render
+  không theo kịp ngay cả khi một số cửa sổ FEC=0, sau đó FEC/IDR làm nặng thêm.
+- `#18` là phiên mới nhất: 540p60/15000, totals `2838/202/50`, trung bình khoảng
+  47,2 FPS. Log ghi 15000 kbps, không phải 8000; bitrate cao làm tăng FEC.
+
+Mọi phiên có hình đều ghi `renderer=opengles2 accelerated=1 vsync=1`. Dòng
+`measured bitrate`, nếu có, là **MBit/s** của video nhận được chứ không phải MB/s
+hay phép đo throughput tối đa của Wi-Fi. Issue v0.3.5 không cung cấp measured
+bitrate đủ để suy ra giới hạn Wi-Fi.
+
+Sau START+SELECT, Issue `#7` có session request thành công rồi Ctrl bị reset;
+`#8`–`#14` thử lại liên tục báo Remote Play đang được dùng. Khoảng hai phút sau
+`#15` kết nối lại. Shutdown trước đó đã gửi Disconnect và dừng Ctrl/Takion sạch,
+nên giữ nguyên pair/session và chờ khoảng hai phút trước khi đổi profile.
 
 ## 8. Log cho session tiếp theo
 
@@ -161,15 +187,14 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 
 1. Đọc file này và `docs/PROJECT_STATUS.md`.
 2. Giữ nguyên pair/session pre-10 của mốc `v0.3.2` nếu không có bằng chứng lỗi.
-3. Đọc các Issue `native_stream_quality` của v0.3.5, so sánh FPS/FEC/lost.
-4. Test theo thứ tự `720p30/4000`, `720p30/6000`, `720p60/6000`,
-   `1080p30/6000`; mỗi mức 1–2 phút trong cùng điều kiện mạng.
-5. Nếu renderer software hoặc FPS thấp nhưng FEC/lost bằng 0, tối ưu decode/render.
-   Nếu FEC/lost cao, xử lý Wi-Fi/bitrate trước.
+3. Dùng `540p30/4000` làm baseline; test lại `720p30/4000` và `720p30/6000`.
+4. Chờ khoảng hai phút sau START+SELECT trước khi bắt đầu phiên kế tiếp.
+5. Nếu FEC=0 mà codec buffer vẫn đầy/FPS thấp, tối ưu decode/render. Nếu FEC
+   tăng, giảm bitrate và xử lý Wi-Fi trước; không thử 1080p/15000 lúc này.
 
 ## 10. Các phần chưa xác nhận
 
-- Mức cải thiện thực tế và phần drop còn lại do mạng hay decode/render.
+- Tối ưu decoder/render để 720p60 ổn định hơn.
 - Bitrate tối ưu cho Wi-Fi và RAM 1 GB của Smart Pro S.
 - Khả năng chạy 1080p30/1080p60 trên A523.
 - PS5/H265.
@@ -198,8 +223,9 @@ E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước. Mốc v0.3.2 đã
 stream thành công PS4 Pro firmware 9.00 GoldHEN trên Smart Pro S, không PSN.
-v0.3.5 sửa modal xóa log bị nháy/tự đóng; kế thừa xóa/cap log an toàn, retry
-Issue pending khi Thoát và START+SELECT để về menu mà không tắt PS4. Nhiệm vụ
-hiện tại là kiểm thử modal, tổ hợp thoát và đọc Issue native_stream_quality.
+v0.3.5 đã xác nhận modal xóa log và START+SELECT hoạt động. Issue #4/#5/#6 cho
+thấy 540p30 ổn định nhất và 720p30 chạy gần 30 FPS; #15/#17/#18 cho thấy 60 FPS,
+1080p hoặc bitrate cao làm tăng decoder backlog/FEC. Chờ khoảng hai phút sau khi
+thoát trước khi reconnect vì PS4 giữ lease tạm. Không sửa pair/session pre-10.
 Không tiết lộ hoặc ghi log PIN, regist_key, rp_key, Account-ID hay token.
 ```

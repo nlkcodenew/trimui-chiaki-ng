@@ -9,6 +9,8 @@
 > nút vật lý START/SELECT để trở về menu mà không cần tắt PS4.
 > v0.3.5 sửa modal xóa log bị nháy/tự đóng: mọi modal chung dùng button edge và
 > Confirm đóng trước khi callback mở hộp kết quả.
+> Kiểm thử máy thật v0.3.5 đã hoàn tất: 540p30/4000 ổn định nhất; 720p30 vẫn đạt
+> gần 30 FPS khi FEC bằng 0; 720p60 và 1080p xuất hiện cả decoder backlog lẫn FEC.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
@@ -158,7 +160,7 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.5 đang kiểm thử
+### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.5 đã kiểm thử
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
@@ -176,6 +178,38 @@ mục tiêu 8000 kbps nhưng bitrate đo được chỉ khoảng 1,96–2,89 Mbp
 nghiêng mạnh về packet loss/độ trễ mạng; đồng thời `CHIAKI_LOG_ALL` và `fflush`
 từng dòng xuống thẻ SD là tải phụ đáng kể. v0.3.3 xử lý phần tải log/render có thể
 sửa trong app và bổ sung số đo để kiểm chứng phần mạng trên thiết bị.
+
+**Kết quả v0.3.5 ngày 2026-09-23:** renderer của mọi phiên là
+`opengles2 accelerated=1 vsync=1`; không có bằng chứng fallback software.
+
+- Issue `#4`, 960x540@30, 4000 kbps: `5304/0/0` rendered/lost/FEC, phần lớn
+  29–30 FPS. Đây là profile ổn định nhất và khớp cảm nhận chơi khá mượt.
+- Issue `#5`, 960x540@60, 6000 kbps: `8142/20/0`, phần lớn 57–60 FPS nhưng có
+  cảnh báo codec buffer đầy. FEC bằng 0 nên phần drop nhỏ này thuộc decode/render.
+- Issue `#6`, 1280x720@30, 4000 kbps: phiên riêng kết thúc khoảng `2731/0/0`,
+  phần lớn gần 30 FPS. 720p30 chạy được nhưng ít dư địa hơn 540p.
+- Issue `#15`, 1280x720@60 (profile bị cắt khỏi tail Issue, suy ra từ chuỗi test,
+  first frame và FPS): `4897/343/47`, FPS trung bình khoảng 51,5. Đây là lỗi hỗn
+  hợp: FEC/network và decoder backlog cùng xuất hiện.
+- Issue `#17`, 1920x1080@30: `1672/391/88`, khoảng 12,8–25,9 FPS, trung bình
+  19,6. Ngay cả cửa sổ FEC=0 cũng có FPS thấp; 1080p vượt khả năng decode/render
+  hiện tại, sau đó packet loss/IDR làm tình hình nặng thêm.
+- Issue `#18`, báo cáo mới nhất, thực tế ghi 960x540@60 **15000 kbps** chứ không
+  phải 8000: `2838/202/50`, trung bình khoảng 47,2 FPS. Bitrate cao gây FEC/IDR
+  dù độ phân giải thấp, xác nhận không nên tăng bitrate khi mạng chưa sạch.
+
+`StreamConnection measured bitrate` dùng đơn vị **MBit/s**, không phải MB/s và
+chỉ là bitrate video nhận được trong cửa sổ thống kê; nó không đo giới hạn
+throughput Wi-Fi. Các Issue v0.3.5 không có dòng measured bitrate đáng tin để kết
+luận băng thông tối đa, nên không suy diễn từ bitrate mục tiêu 4000–15000 kbps.
+
+Sau khi thoát một phiên, Issue `#7` cho thấy session request kế tiếp thành công
+nhưng Ctrl bị PS4 reset. Issue `#8`–`#14`, thử lại cách nhau khoảng 13–20 giây,
+đều bị `Remote Play on Console is already in use`; khoảng hai phút sau `#15` mới
+kết nối lại. Phiên trước đã log gửi Disconnect, đóng Takion và dừng Ctrl sạch,
+nên hiện tượng này được xem là lease Remote Play phía PS4 chưa nhả, không phải
+lỗi pair/key. Chưa sửa session; khi đổi profile cần chờ khoảng hai phút rồi thử
+lại để tránh tạo hàng loạt Issue lỗi tạm thời.
 
 ### 4.5 P1 — Tự gửi log GitHub — ĐÃ XÁC NHẬN TRÊN MÁY THẬT
 Người dùng đã cấu hình `Apps/Chiaki/secrets.json` bằng fine-grained token chỉ có
@@ -234,13 +268,15 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 
-## 8. Bước kiểm thử v0.3.5
+## 8. Bước kiểm thử tiếp theo
 
 1. Nếu muốn bài test sạch, vào **Cài đặt → XÓA LOG CŨ → A → Có**.
-2. Mỗi cấu hình chơi 1–2 phút rồi giữ START+SELECT 1,2 giây để về menu; không
-   tắt PS4. Xác nhận app quay về menu và Issue chất lượng xuất hiện.
-3. Thử lần lượt `720p30/4000`, `720p30/6000`, `720p60/6000`, `1080p30/6000`.
-4. Chỉ thử 1080p60 hoặc 8000–15000 kbps khi `fec/lost` ở cấu hình trước gần 0.
-5. So sánh `fps`, `fec`, `lost` và renderer; dùng Wi-Fi 5 GHz, tắt Bluetooth.
+2. Dùng baseline `540p30/4000`; chơi ít nhất 2 phút rồi giữ START+SELECT 1,2 giây.
+3. Sau khi về menu, chờ khoảng hai phút trước khi bắt đầu profile khác để PS4
+   nhả lease Remote Play; không pair lại và không tắt PS4.
+4. Test lại `720p30/4000` và `720p30/6000` trong cùng điều kiện Wi-Fi 5 GHz,
+   Bluetooth tắt. Chỉ thử 60 FPS khi hai profile này giữ `fec/lost` gần 0.
+5. Không ưu tiên 1080p hoặc 15000 kbps trên màn 720p; số liệu v0.3.5 đã chứng
+   minh chúng tăng tải mà không đem lại độ phân giải hiển thị cao hơn.
 
 Lưu ý phần cứng: RAM 1 GB và màn 720p, nên 720p30 vẫn là cấu hình ưu tiên.

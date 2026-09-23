@@ -20,6 +20,12 @@ log cũng đã tạo GitHub Issue thành công. Log Issue cho thấy đường t
 khoảng 2–3 Mbps, RTT gần 1 giây và có nhiều lỗi FEC, nên v0.3.3 ưu tiên giảm tải
 ghi log và cho phép thử bitrate thấp để tách nghẽn mạng khỏi giới hạn giải mã.
 
+**Kết quả v0.3.5:** renderer là `opengles2 accelerated=1`. Profile
+`540p30/4000` đạt `5304 rendered / 0 lost / 0 FEC` và ổn định nhất. `720p30/4000`
+vẫn gần 30 FPS khi FEC bằng 0; 720p60 và 1080p xuất hiện cả decoder backlog lẫn
+FEC/IDR. Sau START+SELECT, nên chờ khoảng hai phút trước khi kết nối lại vì PS4
+có thể tạm báo Remote Play vẫn đang được dùng dù client đã shutdown sạch.
+
 Tiếp tục dự án ở session khác: đọc `docs/NEW_SESSION_HANDOFF.md` trước. Tài liệu
 này ghi chính xác release hiện tại, kiến trúc stream, trạng thái test và danh
 sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
@@ -35,14 +41,15 @@ sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
 
 ## Cấu hình stream và thứ tự thử
 
-- Độ phân giải: `720p` (native, không tốn scaler)
-- FPS: `30`
-- Bitrate mặc định: `8000` kbps; nên thử `4000` rồi `6000` để giảm packet loss.
+- Profile ổn định đã xác nhận: `540p`, `30 FPS`, `4000` kbps.
+- Profile chất lượng cao hơn để thử tiếp: `720p`, `30 FPS`, `4000`–`6000` kbps.
+- Bitrate mặc định cài đặt vẫn là `8000` kbps, nhưng không nên dùng làm baseline.
 - Tùy chọn thử nghiệm: `1080p` ở 30/60 FPS. Màn hình máy chỉ 1280×720 nên 1080p
   dùng để đo sức giải mã/GPU, không làm tăng độ phân giải vật lý của màn hình.
 - Codec: H264 cho PS4. H265/PS5 có trong helper nhưng chưa được kiểm thử.
-- Thứ tự khuyến nghị: `720p30/4000`, `720p30/6000`, `720p60/6000`,
-  `1080p30/6000`, sau đó mới thử bitrate cao hơn hoặc `1080p60`.
+- Thứ tự khuyến nghị: `540p30/4000`, `720p30/4000`, rồi `720p30/6000`.
+- Chỉ thử 60 FPS khi `fec/lost` gần 0; không ưu tiên 1080p hoặc 15000 kbps trên
+  màn 720p.
 
 ## Chạy stream
 
