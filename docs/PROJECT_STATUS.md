@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.5)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.6)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-23.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
@@ -9,8 +9,8 @@
 > nút vật lý START/SELECT để trở về menu mà không cần tắt PS4.
 > v0.3.5 sửa modal xóa log bị nháy/tự đóng: mọi modal chung dùng button edge và
 > Confirm đóng trước khi callback mở hộp kết quả.
-> Kiểm thử máy thật v0.3.5 đã hoàn tất: 540p30/4000 ổn định nhất; 720p30 vẫn đạt
-> gần 30 FPS khi FEC bằng 0; 720p60 và 1080p xuất hiện cả decoder backlog lẫn FEC.
+> Kiểm thử máy thật v0.3.5 có thêm #20/#21: 540p60/15000 bị FEC/lost/IDR nặng;
+> 720p30/4000 ổn định gần 30 FPS với FEC bằng 0.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
@@ -44,7 +44,8 @@
   không có pending marker thì không tạo Issue mới không cần thiết.
 - Đã xác nhận trên Smart Pro S thật ngày 2026-09-23: màn hình PS4 xuất hiện,
   điều khiển hoạt động và chơi game qua LAN được; cảm nhận ban đầu khá ổn.
-- Chưa xong: xác nhận v0.3.5 trên máy thật, PS5/H265 và Internet/RUDP.
+- Chưa xong: xác nhận mapping A/B/X/Y của v0.3.6 trên máy thật, PS5/H265 và
+  Internet/RUDP.
 
 ## 1. Mục tiêu
 
@@ -160,7 +161,7 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.5 đã kiểm thử
+### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.5/v0.3.6 đang xác nhận
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
@@ -179,7 +180,7 @@ nghiêng mạnh về packet loss/độ trễ mạng; đồng thời `CHIAKI_LOG_
 từng dòng xuống thẻ SD là tải phụ đáng kể. v0.3.3 xử lý phần tải log/render có thể
 sửa trong app và bổ sung số đo để kiểm chứng phần mạng trên thiết bị.
 
-**Kết quả v0.3.5 ngày 2026-09-23:** renderer của mọi phiên là
+**Kết quả các phiên test ngày 2026-09-23:** renderer của mọi phiên là
 `opengles2 accelerated=1 vsync=1`; không có bằng chứng fallback software.
 
 - Issue `#4`, 960x540@30, 4000 kbps: `5304/0/0` rendered/lost/FEC, phần lớn
@@ -194,9 +195,14 @@ sửa trong app và bổ sung số đo để kiểm chứng phần mạng trên 
 - Issue `#17`, 1920x1080@30: `1672/391/88`, khoảng 12,8–25,9 FPS, trung bình
   19,6. Ngay cả cửa sổ FEC=0 cũng có FPS thấp; 1080p vượt khả năng decode/render
   hiện tại, sau đó packet loss/IDR làm tình hình nặng thêm.
-- Issue `#18`, báo cáo mới nhất, thực tế ghi 960x540@60 **15000 kbps** chứ không
-  phải 8000: `2838/202/50`, trung bình khoảng 47,2 FPS. Bitrate cao gây FEC/IDR
-  dù độ phân giải thấp, xác nhận không nên tăng bitrate khi mạng chưa sạch.
+- Issue `#18`, phiên trước, ghi 960x540@60 **15000 kbps**: `2838/202/50`, trung
+  bình khoảng 47,2 FPS; bitrate cao gây FEC/IDR dù độ phân giải thấp.
+- Issue `#19` là lần kết nối thất bại do PS4 reset Ctrl, không phải phiên đo
+  chất lượng.
+- Issue `#20`, 960x540@60/15000, đạt khoảng `40798/1357/295` rendered/lost/FEC;
+  nhiều FEC, IDR và decoder-buffer warning, nên profile này không phù hợp.
+- Issue `#21`, 1280x720@30/4000, đạt `6565/2/0` rendered/lost/FEC và native cuối
+  `6654/2`; FPS ổn định 29,8–30,0 trong các cửa sổ chạy, là profile ưu tiên.
 
 `StreamConnection measured bitrate` dùng đơn vị **MBit/s**, không phải MB/s và
 chỉ là bitrate video nhận được trong cửa sổ thống kê; nó không đo giới hạn
@@ -264,18 +270,19 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `files/rh/updater.py` — OTA + log mạng
 - `files/rh/log_uploader.py` — auto Issue
 - `tools/make_release.py` / `tools/verify_release.py` — build gate
-- `tests/test_release_and_logs.py` — 40 tests
+- `tests/test_release_and_logs.py` — 41 tests
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 
 ## 8. Bước kiểm thử tiếp theo
 
 1. Nếu muốn bài test sạch, vào **Cài đặt → XÓA LOG CŨ → A → Có**.
-2. Dùng baseline `540p30/4000`; chơi ít nhất 2 phút rồi giữ START+SELECT 1,2 giây.
+2. Dùng `720p30/4000` làm baseline đã xác nhận; chơi ít nhất 2 phút rồi giữ
+   START+SELECT 1,2 giây.
 3. Sau khi về menu, chờ khoảng hai phút trước khi bắt đầu profile khác để PS4
    nhả lease Remote Play; không pair lại và không tắt PS4.
-4. Test lại `720p30/4000` và `720p30/6000` trong cùng điều kiện Wi-Fi 5 GHz,
-   Bluetooth tắt. Chỉ thử 60 FPS khi hai profile này giữ `fec/lost` gần 0.
+4. Sau khi nhận `v0.3.6`, kiểm tra riêng A/B/X/Y; test profile chỉ khi cần so sánh.
+   `720p30/4000` đã có kết quả tốt; không cần lặp lại nếu không đổi môi trường.
 5. Không ưu tiên 1080p hoặc 15000 kbps trên màn 720p; số liệu v0.3.5 đã chứng
    minh chúng tăng tải mà không đem lại độ phân giải hiển thị cao hơn.
 

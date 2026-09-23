@@ -407,6 +407,28 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("CHIAKI_CONTROLLER_BUTTON_OPTIONS, false", source)
         self.assertIn("CHIAKI_CONTROLLER_BUTTON_SHARE, false", source)
 
+    def test_native_stream_face_buttons_follow_sdl_labels(self):
+        root = os.path.dirname(os.path.dirname(__file__))
+        with open(os.path.join(root, "native", "chiaki-stream.c"),
+                  encoding="utf-8") as handle:
+            source = handle.read()
+        expected = (
+            "case SDL_CONTROLLER_BUTTON_A: return CHIAKI_CONTROLLER_BUTTON_CROSS;",
+            "case SDL_CONTROLLER_BUTTON_B: return CHIAKI_CONTROLLER_BUTTON_MOON;",
+            "case SDL_CONTROLLER_BUTTON_X: return CHIAKI_CONTROLLER_BUTTON_BOX;",
+            "case SDL_CONTROLLER_BUTTON_Y: return CHIAKI_CONTROLLER_BUTTON_PYRAMID;",
+        )
+        for mapping in expected:
+            self.assertIn(mapping, source)
+        joystick_fallback = (
+            "case 1: return CHIAKI_CONTROLLER_BUTTON_CROSS;",
+            "case 0: return CHIAKI_CONTROLLER_BUTTON_MOON;",
+            "case 3: return CHIAKI_CONTROLLER_BUTTON_BOX;",
+            "case 2: return CHIAKI_CONTROLLER_BUTTON_PYRAMID;",
+        )
+        for mapping in joystick_fallback:
+            self.assertIn(mapping, source)
+
     def test_settings_language_row_updates_current_lang(self):
         screen = self.settings_module.SettingsScreen()
         screen.selected = next(

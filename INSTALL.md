@@ -43,6 +43,7 @@
 
 Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
 9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
+`v0.3.6` sửa mapping A/B/X/Y của native stream; bản này giữ nguyên pair/session.
 `v0.3.5` giữ nguyên pair/session đã chạy tốt, sửa hộp xóa log bị nháy/tự đóng,
 đồng thời kế thừa quản lý log an toàn và tổ hợp thoát stream của v0.3.4.
 Ứng dụng không cần PSN.
@@ -51,12 +52,10 @@ Luồng này đã được xác nhận thành công trên Smart Pro S thật v�
 2. Với PS4 firmware 9.00 GoldHEN, không cần và không được đăng nhập PSN. Sau khi
    cập nhật từ v0.3.1, bấm **Y** và nhập PIN lại đúng một lần để tạo khóa pre-10.
 3. Mở app, quét máy, chọn PS4 đã ghép nối và bấm **A**.
-4. Vào **Cài đặt** và thử lần lượt, mỗi cấu hình chơi ít nhất 1–2 phút:
-   - `720p`, 30 FPS, 4000 kbps
-   - `720p`, 30 FPS, 6000 kbps
-   - `720p`, 60 FPS, 6000 kbps
-   - `1080p`, 30 FPS, 6000 kbps
-   - Chỉ sau đó mới thử 1080p/60 FPS hoặc bitrate 8000–15000 kbps.
+4. Bắt đầu bằng profile đã xác nhận tốt `720p`, 30 FPS, 4000 kbps. Nếu cần giảm
+   tải, dùng `540p`, 30 FPS, 4000 kbps. Chỉ thử profile khác để so sánh; không
+   dùng 15000 kbps làm cấu hình thường xuyên vì test thực tế cho thấy
+   FEC/lost/IDR tăng mạnh.
 5. Giữ **START + SELECT** khoảng 1,2 giây để thoát stream về menu app.
    Dòng hướng dẫn màu xanh luôn hiện trên màn hình chính. Không cần tắt PS4.
 6. Sau khi thoát bình thường, app tự tạo Issue `native_stream_quality` khi token

@@ -2,7 +2,8 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.5 - vá hộp xác nhận/kết quả xóa log bị nháy rồi tự đóng vì
+**Trạng thái**: v0.3.6 - sửa mapping bốn nút mặt khi native stream dùng SDL GameController;
+v0.3.5 vá hộp xác nhận/kết quả xóa log bị nháy rồi tự đóng vì
 nút A vẫn đang được giữ. Các modal chung chỉ nhận cạnh nhấn mới; hộp xác nhận tự
 đóng trước khi mở hộp kết quả. Bản này kế thừa quản lý log và thao tác thoát
 stream của v0.3.4.
@@ -16,14 +17,16 @@ tắt PS4. Pair/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN được giữ 
 **Mốc máy thật 2026-09-23:** sau khi OTA lên `v0.3.2` và ghép lại bằng PIN,
 Smart Pro S đã hiển thị màn hình PS4, nhận điều khiển và chơi game qua LAN thành
 công. Trải nghiệm ban đầu khá ổn nhưng còn drop FPS thường xuyên. Hệ thống tự gửi
-log cũng đã tạo GitHub Issue thành công. Log Issue cho thấy đường truyền chỉ đạt
-khoảng 2–3 Mbps, RTT gần 1 giây và có nhiều lỗi FEC, nên v0.3.3 ưu tiên giảm tải
-ghi log và cho phép thử bitrate thấp để tách nghẽn mạng khỏi giới hạn giải mã.
+log cũng đã tạo GitHub Issue thành công. Log cũ ghi measured video bitrate khoảng
+2–3 MBit/s, RTT gần 1 giây và nhiều lỗi FEC. Đây không phải phép đo throughput
+Wi-Fi; v0.3.3 giảm tải log và thêm profile bitrate thấp để tách nguyên nhân.
 
-**Kết quả v0.3.5:** renderer là `opengles2 accelerated=1`. Profile
-`540p30/4000` đạt `5304 rendered / 0 lost / 0 FEC` và ổn định nhất. `720p30/4000`
-vẫn gần 30 FPS khi FEC bằng 0; 720p60 và 1080p xuất hiện cả decoder backlog lẫn
-FEC/IDR. Sau START+SELECT, nên chờ khoảng hai phút trước khi kết nối lại vì PS4
+**Kết quả test mới nhất:** renderer là `opengles2 accelerated=1`. `#21` với
+`720p30/4000` đạt `6565 rendered / 2 lost / 0 FEC` (native cuối `6654/2`) và
+ổn định khoảng 29,8–30,0 FPS. Ngược lại `#20` với `540p60/15000` có khoảng
+`40798 rendered / 1357 lost / 295 FEC`, nhiều cảnh báo FEC/IDR/decoder buffer;
+không nên dùng bitrate 15000. Sau START+SELECT, nên chờ khoảng hai phút trước
+khi kết nối lại vì PS4
 có thể tạm báo Remote Play vẫn đang được dùng dù client đã shutdown sạch.
 
 Tiếp tục dự án ở session khác: đọc `docs/NEW_SESSION_HANDOFF.md` trước. Tài liệu
@@ -41,13 +44,13 @@ sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
 
 ## Cấu hình stream và thứ tự thử
 
-- Profile ổn định đã xác nhận: `540p`, `30 FPS`, `4000` kbps.
-- Profile chất lượng cao hơn để thử tiếp: `720p`, `30 FPS`, `4000`–`6000` kbps.
+- Profile ưu tiên đã xác nhận: `720p`, `30 FPS`, `4000` kbps.
+- Fallback tải thấp: `540p`, `30 FPS`, `4000` kbps.
 - Bitrate mặc định cài đặt vẫn là `8000` kbps, nhưng không nên dùng làm baseline.
 - Tùy chọn thử nghiệm: `1080p` ở 30/60 FPS. Màn hình máy chỉ 1280×720 nên 1080p
   dùng để đo sức giải mã/GPU, không làm tăng độ phân giải vật lý của màn hình.
 - Codec: H264 cho PS4. H265/PS5 có trong helper nhưng chưa được kiểm thử.
-- Thứ tự khuyến nghị: `540p30/4000`, `720p30/4000`, rồi `720p30/6000`.
+- Thứ tự khuyến nghị: `720p30/4000`, rồi `540p30/4000` nếu cần giảm tải.
 - Chỉ thử 60 FPS khi `fec/lost` gần 0; không ưu tiên 1080p hoặc 15000 kbps trên
   màn 720p.
 

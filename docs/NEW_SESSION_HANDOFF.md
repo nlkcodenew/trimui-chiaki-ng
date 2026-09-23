@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.5
+# Bàn giao session mới — trimui-chiaki-ng v0.3.6
 
 > Cập nhật: 2026-09-23. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
@@ -8,8 +8,9 @@ Kiểm thử hiệu năng Remote Play PS4 qua LAN trên TrimUI Smart Pro S TG505
 `v0.3.2` là mốc stream thật ổn định về chức năng; `v0.3.3` tối ưu I/O/render.
 `v0.3.4` quản lý log an toàn và sửa đường thoát stream START+SELECT trên TrimUI.
 `v0.3.5` sửa hộp xóa log bị nháy rồi tự đóng do nhận lại nút A đang giữ.
-Kiểm thử thật v0.3.5 đã hoàn tất; 540p30/4000 ổn định nhất và renderer GLES2 có
-acceleration. 720p60/1080p bị cả decoder backlog lẫn packet loss/FEC.
+Kiểm thử thật v0.3.5 đã có thêm hai phiên quan trọng: 540p60/15000 bị
+packet loss/FEC và IDR nặng; 720p30/4000 chạy ổn định. `v0.3.6` sửa mapping
+A/B/X/Y ở native SDL GameController và cần xác nhận lại nút trên máy thật.
 
 ## 2. Repo và bản phát hành
 
@@ -17,9 +18,9 @@ acceleration. 720p60/1080p bị cả decoder backlog lẫn packet loss/FEC.
 - Thư mục làm việc: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
-- Bản đã kiểm thử máy thật: `v0.3.5`
-- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.5`
-- `manifest.json` phải trả về đúng `0.3.5`, có
+- Bản stream đã kiểm thử máy thật: `v0.3.5`; bản sửa mapping: `v0.3.6`
+- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.6`
+- `manifest.json` phải trả về đúng `0.3.6`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 3. Phần cứng kiểm thử
@@ -50,7 +51,7 @@ tài liệu, Issue hoặc chat. Các khóa thật chỉ được giữ trên th�
 - `secrets.json` đã được cấu hình và uploader đã tự tạo GitHub Issue `#1`, `#2`.
   Mục tiêu tự gửi log không cần người dùng đính kèm file thủ công đã đạt.
 
-## 5. Luồng stream v0.3.5
+## 5. Luồng stream native
 
 1. `files/rh/screens/home.py` gọi `prepare_stream_launch()`.
 2. `files/rh/chiaki.py` đọc credential của đúng host, kiểm tra RP key 16 byte,
@@ -106,7 +107,7 @@ Quản lý log/thoát stream v0.3.4:
 
 ## 7. Trạng thái kiểm thử trong sandbox
 
-- `python -m unittest discover -s tests -v`: 40/40 test đạt.
+- `python -m unittest discover -s tests -v`: 41/41 test đạt sau khi thêm regression test mapping.
 - `python -m compileall -q files tools native`: đạt.
 - `bash -n files/launch.sh`: đạt.
 - `bash -n native/build-tg5050.sh`: đạt.
@@ -114,10 +115,9 @@ Quản lý log/thoát stream v0.3.4:
 - `python tools/verify_release.py`: đạt.
 - ZIP có quyền `0755` cho `App/Chiaki/bin/chiaki-stream`.
 - Máy thật xác nhận modal xóa log, START+SELECT, stream/input và uploader hoạt
-  động. Không có release mới sau v0.3.5 vì kết quả chưa chứng minh cần sửa pair
-  hoặc session pre-10.
+  động. Pair/session pre-10 không thay đổi; `v0.3.6` chỉ sửa mapping native.
 
-### Kết quả Issue v0.3.5
+### Kết quả Issue v0.3.5 và phiên test mới nhất
 
 - `#4`: 540p30/4000, totals `5304/0/0`, chủ yếu 29–30 FPS.
 - `#5`: 540p60/6000, totals `8142/20/0`, chủ yếu 57–60 FPS; FEC=0 nhưng decoder
@@ -127,8 +127,17 @@ Quản lý log/thoát stream v0.3.4:
   và decode backlog cùng góp phần.
 - `#17`: 1080p30, totals `1672/391/88`, trung bình khoảng 19,6 FPS; decode/render
   không theo kịp ngay cả khi một số cửa sổ FEC=0, sau đó FEC/IDR làm nặng thêm.
-- `#18` là phiên mới nhất: 540p60/15000, totals `2838/202/50`, trung bình khoảng
-  47,2 FPS. Log ghi 15000 kbps, không phải 8000; bitrate cao làm tăng FEC.
+- `#18` là phiên 540p60/15000 trước đó: totals `2838/202/50`, trung bình khoảng
+  47,2 FPS; bitrate cao làm tăng FEC.
+- `#19` là lần bắt đầu phiên 540p60/15000 bị PS4 reset Ctrl và thoát 11, không
+  dùng để đánh giá chất lượng hình.
+- `#20` là phiên chất lượng 540p60/15000 hợp lệ: khoảng `40798 rendered / 1357
+  lost / 295 FEC` (dòng native cuối khoảng `40863 rendered / 1359 lost`), FPS
+  quan sát dao động khoảng 29,7–60 và trung bình tail khoảng 48,4. Có nhiều cảnh
+  báo FEC, IDR và decoder buffer; 15000 kbps không phù hợp dù chỉ 540p.
+- `#21` là phiên chất lượng 720p30/4000 hợp lệ: `6565 rendered / 2 lost / 0 FEC`
+  (native cuối `6654 rendered / 2 lost`), renderer GLES2 accelerated, các cửa sổ
+  ổn định đạt khoảng 29,8–30,0 FPS. Đây là profile ưu tiên dùng hằng ngày.
 
 Mọi phiên có hình đều ghi `renderer=opengles2 accelerated=1 vsync=1`. Dòng
 `measured bitrate`, nếu có, là **MBit/s** của video nhận được chứ không phải MB/s
@@ -187,13 +196,15 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 
 1. Đọc file này và `docs/PROJECT_STATUS.md`.
 2. Giữ nguyên pair/session pre-10 của mốc `v0.3.2` nếu không có bằng chứng lỗi.
-3. Dùng `540p30/4000` làm baseline; test lại `720p30/4000` và `720p30/6000`.
+3. Dùng `720p30/4000` làm profile ưu tiên đã được xác nhận; `540p30/4000` là
+   fallback tải thấp.
 4. Chờ khoảng hai phút sau START+SELECT trước khi bắt đầu phiên kế tiếp.
 5. Nếu FEC=0 mà codec buffer vẫn đầy/FPS thấp, tối ưu decode/render. Nếu FEC
    tăng, giảm bitrate và xử lý Wi-Fi trước; không thử 1080p/15000 lúc này.
 
 ## 10. Các phần chưa xác nhận
 
+- Xác nhận A/B/X/Y của `v0.3.6` trên máy thật sau OTA; các nút khác phải giữ nguyên.
 - Tối ưu decoder/render để 720p60 ổn định hơn.
 - Bitrate tối ưu cho Wi-Fi và RAM 1 GB của Smart Pro S.
 - Khả năng chạy 1080p30/1080p60 trên A523.
@@ -223,9 +234,9 @@ E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước. Mốc v0.3.2 đã
 stream thành công PS4 Pro firmware 9.00 GoldHEN trên Smart Pro S, không PSN.
-v0.3.5 đã xác nhận modal xóa log và START+SELECT hoạt động. Issue #4/#5/#6 cho
-thấy 540p30 ổn định nhất và 720p30 chạy gần 30 FPS; #15/#17/#18 cho thấy 60 FPS,
-1080p hoặc bitrate cao làm tăng decoder backlog/FEC. Chờ khoảng hai phút sau khi
+v0.3.5 đã xác nhận modal xóa log và START+SELECT hoạt động. Issue #20 cho thấy
+540p60/15000 gây FEC/lost/IDR nặng, còn #21 xác nhận 720p30/4000 ổn định. Chờ
+khoảng hai phút sau khi
 thoát trước khi reconnect vì PS4 giữ lease tạm. Không sửa pair/session pre-10.
 Không tiết lộ hoặc ghi log PIN, regist_key, rp_key, Account-ID hay token.
 ```

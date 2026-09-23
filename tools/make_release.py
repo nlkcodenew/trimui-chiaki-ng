@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: sửa hộp xác nhận xóa log bị nháy và tự đóng do nhận lại nút A đang giữ." % version,
-            "en": "v%s: fix the clear-log confirmation/result dialog immediately closing from a held A button." % version,
+            "vi": "v%s: sửa mapping A/B/X/Y khi native stream dùng SDL GameController." % version,
+            "en": "v%s: fix A/B/X/Y mapping for native streaming with SDL GameController." % version,
         },
         "files": files,
         "remove": [],

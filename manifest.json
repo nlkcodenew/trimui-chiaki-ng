@@ -1,13 +1,13 @@
 {
-  "version": "0.3.5",
+  "version": "0.3.6",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-23T10:39:58+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.5/files",
-  "release_tag": "v0.3.5/files",
+  "built": "2026-09-23T21:25:05+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.6/files",
+  "release_tag": "v0.3.6/files",
   "note": {
-    "vi": "v0.3.5: sửa hộp xác nhận xóa log bị nháy và tự đóng do nhận lại nút A đang giữ.",
-    "en": "v0.3.5: fix the clear-log confirmation/result dialog immediately closing from a held A button."
+    "vi": "v0.3.6: sửa mapping A/B/X/Y khi native stream dùng SDL GameController.",
+    "en": "v0.3.6: fix A/B/X/Y mapping for native streaming with SDL GameController."
   },
   "files": [
     {
@@ -42,7 +42,7 @@
     },
     {
       "path": "bin/chiaki-stream",
-      "sha256": "d9ad23bc35a1cb78dbf6958718f79099996225bc30f2bf3f6b20490b12952f37",
+      "sha256": "a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d",
       "size": 1253944
     },
     {
@@ -102,7 +102,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "50bbc3db10611a992832cf5f7b268ae25a570537097aaef99b9cd4c44309e4c4",
+      "sha256": "83fbf530c628d73a985fa08d77da290585dd31c42e7d1e66baa021bd16366ce3",
       "size": 1177
     },
     {
@@ -543,8 +543,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.5.zip",
-    "sha256": "aa0b89b6fc265d181a3a4ffc828d31a6aa94a7de5c020384bd6495426eede3ca",
-    "size": 1238639
+    "name": "trimui-chiaki-ng-v0.3.6.zip",
+    "sha256": "659cfd46379143faf961ef08254d8a732f5448535574ebce420dbb47d066eb67",
+    "size": 1238697
   }
 }
