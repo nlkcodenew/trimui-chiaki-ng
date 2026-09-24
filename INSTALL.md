@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.3.14`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho `v0.3.15`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
@@ -10,14 +10,14 @@ OS và TrimUI Brick Pro Stock OS.
 - Thẻ microSD FAT32 hoặc exFAT có quyền ghi vào `Apps/`.
 - PS4/PS5 và máy TrimUI ở cùng LAN khi quét/ghép nối.
 
-Native helper đi kèm là ELF64 AArch64. Smart Pro S/TG5050 đã được xác nhận
-stream PS4 thật. Brick Pro Stock OS đã xác nhận app, TLS và OTA đến `v0.3.13`;
-stream native trên Brick Pro vẫn cần thêm kiểm thử máy thật.
+Native helper đi kèm là ELF64 AArch64. Smart Pro S/TG5050 với Spruce OS đã được
+xác nhận stream PS4 thật. Brick Pro Stock OS đã xác nhận app, TLS, OTA và pair
+đến `v0.3.14`; runtime `v0.3.15` vẫn cần kiểm thử stream trên máy thật.
 
 ## Cài GitHub Release
 
 1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.14.zip`. Không tải **Source code**.
+2. Tải `trimui-chiaki-ng-v0.3.15.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -30,6 +30,7 @@ stream native trên Brick Pro vẫn cần thêm kiểm thử máy thật.
      assets/
      bin/chiaki-stream
      certs/cacert.pem
+     libs/brick-stock/
      rh/
      vendor/sdl2/
    ```
@@ -46,6 +47,18 @@ token; hãy backup chúng trước khi cài sạch.
 Nếu log có `CERTIFICATE_VERIFY_FAILED` và app cũ hơn `v0.3.11`, phải cài ZIP
 `v0.3.11` hoặc mới hơn bằng tay một lần. Updater cũ phụ thuộc CA hệ thống của
 Stock OS nên không thể tải chính bản vá CA.
+
+## Runtime Brick Pro Stock OS
+
+Issue `#36` và `#37` ở `v0.3.14` xác nhận registration/pair thành công, nhưng
+native helper thoát `127` vì Stock OS không có `libjson-c.so.5`. `v0.3.15` thêm
+dependency closure AArch64 tại `Apps/Chiaki/libs/brick-stock/` và chỉ thêm nó
+làm fallback sau library Stock OS khi model là `sun50iw10`.
+
+Smart Pro S/Spruce model `sun55iw3` không dùng bundle này và tiếp tục chạy với
+library hệ thống đã được xác nhận. Chưa cần tách ZIP theo OS; chỉ tách release
+nếu test Brick tiếp theo cho thấy ABI/GPU thực sự không thể dùng chung native
+binary.
 
 Từ `v0.3.11`, app dùng thêm `certs/cacert.pem` nhưng vẫn giữ
 `ssl.CERT_REQUIRED` và hostname verification. Không xóa CA bundle và không sửa
@@ -139,6 +152,8 @@ Một dòng chất lượng native có dạng:
 - `fps` gần mức đặt và `fec/lost=0`: decode/render đang theo kịp.
 - `fec` hoặc `lost` tăng: giảm bitrate, ưu tiên 5 GHz và tắt Bluetooth.
 - `native stream preflight`: liệt kê thư viện hoặc điều kiện thiếu trước stream.
+- `native runtime: brick-stock`: Brick đã chọn bundle riêng; Spruce phải ghi
+  `native runtime: system`.
 
 ## An toàn thẻ nhớ
 

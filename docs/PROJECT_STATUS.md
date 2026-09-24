@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.14
+# trimui-chiaki-ng — trạng thái dự án v0.3.15
 
 > Cập nhật: 2026-09-24. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
@@ -7,20 +7,20 @@
 
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.14` |
-| Commit/tag | `d09142a` |
-| OTA files | 110 |
-| ZIP entries | 113 |
-| ZIP SHA-256 | `8ece098b41c494e83add3d6647b44383b53946e8dcc0cf27acd590a33e715bbd` |
-| Unittest | 69/69 đạt |
+| Latest | `v0.3.15` |
+| Tag | `v0.3.15` |
+| OTA files | 125 |
+| ZIP entries | 128 |
+| ZIP SHA-256 | `34fb15de42f6eaacff9b7f867d7e8d036d74d4e0a1270e4037f4168f9cca4379` |
+| Unittest | 71/71 đạt |
 | Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 GitHub Release có ba asset:
 
 - `manifest.json`.
-- `trimui-chiaki-ng-v0.3.14.zip`.
-- `trimui-chiaki-ng-v0.3.14.zip.sha256`.
+- `trimui-chiaki-ng-v0.3.15.zip`.
+- `trimui-chiaki-ng-v0.3.15.zip.sha256`.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -31,13 +31,15 @@ mới có `settings.json` mặc định với `device_id` rỗng nhưng không c
 | Nền tảng | UI/app | TLS/OTA | Pair/stream | Ghi chú |
 |---|---:|---:|---:|---|
 | Smart Pro S/TG5050 | Đã xác nhận | Đã dùng OTA | Đã stream PS4 thật | Baseline chính |
-| Spruce OS | Giữ tương thích | Không thay đổi | Chưa có log mới | Không sửa native trong chuỗi Brick Pro |
-| Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.13` | Chưa xác nhận đầy đủ | `v0.3.14` chờ test OTA |
+| Spruce OS | Đã xác nhận | Không thay đổi | Stream tốt ở `v0.3.14` | Issue `#35`, model `sun55iw3` |
+| Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.14` | Pair đạt; stream chờ retest | Issue `#36`/`#37`, model `sun50iw10` |
 | PS4 Pro 9.00/GoldHEN | — | — | Pair/session pre-10 đạt | Không cần PSN |
 | PS5/H265 | — | — | Chưa kiểm thử | Không tuyên bố hỗ trợ máy thật |
 
-Hiện một release chung vẫn phù hợp. Chỉ tách release khi có bằng chứng native
-binary, ABI hoặc library path khác nhau không thể xử lý an toàn trong launcher.
+Một release chung vẫn phù hợp vì native binary và pair protocol giống nhau.
+`sun50iw10` dùng dependency closure riêng trong `libs/brick-stock`; `sun55iw3`
+không nhận path này và tiếp tục dùng library hệ thống. Chỉ tách release nếu test
+máy thật chứng minh ABI/GPU không thể cô lập an toàn trong launcher.
 
 ## 3. Kiến trúc runtime
 
@@ -55,6 +57,7 @@ binary, ABI hoặc library path khác nhau không thể xử lý an toàn trong 
 - `files/rh/chiaki.py`: discovery, registration wrapper, wakeup cũ và launcher.
 - `files/rh/ps4_regist.py`: handshake PS4/PS5 registration.
 - `files/bin/chiaki-stream`: native AArch64 Remote Play helper.
+- `files/libs/brick-stock`: 14 shared libraries AArch64, chỉ cho `sun50iw10`.
 - `files/launch.sh`: chọn Python, library path, crash marker và stream lifecycle.
 
 ### Network/release
@@ -222,6 +225,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.12` | Không popup update cùng version |
 | `v0.3.13` | Device-specific runtime/OTA Issues và fsync |
 | `v0.3.14` | Không cảnh báo giả khi fallback OTA thành công |
+| `v0.3.15` | Runtime AArch64 biệt lập cho Brick Pro Stock OS |
 
 ## 10. Kiểm thử và build gate
 
@@ -235,7 +239,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-69 unittest bao phủ:
+71 unittest bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.
@@ -245,11 +249,12 @@ git diff --check
 - Registration crypto và target validation.
 - Input mapping, settings/modal edges và home flow.
 - Native launcher không đưa khóa vào script.
+- Brick `sun50iw10` chọn runtime riêng; Spruce `sun55iw3` giữ runtime hệ thống.
 
 Verifier kiểm:
 
 - Tag/version/base URL.
-- CA checksum và ELF64 AArch64.
+- CA checksum, ELF64 AArch64 và checksum cố định của 14 thư viện Brick.
 - Manifest source hash và từng payload trong ZIP.
 - ZIP/sidecar SHA-256.
 - File bắt buộc và file cấm.
@@ -257,11 +262,10 @@ Verifier kiểm:
 
 ## 11. Việc tiếp theo
 
-1. Test OTA Brick Pro `v0.3.13 → v0.3.14`.
-2. Xác nhận lỗi source trung gian chỉ ở debug log mức INFO và không vào
-   `Chiaki-loi.txt` khi fallback thành công.
-3. Xác nhận một Issue lỗi thật từ Brick Pro có model/`CHI`/`HW` và không lộ raw
-   identifier hoặc secret.
-4. Test native stream/input/audio trên Brick Pro.
+1. Test OTA Brick Pro `v0.3.14 → v0.3.15`.
+2. Xác nhận preflight ghi `native runtime: brick-stock` và không còn thiếu
+   shared library/exit `127`.
+3. Test native stream/video/audio/input trên Brick Pro; đọc Issue tự động mới.
+4. Nếu còn lỗi ABI/GPU dù dependency closure đầy đủ, tách release theo OS.
 5. Giữ baseline Smart Pro S `720p30/4000`; không sửa pair/native nếu không có
    log chứng minh regression.

@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.14
+# Bàn giao session mới — trimui-chiaki-ng v0.3.15
 
 > Cập nhật: 2026-09-24. Đọc file này trước khi tiếp tục dự án.
 
@@ -7,14 +7,15 @@
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`.
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
-- Release mới nhất: `v0.3.14`.
-- Commit release: `d09142a` — `fix: suppress recovered OTA source warnings in v0.3.14`.
+- Release mới nhất: `v0.3.15`.
+- Nội dung: runtime biệt lập cho Brick Pro Stock OS, không đổi native.
 - GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
-- SHA-256 ZIP `v0.3.14`:
-  `8ece098b41c494e83add3d6647b44383b53946e8dcc0cf27acd590a33e715bbd`.
-- Manifest có 110 file OTA; không có `settings.json`, `secrets.json` hoặc log.
-- 69/69 unittest đạt; `compileall`, build release và verifier đều đạt.
-- Worktree phải sạch trước khi bắt đầu thay đổi mới.
+- SHA-256 ZIP `v0.3.15`:
+  `34fb15de42f6eaacff9b7f867d7e8d036d74d4e0a1270e4037f4168f9cca4379`.
+- Manifest có 125 file OTA; ZIP có 128 entry; không có settings/secrets/log.
+- 71/71 unittest đạt; `compileall`, build release và verifier đều đạt.
+- Native SHA-256 vẫn là
+  `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.
 
 ## 2. Mục tiêu và ràng buộc
 
@@ -34,7 +35,8 @@ Các nguyên tắc không được phá vỡ:
 6. Nếu các OS thật sự cần native binary/thư viện khác nhau, tách release theo OS
    thay vì sửa gói chung theo cách làm hỏng nền tảng đang hoạt động.
 
-Hiện chưa có bằng chứng kỹ thuật buộc phải tách release.
+Hiện chưa cần tách release: runtime Brick được cô lập theo model. Nếu test máy
+thật còn lỗi ABI/GPU, tách release theo OS thay vì thay đường chạy Spruce.
 
 ## 3. Brick Pro Stock OS — trạng thái máy thật
 
@@ -54,7 +56,18 @@ tồn tại và metadata khi cần.
    restart đều đúng.
 4. OTA `v0.3.12 → v0.3.13` thành công: 12 file được tải, kiểm hash, cài và
    restart đúng.
-5. OTA `v0.3.13 → v0.3.14` chưa được xác nhận trên máy thật tại thời điểm bàn giao.
+5. OTA lên `v0.3.14` đã thành công; Issue `#36`/`#37` được gửi đúng từ Brick.
+
+### Pair và lỗi stream v0.3.14
+
+- Pair không lỗi: log có `registration success`, `key_type=2`, target `1000`.
+- Native helper thoát `127` trước session vì thiếu `libjson-c.so.5`.
+- Loader chỉ báo dependency thiếu đầu tiên; closure từ SDK gồm 14 thư viện,
+  khoảng 20 MB chưa nén và không thiếu SONAME ngoài glibc hệ thống.
+- `v0.3.15` chỉ thêm `libs/brick-stock` làm fallback sau library Stock OS trên
+  model `sun50iw10`, tránh override SDL/video/audio hệ thống của Brick.
+- Spruce `sun55iw3` tiếp tục dùng runtime `system`; Issue `#35` xác nhận stream
+  `v0.3.14` vẫn hoạt động tốt.
 
 Trong lần lên `v0.3.13`, URL GitHub Release lỗi DNS lúc `10:38:46`:
 
@@ -197,16 +210,13 @@ Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SH
 
 Ưu tiên theo thứ tự:
 
-1. Xác nhận OTA `v0.3.13 → v0.3.14` trên Brick Pro.
-2. Kiểm tra log sau update: fallback thành công không còn vào
-   `Chiaki-loi.txt`; app khởi động đúng `v0.3.14`.
-3. Khi có lỗi thật, xác nhận Issue title/body chứa model + `CHI-...` + `HW-...`
-   nhưng không chứa raw token/MAC/serial/key.
-4. Kiểm thử native stream/input/audio trên Brick Pro trước khi tuyên bố tương
-   thích stream đầy đủ.
+1. Xác nhận OTA `v0.3.14 → v0.3.15` trên Brick Pro.
+2. Kiểm tra preflight có `native runtime: brick-stock`, không còn exit `127`.
+3. Kiểm thử native video/audio/input trên Brick Pro và đọc Issue mới nếu có.
+4. Chỉ tách release nếu dependency closure vẫn không tương thích ABI/GPU.
 5. Tiếp tục dùng `720p30/4000` làm baseline Smart Pro S.
 
-Không còn việc phát hành nào đang dở. `v0.3.14` đã là GitHub `latest`.
+Không thay native binary, pair/session hoặc SDL mapping đã chạy trên Spruce.
 
 ## 8. Lệnh kiểm tra
 
@@ -240,7 +250,7 @@ Trước commit/release, xác nhận không stage:
 ## 9. Quy trình phát hành
 
 1. Tăng `APP_VERSION` và release note.
-2. Chạy compile, 69 unittest, build và verifier.
+2. Chạy compile, 71 unittest, build và verifier.
 3. Kiểm manifest có CA/native, không có settings/secrets/log.
 4. Commit/push `main`.
 5. Tạo annotated tag đúng version và push tag.
@@ -253,7 +263,8 @@ Trước commit/release, xác nhận không stage:
 ```text
 Tiếp tục repo E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước.
-Latest là v0.3.14. Brick Pro đã OTA thành công đến v0.3.13; cần xác nhận
-v0.3.13 → v0.3.14 và log fallback OTA. Không tắt TLS, không đọc/tiết lộ token,
-không thay native stream/pair/input đang hoạt động trên Smart Pro S/Spruce.
+Release v0.3.15 thêm runtime chỉ cho Brick sun50iw10 sau lỗi exit 127 thiếu
+libjson-c.so.5. Cần xác nhận OTA và stream thật; Spruce sun55iw3 phải tiếp tục
+dùng runtime system. Không tắt TLS, không đọc/tiết lộ token, không thay native
+stream/pair/input đang hoạt động trên Smart Pro S/Spruce.
 ```

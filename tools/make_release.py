@@ -154,8 +154,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: không báo lỗi giả khi URL OTA dự phòng tải thành công." % version,
-            "en": "v%s: avoid false OTA warnings when a fallback URL succeeds." % version,
+            "vi": "v%s: thêm runtime biệt lập cho Brick Pro Stock OS; giữ nguyên Spruce." % version,
+            "en": "v%s: add an isolated Brick Pro Stock OS runtime without changing Spruce." % version,
         },
         "files": files,
         "remove": [],

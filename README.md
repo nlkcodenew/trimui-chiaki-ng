@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release mới nhất: `v0.3.14`.**
+**Release mới nhất: `v0.3.15`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -18,16 +18,19 @@
 - `v0.3.14` coi lỗi một nguồn manifest là lỗi trung gian nếu URL dự phòng tải
   thành công. Chỉ khi tất cả nguồn đều thất bại app mới ghi `WARNING` và gửi
   GitHub Issue.
+- `v0.3.15` thêm runtime AArch64 biệt lập cho Brick Pro Stock OS sau khi Issue
+  `#36`/`#37` cho thấy pair đã thành công nhưng loader thiếu `libjson-c.so.5`.
 
-Brick Pro Stock OS đã cài thủ công `v0.3.11`, OTA thành công lên `v0.3.12` và
-`v0.3.13`. Trong lần lên `v0.3.13`, URL GitHub Release lỗi DNS tạm thời nhưng
-Raw GitHub fallback thành công; 12 file được kiểm SHA-256, cài và restart đúng.
-OTA `v0.3.13 → v0.3.14` là bước kiểm thử máy thật tiếp theo.
+Brick Pro Stock OS đã OTA thành công đến `v0.3.14`. Pair PS4 ở `v0.3.14` cũng
+thành công; kết nối dừng trước khi chạy vì Stock OS thiếu shared library của
+native helper. `v0.3.15` đóng gói dependency closure riêng cho model
+`sun50iw10`; stream/input/audio vẫn cần xác nhận lại trên máy thật.
 
-Native stream, pair/session pre-10 và mapping SDL của Smart Pro S/Spruce không
-thay đổi trong chuỗi bản vá `v0.3.11–v0.3.14`. Hiện chưa cần tách release theo
-OS; nếu một OS cần native binary hoặc thư viện không tương thích, release riêng
-sẽ được dùng thay vì làm hỏng nền tảng đang hoạt động.
+Native binary, pair/session pre-10 và mapping SDL của Smart Pro S/Spruce không
+thay đổi. Model `sun55iw3` tiếp tục dùng library hệ thống; chỉ `sun50iw10` có
+`libs/brick-stock` làm fallback sau library Stock OS. Vì runtime đã cô lập nên chưa cần tách
+release. Nếu test máy thật chứng minh ABI/GPU không tương thích, sẽ tách release
+theo OS thay vì làm hỏng nền tảng đang hoạt động.
 
 ## Tính năng
 
@@ -46,15 +49,15 @@ sẽ được dùng thay vì làm hỏng nền tảng đang hoạt động.
 | Thành phần | Trạng thái |
 |---|---|
 | Smart Pro S/TG5050 | Stream PS4 thật có hình, âm thanh và input |
-| Spruce OS | Giữ chung launcher/native path; không thay đổi trong bản vá Brick Pro |
-| Brick Pro Stock OS | CA/TLS và OTA đã xác nhận đến `v0.3.13` |
+| Spruce OS | Stream tốt trên `sun55iw3`; tiếp tục dùng library hệ thống |
+| Brick Pro Stock OS | OTA/pair đạt ở `v0.3.14`; `v0.3.15` chờ test stream |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
 | PS5/H265 | Có mã hỗ trợ trong helper nhưng chưa được kiểm thử máy thật |
 | WAKEUP PS4 Rest Mode | Đã thử thất bại trên môi trường hiện tại và tắt từ `v0.3.10` |
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.3.14.zip` tại
+1. Tải `trimui-chiaki-ng-v0.3.15.zip` tại
    [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
@@ -116,7 +119,7 @@ chip ID và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.14 reason fingerprint
+[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.15 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.
@@ -157,7 +160,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-Hiện có 69 unittest. Build gate kiểm tra version, CA bundle, ELF AArch64,
+Build gate kiểm tra version, CA bundle, ELF AArch64, từng checksum runtime Brick,
 manifest/ZIP, từng SHA-256 payload, file cấm và tính tái lập LF giữa Windows và
 Linux. Native binary hiện tại có SHA-256
 `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.

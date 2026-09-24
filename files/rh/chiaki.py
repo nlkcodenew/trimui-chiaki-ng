@@ -78,6 +78,17 @@ def find_chiaki_binary(app_dir):
     _report_error("stream_native_helper_missing")
     return None
 
+
+def _native_runtime(app_dir, model=None):
+    """Select an isolated native runtime only for Brick Pro Stock OS."""
+    if model is None:
+        from .device_identity import device_model
+        model = device_model()
+    runtime_dir = os.path.join(app_dir, "libs", "brick-stock")
+    if str(model or "").strip().lower() == "sun50iw10" and os.path.isdir(runtime_dir):
+        return "brick-stock", runtime_dir
+    return "system", ""
+
 def _paired_credentials(addr):
     from .paths import APP_DIR
 
@@ -233,6 +244,7 @@ def prepare_stream_launch(host):
 
         debug_path = os.path.join(APP_DIR, "Chiaki-debug.log")
         error_path = os.path.join(APP_DIR, "Chiaki-loi.txt")
+        runtime_name, runtime_dir = _native_runtime(APP_DIR)
         launcher_path = os.environ.get("CHIAKI_STREAM_LAUNCHER", "/tmp/launch_game.sh")
         launcher_temp = launcher_path + ".tmp"
         dollar = "$"
@@ -241,6 +253,7 @@ def prepare_stream_launch(host):
             "session": session_path,
             "debug": debug_path,
             "error": error_path,
+            "runtime": runtime_dir,
         }.items()}
         lines = [
             "#!/bin/sh",
@@ -251,13 +264,25 @@ def prepare_stream_launch(host):
             "trap 'rm -f \"%sSESSION\"' EXIT INT TERM" % dollar,
             "chmod +x \"%sBIN\" 2>/dev/null || true" % dollar,
             "echo \"[%s(date '+%%Y-%%m-%%d %%H:%%M:%%S')] native stream preflight\" >> \"%sDEBUG\"" % (dollar, dollar),
-            "echo \"binary: %s(file \"%sBIN\" 2>/dev/null || echo unavailable)\" >> \"%sDEBUG\"" % (dollar, dollar, dollar),
-            "if command -v ldd >/dev/null 2>&1; then ldd \"%sBIN\" >> \"%sDEBUG\" 2>&1; fi" % (dollar, dollar),
+            "echo \"native runtime: %s\" >> \"%sDEBUG\"" % (runtime_name, dollar),
+        ]
+        if runtime_dir:
+            lines.extend([
+                "RUNTIME=%s" % quoted["runtime"],
+                "if [ -n \"${LD_LIBRARY_PATH:-}\" ]; then",
+                "    LD_LIBRARY_PATH=\"${LD_LIBRARY_PATH%:}:$RUNTIME\"",
+                "else",
+                "    LD_LIBRARY_PATH=\"$RUNTIME\"",
+                "fi",
+                "export LD_LIBRARY_PATH",
+            ])
+        lines.extend([
+            "LD_TRACE_LOADED_OBJECTS=1 \"%sBIN\" >> \"%sDEBUG\" 2>&1 || true" % (dollar, dollar),
             "\"%sBIN\" \"%sSESSION\" >> \"%sDEBUG\" 2>> \"%sERROR_LOG\"" % (dollar, dollar, dollar, dollar),
             "RC=%s?" % dollar,
             "echo \"[%s(date '+%%Y-%%m-%%d %%H:%%M:%%S')] native stream exit=%sRC\" >> \"%sDEBUG\"" % (dollar, dollar, dollar),
             "exit \"%sRC\"" % dollar,
-        ]
+        ])
         with open(launcher_temp, "w", encoding="utf-8", newline="\n") as handle:
             handle.write("\n".join(lines) + "\n")
             handle.flush()

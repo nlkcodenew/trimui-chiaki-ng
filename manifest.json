@@ -1,13 +1,13 @@
 {
-  "version": "0.3.14",
+  "version": "0.3.15",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-24T10:45:41+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.14/files",
-  "release_tag": "v0.3.14/files",
+  "built": "2026-09-24T21:53:35+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.15/files",
+  "release_tag": "v0.3.15/files",
   "note": {
-    "vi": "v0.3.14: không báo lỗi giả khi URL OTA dự phòng tải thành công.",
-    "en": "v0.3.14: avoid false OTA warnings when a fallback URL succeeds."
+    "vi": "v0.3.15: thêm runtime biệt lập cho Brick Pro Stock OS; giữ nguyên Spruce.",
+    "en": "v0.3.15: add an isolated Brick Pro Stock OS runtime without changing Spruce."
   },
   "files": [
     {
@@ -56,9 +56,84 @@
       "size": 188900
     },
     {
+      "path": "libs/brick-stock/THIRD_PARTY_NOTICES.txt",
+      "sha256": "e8995a43d4cd8480244138a832e7ab181c0623f29ef0660f91ec3ebaa1b65bfc",
+      "size": 1780
+    },
+    {
+      "path": "libs/brick-stock/libSDL2-2.0.so.0",
+      "sha256": "0fc2e4d6bfdf3a84eb9334dd7a39096c1f9555c3101140883497ecee73c36d01",
+      "size": 1623064
+    },
+    {
+      "path": "libs/brick-stock/libatomic.so.1",
+      "sha256": "fead8ddf3612a4867881747c947a68f38c1d50f6a677eb8a38acdf9cea12bb4f",
+      "size": 273928
+    },
+    {
+      "path": "libs/brick-stock/libavcodec.so.60",
+      "sha256": "cc629446328d77ccea432e89c5cdf94dc234e4ebfb33210a2cef08808f1c9bde",
+      "size": 12191672
+    },
+    {
+      "path": "libs/brick-stock/libavutil.so.58",
+      "sha256": "017691c97d410c546fb3806af316be06c4be518b0349ca5f026d8b8aff78e284",
+      "size": 767904
+    },
+    {
+      "path": "libs/brick-stock/libcrypto.so.1.1",
+      "sha256": "e40f8d5a4c1ca2c2fdfe0fe4c98f9d7f45cf200b3355a93b78b71f19a4cd25b1",
+      "size": 2875800
+    },
+    {
+      "path": "libs/brick-stock/libevent-2.1.so.7",
+      "sha256": "ff25e48ec5e768768f67f1ff7c96176631ba0298625a54c51705fd52654af725",
+      "size": 397656
+    },
+    {
+      "path": "libs/brick-stock/libjson-c.so.5",
+      "sha256": "02312a94c5be7b846a0152a6e8a3c1536d3dfa84389f601f01ee926596b1314d",
+      "size": 89568
+    },
+    {
+      "path": "libs/brick-stock/liblzma.so.5",
+      "sha256": "47978ea76e3d91a6d9d8f6f6202fa877be8be7a89d54ed670a1eb1c0098988a6",
+      "size": 162984
+    },
+    {
+      "path": "libs/brick-stock/libnghttp2.so.14",
+      "sha256": "a66731cd3df3d495bf74e6309b39d0d4b09b59d7b3dc8d5d3cf5ff073f292540",
+      "size": 183096
+    },
+    {
+      "path": "libs/brick-stock/libopus.so.0",
+      "sha256": "763c521af740736a3fa13a81382b609e1ef83bc4bc7a6bab60d0b1eae24b0123",
+      "size": 341800
+    },
+    {
+      "path": "libs/brick-stock/libssl.so.1.1",
+      "sha256": "a8e40386762686f58a9dfb5115b8924050eff51fcb3393629d4f04ea50ec60c2",
+      "size": 630024
+    },
+    {
+      "path": "libs/brick-stock/libswresample.so.4",
+      "sha256": "01cf2e3d7c74c31bfaa8467a323d30a7cb5840ff68167d669f7d59ede337ffb4",
+      "size": 92024
+    },
+    {
+      "path": "libs/brick-stock/libswscale.so.7",
+      "sha256": "77b9ba3c7c68a78f17972decef03a43a38ac8aa2877e7ef3b679035f16f25c7d",
+      "size": 378744
+    },
+    {
+      "path": "libs/brick-stock/libz.so.1",
+      "sha256": "93094436a4ecb7d8a42f2b4c5c32347a8b8081afae68e7afaaf833ec87aa7f34",
+      "size": 87656
+    },
+    {
       "path": "rh/chiaki.py",
-      "sha256": "a765b141a05ba8790e5a0bae92d90a44c3b5c84bf2412b6255e3165f4973462a",
-      "size": 24720
+      "sha256": "1d225993e3e44e69619ed74df175dbc2df34768a1814d09a2ff53f6bb6f228fd",
+      "size": 25620
     },
     {
       "path": "rh/device_identity.py",
@@ -122,7 +197,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "b51dfea62381d769017185eac5d6f769035057e7acb90c77f2c724fd1ded8482",
+      "sha256": "15434c35f63baf3398c7fc5653dc40b9f84be4eef2081f2f14cd98d5f757f43d",
       "size": 1178
     },
     {
@@ -563,8 +638,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.14.zip",
-    "sha256": "8ece098b41c494e83add3d6647b44383b53946e8dcc0cf27acd590a33e715bbd",
-    "size": 1353351
+    "name": "trimui-chiaki-ng-v0.3.15.zip",
+    "sha256": "34fb15de42f6eaacff9b7f867d7e8d036d74d4e0a1270e4037f4168f9cca4379",
+    "size": 10757796
   }
 }

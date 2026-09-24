@@ -1140,6 +1140,7 @@ class LogUploaderTests(unittest.TestCase):
                 mock.patch.dict(os.environ, {
                     "CHIAKI_SESSION_DIR": work_dir,
                     "CHIAKI_STREAM_LAUNCHER": launcher_path,
+                    "CHIAKI_DEVICE_MODEL": "sun50iw10",
                 }, clear=False):
             ok, _ = chiaki.prepare_stream_launch(host)
         self.assertTrue(ok)
@@ -1147,6 +1148,10 @@ class LogUploaderTests(unittest.TestCase):
             script = handle.read()
         self.assertNotIn(regist_key, script)
         self.assertNotIn(rp_key, script)
+        self.assertIn("native runtime: brick-stock", script)
+        self.assertIn("LD_LIBRARY_PATH=", script)
+        self.assertIn(os.path.join("libs", "brick-stock"), script)
+        self.assertIn('${LD_LIBRARY_PATH%:}:$RUNTIME', script)
         session_line = next(line for line in script.splitlines() if line.startswith("SESSION="))
         session_path = session_line.split("=", 1)[1].strip("'")
         if os.name != "nt":
@@ -1165,6 +1170,22 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn(rp_key, session)
         os.remove(session_path)
         os.remove(paired_path)
+
+    def test_brick_stock_uses_isolated_native_runtime(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        runtime_dir = os.path.join(self.app_dir, "libs", "brick-stock")
+        os.makedirs(runtime_dir, exist_ok=True)
+        name, path = chiaki._native_runtime(self.app_dir, "sun50iw10")
+        self.assertEqual(name, "brick-stock")
+        self.assertEqual(path, runtime_dir)
+
+    def test_spruce_keeps_system_native_runtime(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        runtime_dir = os.path.join(self.app_dir, "libs", "brick-stock")
+        os.makedirs(runtime_dir, exist_ok=True)
+        name, path = chiaki._native_runtime(self.app_dir, "sun55iw3")
+        self.assertEqual(name, "system")
+        self.assertEqual(path, "")
 
     def test_native_stream_rejects_pair_from_wrong_protocol_target(self):
         chiaki = importlib.import_module("rh.chiaki")
