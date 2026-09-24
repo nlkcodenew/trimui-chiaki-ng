@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.12
+# Bàn giao session mới — trimui-chiaki-ng v0.3.13
 
 > Cập nhật: 2026-09-24. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
@@ -6,7 +6,8 @@
 
 `v0.3.11` thêm hỗ trợ HTTPS cho **TrimUI Brick Pro chạy Stock OS**. `v0.3.12`
 sửa popup OTA lặp lại khi app và manifest đã cùng version nhưng một file cài
-thủ công lệch hash. Phần stream Smart Pro S/Spruce OS vẫn giữ nguyên.
+thủ công lệch hash. `v0.3.13` tự báo Issue cho lỗi OTA/runtime có ý nghĩa, thêm
+ID phần cứng băm và fsync OTA cho exFAT. Phần stream Smart Pro S/Spruce vẫn giữ.
 Người dùng đã chép v0.3.9 vào `D:/Apps/Chiaki` trên Brick Pro và thử OTA lên
 v0.3.10. Hai lỗi đầu tiên cần xử lý là HTTPS/CA của OTA và uploader GitHub.
 
@@ -32,8 +33,8 @@ WAKEUP/host offline trong giao diện và trở lại luồng quét máy đang b
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
 - Bản stream/mapping đã kiểm thử máy thật: `v0.3.6`; WAKEUP đã tắt ở `v0.3.10`
-- Release mục tiêu: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.12`
-- `manifest.json` phải trả về đúng `0.3.12`, có
+- Release mục tiêu: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.13`
+- `manifest.json` phải trả về đúng `0.3.13`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 2.1 Bàn giao Brick Pro Stock OS — cần làm ngay
@@ -43,22 +44,19 @@ Log máy Brick Pro ngày 2026-09-24 nằm ngoài repo tại:
 - `D:/Apps/Chiaki/Chiaki-debug.log`
 - `D:/Apps/Chiaki/Chiaki-loi.txt`
 
-Không đưa file token vào repo hoặc log. Kết luận đã xác nhận:
+Không đưa file token vào repo hoặc log. Kết luận mới nhất đã xác nhận:
 
-1. Máy đang chạy đúng `v0.3.9` từ `D:/Apps/Chiaki`.
-2. OTA không hề nhận được manifest. Cả ba URL GitHub Release, GitHub Raw và
-   ghproxy đều lỗi `SSL: CERTIFICATE_VERIFY_FAILED: unable to get local issuer
-   certificate`. Thông báo "chưa có bản mới" chỉ là UI fallback gây hiểu nhầm,
-   không phải server thiếu v0.3.10.
-3. Stock OS thiếu/không tìm thấy CA root phù hợp. Trong v0.3.9,
-   `updater._get()` chỉ gọi `ssl.create_default_context()` và phụ thuộc CA hệ
-   thống. Uploader cũ cũng dùng HTTPS qua `urllib` và gặp cùng lớp lỗi khi POST.
-4. File người dùng đặt tên `secrets..json` (hai dấu chấm), trong khi app chỉ đọc
-   `secrets.json`. JSON hợp lệ và có đúng các key cần thiết, nhưng app không thể
-   thấy file do sai tên. Không ghi hoặc tiết lộ giá trị token.
-5. Phiên log được cung cấp không có `.pending_crash` và không có marker POST
-   GitHub, nên chưa có bằng chứng uploader đã thử gửi. Muốn test uploader cần
-   tên file đúng và một report pending/chức năng gửi chẩn đoán thực sự được gọi.
+1. Người dùng đã đổi đúng `secrets..json` thành `secrets.json`; chỉ kiểm tra tên
+   và metadata, không đọc hoặc tiết lộ token.
+2. Cài thủ công v0.3.11 rồi OTA lên v0.3.12 thành công trên Brick Pro Stock OS.
+   Manifest, ba file thay đổi và SHA-256 đều hợp lệ; app restart đúng v0.3.12.
+3. Log mới nhất không có warning/error/traceback, `Chiaki-loi.txt` rỗng và không
+   có report pending, nên không tạo GitHub Issue là hành vi đúng.
+4. Lỗi hai thư mục `Chiaki` là hỏng entry exFAT sau khi rút cáp giữa lúc I/O,
+   không phải updater tự tạo thư mục. `chkdsk D: /F`, cài sạch v0.3.11 rồi OTA
+   lại v0.3.12 không tái hiện lỗi.
+5. ID hiện tại của bản cài trên thẻ là `CHI-E545`. `RH-5930` của RetroHub cũng
+   chỉ là ID ngẫu nhiên lưu trên thẻ, không phải serial phần cứng.
 
 Đã triển khai trong v0.3.11:
 
@@ -74,14 +72,10 @@ Không đưa file token vào repo hoặc log. Kết luận đã xác nhận:
 
 Việc còn phải xác nhận trên máy thật:
 
-- OTA và GitHub Issue uploader trên Brick Pro Stock OS sau khi cài ZIP v0.3.11.
+- OTA v0.3.12 lên v0.3.13 và một Issue lỗi thật có `CHI-...`, `HW-...`, model.
 - Kiểm tra thêm khả năng chạy native binary, SDL/input/audio và đường dẫn mount
   trên Brick Pro Stock OS sau khi OTA/uploader hoạt động; chưa giả định binary
   Smart Pro S tương thích hoàn toàn với Brick Pro.
-
-Việc người dùng có thể làm ngay trước bản vá: đổi đúng tên
-`D:/Apps/Chiaki/secrets..json` thành `D:/Apps/Chiaki/secrets.json`. Thao tác này
-chỉ sửa việc app tìm token; nó không tự sửa lỗi CA/TLS của Stock OS.
 
 ## 3. Phần cứng kiểm thử
 

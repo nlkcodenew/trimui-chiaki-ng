@@ -50,6 +50,7 @@ os.environ["PYSDL2_DLL_PATH"] = ":".join([
 from rh import state, paths
 from rh.logger import init_logger, get_logger, set_debug_level
 from rh.version import APP_VERSION
+from rh.device_identity import diagnostic_identity
 
 
 def main():
@@ -60,13 +61,20 @@ def main():
     log.info("SDCARD_PATH=%s", paths.SDCARD_PATH)
     log.info("APP_DIR=%s", paths.APP_DIR)
     log.info("PYTHON=%s", sys.version.replace("\n", " "))
+    identity = diagnostic_identity()
+    log.info("device identity: model=%s install_id=%s hardware_id=%s",
+             identity["model"], identity["install_id"], identity["hardware_id"])
     log.info("enable_logging=%s", state.enable_logging)
     if state.enable_logging:
         set_debug_level(True)
 
     try:
-        from rh.log_uploader import start_pending_upload
+        from rh.log_uploader import queue_diagnostic, start_pending_upload
         start_pending_upload("startup_retry")
+        if getattr(state, "settings_load_error", ""):
+            queue_diagnostic("settings_load_failed")
+        if getattr(state, "settings_save_error", ""):
+            queue_diagnostic("settings_save_failed")
     except Exception as exc:
         log.warning("cannot start pending log uploader: %s", exc)
 

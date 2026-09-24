@@ -149,6 +149,11 @@ class UpdateModal(BaseModal):
                 self.failed = True
         except Exception as exc:
             log.exception("update modal install failed: %s", exc)
+            try:
+                from ..log_uploader import queue_diagnostic
+                queue_diagnostic("ota_install_exception")
+            except Exception as report_exc:
+                log.warning("cannot queue OTA install diagnostic: %s", report_exc)
             self.phase = tr("update_failed")
             self.status = tr("update_failed_hint")
             self.failed = True

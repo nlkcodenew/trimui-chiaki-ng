@@ -38,6 +38,14 @@ from .logger import get_logger
 log = get_logger()
 
 
+def _report_error(reason):
+    try:
+        from .log_uploader import queue_diagnostic
+        queue_diagnostic(reason)
+    except Exception as exc:
+        log.warning("cannot queue diagnostic %s: %s", reason, exc)
+
+
 @dataclass
 class DiscoveredHost:
     name: str = ""
@@ -67,6 +75,7 @@ def find_chiaki_binary(app_dir):
             log.info("chiaki binary found: %s", path)
             return path
     log.error("native stream helper not found in %s", os.path.join(app_dir, "bin"))
+    _report_error("stream_native_helper_missing")
     return None
 
 def _paired_credentials(addr):
@@ -265,6 +274,7 @@ def prepare_stream_launch(host):
             except OSError:
                 pass
         log.error("cannot prepare native stream: %s", exc)
+        _report_error("stream_prepare_failed")
         return False, "Không chuẩn bị được stream: %s" % exc
 
 
@@ -336,6 +346,7 @@ def write_chiaki_conf(hosts, path=None):
         return True
     except OSError as exc:
         log.warning("chiaki.conf write failed: %s", exc)
+        _report_error("settings_legacy_config_write_failed")
         return False
 
 
@@ -480,6 +491,7 @@ def discovery_broadcast(timeout=3.0):
                     continue
                 except OSError as exc:
                     log.warning("discovery recvfrom error: %s", exc)
+                    _report_error("discovery_receive_error")
                     break
                 host = _parse_srch(data, addr, ps5_mode)
                 if host is None:
@@ -491,6 +503,7 @@ def discovery_broadcast(timeout=3.0):
                     out.append(host)
         except OSError as exc:
             log.warning("discovery worker dest %d error: %s", dest_port, exc)
+            _report_error("discovery_worker_error")
         finally:
             s.close()
 
@@ -531,6 +544,7 @@ def regist_with_pin(host, pin, timeout=10.0):
                           target=target)
     except Exception as exc:
         log.error("registration failed: host=%s error=%s", addr, exc)
+        _report_error("pair_registration_failed")
         return False, {"error": str(exc)}
     result.update({"addr": addr, "is_ps5": False, "target": target})
     log.info(

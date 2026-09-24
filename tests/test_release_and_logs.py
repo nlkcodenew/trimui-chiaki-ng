@@ -26,6 +26,7 @@ class LogUploaderTests(unittest.TestCase):
         cls.uploader = importlib.import_module("rh.log_uploader")
         cls.updater = importlib.import_module("rh.updater")
         cls.ssl_context = importlib.import_module("rh.ssl_context")
+        cls.device_identity = importlib.import_module("rh.device_identity")
         cls.inputs = importlib.import_module("rh.inputs")
         cls.logger_module = importlib.import_module("rh.logger")
         cls.common_modals = importlib.import_module("rh.modals.common")
@@ -63,6 +64,8 @@ class LogUploaderTests(unittest.TestCase):
             handle.write(
                 "github_token=github_pat_SECRET_VALUE\n"
                 "psn_online_id: PlayerName\n"
+                "serial_number=SERIAL-PRIVATE-123\n"
+                "sunxi_chipid: CHIP-PRIVATE-456\n"
                 "console 192.168.1.55 aa:bb:cc:dd:ee:ff crashed\n"
             )
 
@@ -79,14 +82,29 @@ class LogUploaderTests(unittest.TestCase):
             captured.append((token, repo, title, body))
             return "https://github.com/example/issues/1"
 
+        identity = {
+            "install_id": "CHI-ABCD",
+            "hardware_id": "HW-0123456789AB",
+            "model": "TrimUI Brick Pro",
+        }
         with mock.patch.object(self.uploader, "_collect", side_effect=fake_collect), \
-                mock.patch.object(self.uploader, "_post_issue", side_effect=fake_post):
+                mock.patch.object(self.uploader, "_post_issue", side_effect=fake_post), \
+                mock.patch.object(self.uploader, "diagnostic_identity",
+                                  return_value=identity):
             self.assertTrue(self.uploader.upload_pending("exit_1"))
             self.assertFalse(os.path.exists(self.uploader.PENDING_FILE))
             self.assertEqual(len(captured), 1)
             body = captured[0][3]
+            title = captured[0][2]
+            self.assertIn("[TrimUI Brick Pro]", title)
+            self.assertIn("[CHI-ABCD]", title)
+            self.assertIn("[HW-0123456789AB]", title)
+            self.assertIn("Mã cài đặt", body)
+            self.assertIn("Mã phần cứng băm", body)
             self.assertNotIn("SECRET_VALUE", body)
             self.assertNotIn("PlayerName", body)
+            self.assertNotIn("SERIAL-PRIVATE-123", body)
+            self.assertNotIn("CHIP-PRIVATE-456", body)
             self.assertNotIn("192.168.1.55", body)
             self.assertNotIn("aa:bb:cc:dd:ee:ff", body)
 
@@ -104,6 +122,130 @@ class LogUploaderTests(unittest.TestCase):
                                   side_effect=OSError("offline")):
             self.assertFalse(self.uploader.upload_pending("exit_1"))
         self.assertTrue(os.path.exists(self.uploader.PENDING_FILE))
+
+    def test_device_identity_hashes_hardware_without_exposing_raw_values(self):
+        serial = "SERIAL-PRIVATE-123"
+        mac = "12:34:56:78:9a:bc"
+        values = {
+            self.device_identity.SERIAL_PATHS[0]: serial,
+            self.device_identity.MAC_PATHS[0]: mac,
+        }
+        old_device_id = self.device_identity.state.device_id
+        self.device_identity.state.device_id = "CHI-TEST"
+        try:
+            with mock.patch.object(
+                    self.device_identity, "_read_identity_file",
+                    side_effect=lambda path: values.get(path, "")), \
+                    mock.patch.dict(os.environ,
+                                    {"DEVICE_NAME": "TrimUI Brick Pro"}, clear=False):
+                first = self.device_identity.diagnostic_identity()
+                second = self.device_identity.diagnostic_identity()
+        finally:
+            self.device_identity.state.device_id = old_device_id
+        self.assertEqual(first, second)
+        self.assertEqual(first["install_id"], "CHI-TEST")
+        self.assertEqual(first["model"], "TrimUI Brick Pro")
+        self.assertRegex(first["hardware_id"], r"^HW-[A-F0-9]{12}$")
+        serialized = json.dumps(first)
+        self.assertNotIn(serial, serialized)
+        self.assertNotIn(mac, serialized)
+
+    def test_device_identity_prefers_stable_serial_over_mac(self):
+        serial = (
+            "sunxi_platform : sun50iw9p1\n"
+            "sunxi_secure : secure\n"
+            "sunxi_chipid : 0123456789abcdef\n"
+        )
+        first_values = {
+            self.device_identity.SERIAL_PATHS[3]: serial,
+            self.device_identity.MAC_PATHS[1]: "12:34:56:78:9a:bc",
+        }
+        second_values = {
+            self.device_identity.SERIAL_PATHS[3]: serial,
+            self.device_identity.MAC_PATHS[1]: "98:76:54:32:10:fe",
+        }
+        with mock.patch.object(
+                self.device_identity, "_read_identity_file",
+                side_effect=lambda path: first_values.get(path, "")):
+            first = self.device_identity.hardware_id()
+        with mock.patch.object(
+                self.device_identity, "_read_identity_file",
+                side_effect=lambda path: second_values.get(path, "")):
+            second = self.device_identity.hardware_id()
+        self.assertEqual(first, second)
+        self.assertRegex(first, r"^HW-[A-F0-9]{12}$")
+
+    def test_device_identity_ignores_zero_sunxi_chipid(self):
+        values = {
+            self.device_identity.SERIAL_PATHS[3]: "sunxi_chipid : 0000000000000000",
+            self.device_identity.MAC_PATHS[1]: "12:34:56:78:9a:bc",
+        }
+        with mock.patch.object(
+                self.device_identity, "_read_identity_file",
+                side_effect=lambda path: values.get(path, "")):
+            actual = self.device_identity.hardware_id()
+        expected_material = "trimui-chiaki-ng-device-v1\0mac=12:34:56:78:9a:bc"
+        expected = "HW-%s" % __import__("hashlib").sha256(
+            expected_material.encode("utf-8")).hexdigest()[:12].upper()
+        self.assertEqual(actual, expected)
+
+    def test_device_identity_falls_back_to_install_when_hardware_is_unavailable(self):
+        old_device_id = self.device_identity.state.device_id
+        self.device_identity.state.device_id = "CHI-CARD"
+        try:
+            with mock.patch.object(self.device_identity, "_read_identity_file",
+                                   return_value=""):
+                hardware_id = self.device_identity.hardware_id()
+        finally:
+            self.device_identity.state.device_id = old_device_id
+        self.assertRegex(hardware_id, r"^APP-[A-F0-9]{12}$")
+
+    def test_issue_identity_does_not_expose_raw_hardware_values(self):
+        identity = {
+            "install_id": "CHI-ABCD",
+            "hardware_id": "HW-0123456789AB",
+            "model": "TrimUI Brick Pro",
+        }
+        with mock.patch.object(self.uploader, "diagnostic_identity",
+                               return_value=identity):
+            body = self.uploader._issue_body(
+                [("Chiaki-loi.txt", "minor failure")],
+                "ota_download_failed", "a" * 64,
+            )
+        self.assertIn("TrimUI Brick Pro", body)
+        self.assertIn("CHI-ABCD", body)
+        self.assertIn("HW-0123456789AB", body)
+        self.assertIn("MAC và serial thô đã được lọc", body)
+
+    def test_pending_diagnostics_keep_multiple_distinct_reasons(self):
+        with mock.patch.object(self.uploader, "start_pending_upload",
+                               return_value="thread"):
+            self.uploader.queue_diagnostic("ota_download_failed")
+            self.uploader.queue_diagnostic("settings_save_failed")
+            self.uploader.queue_diagnostic("ota_download_failed")
+        self.assertEqual(
+            self.uploader._pending_reasons(),
+            ["ota_download_failed", "settings_save_failed"],
+        )
+
+    def test_distinct_error_reasons_are_not_deduplicated(self):
+        sections = [("Chiaki-loi.txt", "same log tail")]
+        posted = []
+
+        def fake_post(_token, _repo, title, _body):
+            posted.append(title)
+            return "https://github.com/example/issues/%d" % len(posted)
+
+        self._pending_log()
+        with mock.patch.object(self.uploader, "_collect", return_value=sections), \
+                mock.patch.object(self.uploader, "_post_issue", side_effect=fake_post):
+            self.uploader._remember_pending_reason("ota_download_failed")
+            self.assertTrue(self.uploader.upload_pending("ota_download_failed"))
+            self.uploader._remember_pending_reason("settings_save_failed")
+            self.assertTrue(self.uploader.upload_pending("settings_save_failed"))
+        self.assertEqual(len(posted), 2)
+        self.assertIn("ota_download_failed", posted[0])
+        self.assertIn("settings_save_failed", posted[1])
 
     def test_ssl_context_keeps_certificate_and_hostname_verification(self):
         context = self.ssl_context.create_ssl_context()
@@ -173,9 +315,25 @@ class LogUploaderTests(unittest.TestCase):
         with mock.patch.object(self.updater, "candidate_manifest_urls",
                                return_value=["https://example.com/manifest.json"]), \
                 mock.patch.object(self.updater, "_get",
-                                  side_effect=urllib.error.URLError(reason)):
+                                  side_effect=urllib.error.URLError(reason)), \
+                mock.patch.object(self.updater, "_report_error") as report:
             self.assertIsNone(self.updater.fetch_manifest())
         self.assertEqual(self.updater.last_check_status(), "tls_error")
+        report.assert_called_once_with("ota_manifest_tls_error")
+
+    def test_manifest_fallback_success_does_not_report_transient_failure(self):
+        manifest = json.dumps({"version": "99.0.0", "files": []}).encode("utf-8")
+        with mock.patch.object(
+                self.updater, "candidate_manifest_urls",
+                return_value=["https://first.invalid/manifest.json",
+                              "https://second.example/manifest.json"]), \
+                mock.patch.object(
+                    self.updater, "_get",
+                    side_effect=[urllib.error.URLError("offline"), manifest]), \
+                mock.patch.object(self.updater, "_report_error") as report:
+            result = self.updater.fetch_manifest()
+        self.assertEqual(result["version"], "99.0.0")
+        report.assert_not_called()
 
     def test_misnamed_secrets_file_is_not_read_or_logged(self):
         os.remove(self.uploader.SECRETS_FILE)
@@ -737,7 +895,8 @@ class LogUploaderTests(unittest.TestCase):
                 self._closed = True
 
         with mock.patch.object(chiaki.socket, "socket", FakeSocket), \
-                mock.patch.object(chiaki.time, "sleep", lambda *_: None):
+                mock.patch.object(chiaki.time, "sleep", lambda *_: None), \
+                mock.patch.object(chiaki, "_report_error"):
             chiaki.discovery_broadcast(timeout=0.1)
         self.assertIn(987, sent_dests)
         self.assertIn(9302, sent_dests)

@@ -74,6 +74,31 @@ def _is_tls_verification_error(exc):
     return "CERTIFICATE_VERIFY_FAILED" in str(exc).upper()
 
 
+def _report_error(reason):
+    try:
+        from .log_uploader import queue_diagnostic
+        queue_diagnostic(reason)
+    except Exception as exc:
+        log.warning("cannot queue OTA diagnostic %s: %s", reason, exc)
+
+
+def _fsync_directory(path):
+    if not hasattr(os, "fsync"):
+        return
+    descriptor = None
+    try:
+        descriptor = os.open(path, os.O_RDONLY)
+        os.fsync(descriptor)
+    except OSError:
+        pass
+    finally:
+        if descriptor is not None:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+
+
 def base_url():
     return (getattr(state, "update_url", "") or UPDATE_BASE_URL).rstrip("/")
 
@@ -240,8 +265,10 @@ def fetch_manifest():
             continue
     if failures and all(_is_tls_verification_error(exc) for exc in failures):
         _last_check_status = "tls_error"
+        _report_error("ota_manifest_tls_error")
     else:
         _last_check_status = "network_error"
+        _report_error("ota_manifest_network_error")
     return None
 
 
@@ -272,6 +299,7 @@ def check_for_update(force=False):
         m = fetch_manifest()
     except Exception as exc:
         log.exception("OTA update check failed: %s", exc)
+        _report_error("ota_check_exception")
         return None
     if not m:
         return None
@@ -298,6 +326,7 @@ def _stage_files(manifest, files, progress=None):
         os.makedirs(STAGING_DIR, exist_ok=True)
     except OSError as exc:
         log.error("OTA staging setup failed: %s", exc)
+        _report_error("ota_staging_setup_failed")
         return False
     total = len(files)
     log.info("OTA staging start: version=%s files=%d network=required",
@@ -310,17 +339,22 @@ def _stage_files(manifest, files, progress=None):
                                expected_sha=f["sha256"], manifest=manifest)
         except ValueError:
             log.error("OTA hash mismatch for %s", f["path"])
+            _report_error("ota_hash_mismatch")
             return False
         except Exception as exc:
             log.error("OTA download failed for %s: %s", f["path"], exc)
+            _report_error("ota_download_failed")
             return False
         dst = os.path.join(STAGING_DIR, f["path"])
         try:
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             with open(dst, "wb") as fh:
                 fh.write(data)
+                fh.flush()
+                os.fsync(fh.fileno())
         except OSError as exc:
             log.error("OTA staging write failed for %s: %s", f["path"], exc)
+            _report_error("ota_staging_write_failed")
             return False
     if progress:
         progress(total, total, "")
@@ -345,6 +379,7 @@ def apply_update(manifest, files):
         try:
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             os.replace(src, dst)
+            _fsync_directory(os.path.dirname(dst) or APP_DIR)
             if f["path"].endswith(".sh") or f["path"].startswith("bin/"):
                 try:
                     os.chmod(dst, 0o755)
@@ -353,6 +388,7 @@ def apply_update(manifest, files):
             moved += 1
         except OSError as exc:
             log.error("OTA install failed for %s: %s", f["path"], exc)
+            _report_error("ota_install_failed")
             return False
     for rel in manifest.get("remove", []):
         if not _safe_rel(rel):
@@ -378,7 +414,8 @@ def _purge_pycache():
 def skip_version(version):
     if version not in (state.skipped_versions or []):
         state.skipped_versions.append(version)
-        state.save_settings()
+        if not state.save_settings():
+            _report_error("settings_save_failed")
 
 
 def request_restart():
@@ -391,6 +428,7 @@ def request_restart():
         return True
     except OSError as exc:
         log.error("OTA restart request failed: %s", exc)
+        _report_error("ota_restart_failed")
         return False
 
 

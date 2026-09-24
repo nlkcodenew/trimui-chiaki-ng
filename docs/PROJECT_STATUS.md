@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.12)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.13)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-24.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
@@ -19,6 +19,8 @@
 > trên Brick Pro Stock OS; không thay đổi native stream của Smart Pro S/Spruce.
 > v0.3.12 chỉ hiện OTA khi version server mới hơn, tránh popup cùng version do
 > hash file lệch sau cài thủ công; cơ chế apply `version.py` cuối vẫn giữ nguyên.
+> v0.3.13 tự báo lỗi OTA/runtime có ý nghĩa, đưa `CHI-...` + `HW-...` + model
+> vào Issue, không lộ serial/MAC thô, và fsync OTA để giảm rủi ro trên exFAT.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
@@ -109,9 +111,9 @@ Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/
 ## 3. Tự động gửi log về GitHub — ĐÃ XÁC NHẬN TRÊN MÁY THẬT
 
 **Mã đã xong:**
-- `files/rh/log_uploader.py`: đọc `secrets.json` hoặc env `CHIAKI_GITHUB_TOKEN`, lọc token/PSN/IP/MAC,
+- `files/rh/log_uploader.py`: đọc `secrets.json` hoặc env `CHIAKI_GITHUB_TOKEN`, lọc token/PSN/IP/MAC/serial,
   giới hạn 24KB/log, 60K body, fingerprint dedupe qua `.log_upload_state.json`, chỉ gửi khi có
-  `.pending_crash`, retry ở lần khởi động sau, tạo Issue tiêu đề `[device-log] vX.Y.Z reason fingerprint`.
+  `.pending_crash`, retry ở lần khởi động sau; tiêu đề Issue có model, `CHI-...` và `HW-...`.
 - `files/app.py` gọi `start_pending_upload("startup_retry")` và lazy import SDL sau logger.
 - `files/launch.sh` gọi `python -m rh.log_uploader` khi crash.
 - `files/secrets.example.json` mẫu, `.gitignore` loại trừ `secrets.json`.
@@ -283,7 +285,7 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
 - `files/rh/updater.py` — OTA + log mạng
 - `files/rh/log_uploader.py` — auto Issue
 - `tools/make_release.py` / `tools/verify_release.py` — build gate
-- `tests/test_release_and_logs.py` — 50 tests
+- `tests/test_release_and_logs.py` — 68 tests
 - `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
 
 

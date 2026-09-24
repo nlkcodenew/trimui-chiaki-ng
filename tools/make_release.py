@@ -145,8 +145,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: không còn báo cập nhật lặp khi máy đã chạy cùng phiên bản." % version,
-            "en": "v%s: stop repeated update prompts when already on the same version." % version,
+            "vi": "v%s: tự gửi Issue cho lỗi OTA và lỗi vận hành nhỏ có ý nghĩa." % version,
+            "en": "v%s: auto-report meaningful OTA and runtime errors as GitHub Issues." % version,
         },
         "files": files,
         "remove": [],

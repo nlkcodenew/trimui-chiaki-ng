@@ -3,11 +3,12 @@
 Ứng dụng PS4 / PS5 Remote Play cho TrimUI Smart Pro S/Spruce OS và TrimUI Brick
 Pro Stock OS.
 
-**Trạng thái**: v0.3.12 sửa OTA tự báo lại cùng phiên bản sau khi cài thủ công.
-App chỉ hiện popup khi version trên server thực sự mới hơn; sai khác hash trong
-cùng version không còn tạo vòng lặp cập nhật. TLS/CA của v0.3.11 vẫn được giữ,
-không tắt xác minh certificate/hostname. Native stream, pair/session pre-10,
-SDL/input và luồng quét máy đang bật của v0.3.10 không thay đổi.
+**Trạng thái**: v0.3.13 tự gửi Issue cho lỗi OTA và lỗi vận hành kết thúc thật
+sự, kể cả lỗi nhỏ như lưu settings, discovery socket, pair hoặc chuẩn bị stream.
+Mỗi Issue có mã cài đặt `CHI-xxxx`, mã phần cứng băm `HW-xxxxxxxxxxxx` và model
+để phân biệt nhiều máy mà không gửi serial/MAC thô. Không gửi Issue cho trạng
+thái bình thường như quét 0 host hoặc một URL fallback lỗi rồi URL sau thành công.
+TLS/CA, native stream, pair/session pre-10 và SDL/input vẫn giữ nguyên.
 
 **Nền tảng v0.3.4:** bổ sung quản lý log và sửa thao tác thoát stream trên
 TrimUI. Màn hình chính luôn hiện hướng dẫn giữ `START + SELECT` 1,2 giây; native
@@ -121,7 +122,12 @@ Khi app thoát do lỗi, launcher tạo `.pending_crash` và gửi log trong l�
 tại hoặc lần khởi động tiếp theo nếu mạng đang mất. Từ v0.3.3, phiên stream thoát
 bình thường cũng gửi báo cáo `native_stream_quality` để đo drop FPS từ xa. Trước
 khi gửi, app lọc token, password, khóa đăng ký, PSN ID, địa chỉ IP nội bộ và địa
-chỉ MAC. Fingerprint ngăn tạo Issue lặp lại. Có thể tắt trong **Cài đặt**.
+chỉ MAC. Fingerprint theo cả loại lỗi ngăn retry tạo Issue lặp lại nhưng vẫn giữ
+hai lỗi khác nhau trên cùng đoạn log. Có thể tắt trong **Cài đặt**.
+
+`RH-xxxx` của RetroHub và `CHI-xxxx` của Chiaki đều là mã ngẫu nhiên lưu trên
+thẻ. Mã `HW-...` mới là pseudonym băm từ định danh phần cứng để phân biệt các
+máy. App không gửi MAC, serial, token hoặc khóa ghép nối thô.
 
 ## File log
 

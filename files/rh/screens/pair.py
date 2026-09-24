@@ -55,7 +55,9 @@ class PairScreen(BaseScreen):
     def _do_pair(self, pin):
         try: ok, info = chiaki.regist_with_pin(self.host, pin)
         except Exception as e:
-            log.error("pair exception: %s", e); self.status = tr("pair_failed") % e; self.pairing = False; return
+            log.error("pair exception: %s", e)
+            self._report_error("pair_screen_exception")
+            self.status = tr("pair_failed") % e; self.pairing = False; return
         if ok:
             try:
                 state.host_addr = self.host.addr
@@ -65,7 +67,8 @@ class PairScreen(BaseScreen):
                 state.rp_key = info["rp_key"]
                 state.rp_key_type = int(info.get("rp_key_type", 0))
                 state.server_mac = info.get("server_mac", "")
-                state.save_settings()
+                if not state.save_settings():
+                    raise OSError("settings save failed")
                 import json, os
                 from ..paths import APP_DIR
                 ppath = os.path.join(APP_DIR, "paired_hosts.json")
@@ -92,6 +95,7 @@ class PairScreen(BaseScreen):
                 os.replace(temp_path, ppath)
             except Exception as e:
                 log.error("pair save failed: %s", e)
+                self._report_error("pair_save_failed")
                 self.status = tr("pair_failed") % "không lưu được khóa"
                 self.pairing = False
                 return
@@ -101,6 +105,13 @@ class PairScreen(BaseScreen):
             except: pass
         else: self.status = tr("pair_failed") % (info.get("error", "unknown") if isinstance(info, dict) else str(info))
         self.pairing = False
+    @staticmethod
+    def _report_error(reason):
+        try:
+            from ..log_uploader import queue_diagnostic
+            queue_diagnostic(reason)
+        except Exception as exc:
+            log.warning("cannot queue diagnostic %s: %s", reason, exc)
     def render(self, engine):
         engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, 13, 17, 28, 255)
         if not self.host:

@@ -34,11 +34,14 @@ rp_key_type = 0
 server_mac = ""
 auto_upload_logs = True
 github_issue_repo = "nlkcodenew/trimui-chiaki-ng"
+settings_load_error = ""
+settings_save_error = ""
 
 _save_lock = threading.Lock()
 
 
 def _load():
+    global settings_load_error
     global current_lang, video_resolution, video_fps, video_bitrate, audio_volume
     global wifi_awake, auto_update, enable_logging, device_id, skipped_versions
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
@@ -50,7 +53,8 @@ def _load():
     try:
         with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
             cfg = json.load(f)
-    except (OSError, ValueError, json.JSONDecodeError):
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        settings_load_error = exc.__class__.__name__
         return
     current_lang = cfg.get("language", current_lang)
     video_resolution = cfg.get("video_resolution", video_resolution)
@@ -84,6 +88,7 @@ def _load():
 def save_settings():
     """Ghi settings.json theo kieu atomic: ghi file tam roi rename, tranh bi trung
     luc may tat dot ngot giua chung (deep suspend hay user rut the)."""
+    global settings_save_error
     with _save_lock:
         try:
             tmp = SETTINGS_FILE + ".tmp"
@@ -118,8 +123,12 @@ def save_settings():
                 f.flush()
                 os.fsync(f.fileno())
             os.replace(tmp, SETTINGS_FILE)
+            settings_save_error = ""
+            return True
         except OSError as exc:
+            settings_save_error = exc.__class__.__name__
             print("save_settings failed: %s" % exc)
+            return False
 
 
 _load()
@@ -128,7 +137,8 @@ _load()
 if not device_id or device_id == "CHI-A6A9":
     import random
     device_id = "CHI-%s" % "".join(random.choices("0123456789ABCDEF", k=4))
-    save_settings()
+    if not settings_load_error:
+        save_settings()
 
 SCREEN_W = 1280
 SCREEN_H = 720

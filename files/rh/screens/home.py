@@ -52,6 +52,7 @@ class HomeScreen(BaseScreen):
                 res = check_for_update(force=False)
             except Exception as exc:
                 log.warning("auto-update check failed: %s", exc)
+                self._report_error("ota_auto_check_exception")
                 return
             if res and self.engine:
                 manifest, files = res
@@ -85,6 +86,7 @@ class HomeScreen(BaseScreen):
             hosts = chiaki.discovery_broadcast(timeout=3.0)
         except Exception as exc:
             log.error("scan exception: %s", exc)
+            self._report_error("discovery_exception")
             hosts = []
         self.hosts = hosts
         self.scanning = False
@@ -203,6 +205,7 @@ class HomeScreen(BaseScreen):
             res = check_for_update(force=True)
         except Exception as exc:
             log.warning("manual update check failed: %s", exc)
+            self._report_error("ota_manual_check_exception")
             res = None
         if res:
             manifest, files = res
@@ -216,6 +219,14 @@ class HomeScreen(BaseScreen):
             else:
                 self.toast = tr("update_check_failed")
             self.toast_until = time.time() + 5
+
+    @staticmethod
+    def _report_error(reason):
+        try:
+            from ..log_uploader import queue_diagnostic
+            queue_diagnostic(reason)
+        except Exception as exc:
+            log.warning("cannot queue diagnostic %s: %s", reason, exc)
 
     def update(self, dt):
         if self.toast and time.time() > self.toast_until:

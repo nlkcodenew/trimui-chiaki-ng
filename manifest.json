@@ -1,19 +1,19 @@
 {
-  "version": "0.3.12",
+  "version": "0.3.13",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-24T09:26:12+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.12/files",
-  "release_tag": "v0.3.12/files",
+  "built": "2026-09-24T10:25:49+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.13/files",
+  "release_tag": "v0.3.13/files",
   "note": {
-    "vi": "v0.3.12: không còn báo cập nhật lặp khi máy đã chạy cùng phiên bản.",
-    "en": "v0.3.12: stop repeated update prompts when already on the same version."
+    "vi": "v0.3.13: tự gửi Issue cho lỗi OTA và lỗi vận hành nhỏ có ý nghĩa.",
+    "en": "v0.3.13: auto-report meaningful OTA and runtime errors as GitHub Issues."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "75bad8332a40836ed6f552a55b7751835f367311ffcb9d9f2222af5b37bf12e3",
-      "size": 4246
+      "sha256": "2902e551086f4ae3944e8d4033f8763139dcc8d94891c7c02e793d8cbb6614a9",
+      "size": 4718
     },
     {
       "path": "config.json",
@@ -57,8 +57,13 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "ff9c21eddcce055247f0687a7df2c041f13e901c122b789eae321e849277af70",
-      "size": 24181
+      "sha256": "a765b141a05ba8790e5a0bae92d90a44c3b5c84bf2412b6255e3165f4973462a",
+      "size": 24720
+    },
+    {
+      "path": "rh/device_identity.py",
+      "sha256": "29ec897f41010c573c7206dd2a26194d9ec8283adfdf76454c84193d53fff1a2",
+      "size": 3084
     },
     {
       "path": "rh/engine.py",
@@ -72,8 +77,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "d5b7db0a1a3c434079548213b0dcc3bf677da6977ff4c00994d721e79a65b465",
-      "size": 8455
+      "sha256": "050de0465a4205132be44d84af06e097548926776f0e9b51f16f656a850f6b73",
+      "size": 8462
     },
     {
       "path": "rh/inputs.py",
@@ -82,8 +87,8 @@
     },
     {
       "path": "rh/log_uploader.py",
-      "sha256": "e7b123bd1c2a520e7ee3c2078e41ca094d30e54cfa2b22021ab3b5b67137839c",
-      "size": 9115
+      "sha256": "153bf700168ba2e36b7d9b315b25aafb12aa96dd106542899aa11187fae30878",
+      "size": 12763
     },
     {
       "path": "rh/logger.py",
@@ -107,17 +112,17 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "bf219a6836955b1a9471cb5f3c9e5d48d55ac6c7cb4a465e75fbbd21eeb6504c",
-      "size": 5062
+      "sha256": "795cb3d4cf9489bca89f667d5678ea827dbc00eb0c39ca78f104be51f9b2b09c",
+      "size": 5413
     },
     {
       "path": "rh/updater.py",
-      "sha256": "fd7450faf029cdacb19cf94ebf9ce863307ad73a45969ee439442274084d7fbf",
-      "size": 14884
+      "sha256": "c67518e432443580e385f77ae95b360a9eb466c4cb2d93f3f221c19e1594a39b",
+      "size": 16098
     },
     {
       "path": "rh/version.py",
-      "sha256": "1a4ba5ad73ff16c7dcc9a1dd0b95a6cf4b4f54c8eeb9c50343c280afd633bd0f",
+      "sha256": "9c0ae44fbef601a7bf47aafeeebd66f5c8e110ca03eb51648cd80c54ed7e684e",
       "size": 1178
     },
     {
@@ -137,8 +142,8 @@
     },
     {
       "path": "rh/modals/update.py",
-      "sha256": "82e8d5b52966847a743d8a04a9c72f5b7fca2c0ca83659a449687df1c3bd8a0a",
-      "size": 7382
+      "sha256": "acea90dbf1ecb33f43789099bff6c6ca984be6e0d580bea165fb756170488b3d",
+      "size": 7644
     },
     {
       "path": "rh/screens/__init__.py",
@@ -152,18 +157,18 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "bb184e4a17ebc06b4d23c3ce8d67928868f1466be41efdca860238625804d7ba",
-      "size": 9857
+      "sha256": "753b0887168e73920efd16dd54f69253dba2e41275748c45f2b58c5810dc23e2",
+      "size": 10295
     },
     {
       "path": "rh/screens/pair.py",
-      "sha256": "251fbb235da1c408071b4055423dc4856fd423b36a42bd68fefb6723fab45563",
-      "size": 5925
+      "sha256": "88c7a92bcb4f984fd23ac430df1e885117f68dbc1b3d35b8f626a13af30f6789",
+      "size": 6372
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "86db1672795e3793cb5223a847fbec76d7f9bfef84ede40e1e699aa799670e37",
-      "size": 6945
+      "sha256": "771b3b248fb0fa744bc3d77dbbf2e2c9cfb786d61fed1a5014df5e7a59e69461",
+      "size": 7582
     },
     {
       "path": "rh/ui/__init__.py",
@@ -558,8 +563,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.12.zip",
-    "sha256": "37098e4e17d4e57761752d08fe9a237879deb9b0cd4f95f56107398386e2430b",
-    "size": 1349934
+    "name": "trimui-chiaki-ng-v0.3.13.zip",
+    "sha256": "80b60f316459be71e965f354eb017d5d5f553ebca0ea59dc4dd63884943d0935",
+    "size": 1353300
   }
 }

@@ -24,6 +24,7 @@ from .paths import APP_DIR
 from .version import APP_VERSION
 from .logger import get_logger
 from .ssl_context import create_ssl_context
+from .device_identity import diagnostic_identity
 
 log = get_logger()
 
@@ -33,10 +34,12 @@ PENDING_FILE = os.path.join(APP_DIR, ".pending_crash")
 MAX_LOG_BYTES = 24000
 MAX_BODY_CHARS = 60000
 TIMEOUT = 15
+MAX_PENDING_REASONS = 8
 
 _SECRET_LINE = re.compile(
     r"(?im)^([^\n]*(?:token|password|passwd|secret|regist_key|rp_key|"
-    r"psn_account_id|psn_online_id|host_name|host_addr)[^:=\n]*[:=]\s*)"
+    r"psn_account_id|psn_online_id|host_name|host_addr|serial[-_ ]?(?:number|no)|"
+    r"sunxi_chipid|chip[-_ ]?id|machine[-_ ]?id)[^:=\n]*[:=]\s*)"
     r"[^\s,}\]]+"
 )
 _GITHUB_TOKEN = re.compile(r"\b(?:ghp|github_pat|gho|ghu|ghs|ghr)_[A-Za-z0-9_]+\b")
@@ -46,6 +49,8 @@ _PRIVATE_IP = re.compile(
 )
 _MAC_ADDRESS = re.compile(r"(?i)\b(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}\b")
 _REPO_NAME = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+_pending_lock = threading.Lock()
+_upload_lock = threading.Lock()
 
 
 def _read_json(path):
@@ -55,6 +60,60 @@ def _read_json(path):
         return value if isinstance(value, dict) else {}
     except (OSError, ValueError, json.JSONDecodeError):
         return {}
+
+
+def _clean_reason(reason):
+    value = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(reason or "error"))
+    return value.strip("_.-")[:80] or "error"
+
+
+def _pending_reasons():
+    value = _read_json(PENDING_FILE)
+    reasons = value.get("reasons", []) if isinstance(value, dict) else []
+    if not isinstance(reasons, list):
+        return []
+    return [_clean_reason(reason) for reason in reasons[:MAX_PENDING_REASONS]]
+
+
+def _remember_pending_reason(reason):
+    with _pending_lock:
+        reason = _clean_reason(reason)
+        reasons = _pending_reasons()
+        if reason not in reasons:
+            reasons.append(reason)
+        temp_path = PENDING_FILE + ".tmp"
+        try:
+            with open(temp_path, "w", encoding="utf-8") as handle:
+                json.dump({"reasons": reasons[-MAX_PENDING_REASONS:]}, handle)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temp_path, PENDING_FILE)
+            return True
+        except OSError as exc:
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+            log.warning("cannot remember diagnostic reason %s: %s", reason, exc)
+            return False
+
+
+def _clear_uploaded_reasons(uploaded_reasons):
+    with _pending_lock:
+        current = _pending_reasons()
+        remaining = [reason for reason in current if reason not in uploaded_reasons]
+        if remaining:
+            temp_path = PENDING_FILE + ".tmp"
+            with open(temp_path, "w", encoding="utf-8") as handle:
+                json.dump({"reasons": remaining}, handle)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temp_path, PENDING_FILE)
+            return
+        try:
+            os.remove(PENDING_FILE)
+        except OSError:
+            pass
 
 
 def _configuration():
@@ -118,15 +177,16 @@ def _collect():
 
 
 def _fingerprint(sections, reason=None):
-    # Không đưa reason vào fingerprint: cùng một crash có thể được thử lại với
-    # reason startup_retry sau khi lần upload đầu mất mạng.
-    payload = "\n".join(text[-8000:] for _, text in sections)
+    payload = "%s\n%s" % (
+        _clean_reason(reason),
+        "\n".join(text[-8000:] for _, text in sections),
+    )
     return hashlib.sha256(payload.encode("utf-8", errors="replace")).hexdigest()
 
 
-def _device_hash():
-    value = str(getattr(state, "device_id", "unknown"))
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:10]
+def _content_fingerprint(sections):
+    payload = "\n".join(text[-8000:] for _, text in sections)
+    return hashlib.sha256(payload.encode("utf-8", errors="replace")).hexdigest()
 
 
 def _issue_body(sections, reason, fingerprint):
@@ -135,10 +195,13 @@ def _issue_body(sections, reason, fingerprint):
         summary = "Báo cáo chất lượng stream được gửi tự động từ thiết bị TrimUI."
     elif reason.startswith("wakeup_"):
         summary = "Báo cáo chẩn đoán đánh thức PlayStation được gửi tự động."
+    elif reason.startswith(("ota_", "discovery_", "pair_", "stream_", "settings_")):
+        summary = "Báo cáo lỗi vận hành được gửi tự động từ thiết bị TrimUI."
     elif reason.endswith("_retry"):
         summary = "Báo cáo đang chờ được gửi lại khi ứng dụng thoát."
     else:
         summary = "Log được gửi tự động từ thiết bị TrimUI sau khi ứng dụng lỗi."
+    identity = diagnostic_identity()
     lines = [
         summary,
         "",
@@ -146,12 +209,14 @@ def _issue_body(sections, reason, fingerprint):
         "|---|---|",
         "| App | trimui-chiaki-ng v%s |" % APP_VERSION,
         "| Lý do | `%s` |" % reason,
-        "| Thiết bị | `%s` |" % _device_hash(),
+        "| Model | `%s` |" % identity["model"],
+        "| Mã cài đặt | `%s` |" % identity["install_id"],
+        "| Mã phần cứng băm | `%s` |" % identity["hardware_id"],
         "| Python | `%s` |" % platform.python_version(),
         "| Hệ thống | `%s` |" % _sanitize(platform.platform()),
         "| Fingerprint | `%s` |" % fingerprint[:16],
         "",
-        "> Token, khóa đăng ký, PSN Account ID và địa chỉ IP nội bộ đã được lọc.",
+        "> Token, khóa đăng ký, PSN Account ID, địa chỉ IP, MAC và serial thô đã được lọc.",
     ]
     for name, text in sections:
         safe_text = text[-MAX_LOG_BYTES:].replace("```", "` ` `")
@@ -180,13 +245,24 @@ def _post_issue(token, repo, title, body):
     return result.get("html_url", "")
 
 
-def upload_pending(reason="crash", force=False):
+def _upload_pending(reason="crash", force=False):
     token, repo, enabled = _configuration()
     if not enabled and not force:
         log.info("log upload disabled in settings")
         return False
     if not force and not os.path.exists(PENDING_FILE):
         return False
+    pending_reasons = _pending_reasons()
+    uploaded_reasons = list(pending_reasons)
+    caller_reason = _clean_reason(reason)
+    if pending_reasons:
+        report_reasons = list(pending_reasons)
+        if (caller_reason not in ("startup", "startup_retry", "user_exit_retry", "crash")
+                and caller_reason not in report_reasons):
+            report_reasons.append(caller_reason)
+        reason = "+".join(report_reasons)
+    else:
+        reason = caller_reason
     if not token:
         log.warning("log upload pending: missing secrets.json github_token")
         return False
@@ -199,15 +275,26 @@ def upload_pending(reason="crash", force=False):
         log.warning("log upload pending but no readable logs")
         return False
     fingerprint = _fingerprint(sections, reason)
+    content_fingerprint = _content_fingerprint(sections)
     history = _read_json(STATE_FILE)
-    if not force and history.get("fingerprint") == fingerprint:
-        try:
-            os.remove(PENDING_FILE)
-        except OSError:
-            pass
-        return True
+    if not force:
+        exact_duplicate = history.get("fingerprint") == fingerprint
+        legacy_retry_duplicate = (
+            not pending_reasons
+            and caller_reason.endswith("_retry")
+            and history.get("content_fingerprint") == content_fingerprint
+        )
+        if exact_duplicate or legacy_retry_duplicate:
+            _clear_uploaded_reasons(uploaded_reasons)
+            return True
 
-    title = "[device-log] v%s %s %s" % (APP_VERSION, reason, fingerprint[:8])
+    identity = diagnostic_identity()
+    title_reason = reason[:80]
+    title = "[device-log][%s][%s][%s] v%s %s %s" % (
+        identity["model"][:32], identity["install_id"][:16],
+        identity["hardware_id"][:16], APP_VERSION, title_reason,
+        fingerprint[:8],
+    )
     body = _issue_body(sections, reason, fingerprint)
     try:
         issue_url = _post_issue(token, repo, title, body)
@@ -219,17 +306,25 @@ def upload_pending(reason="crash", force=False):
     try:
         with open(tmp, "w", encoding="utf-8") as handle:
             json.dump({
-                "fingerprint": fingerprint,
+                    "fingerprint": fingerprint,
+                    "content_fingerprint": content_fingerprint,
                 "version": APP_VERSION,
                 "issue_url": issue_url,
                 "uploaded_at": int(time.time()),
             }, handle, indent=2)
+            handle.flush()
+            os.fsync(handle.fileno())
         os.replace(tmp, STATE_FILE)
-        os.remove(PENDING_FILE)
+        _clear_uploaded_reasons(uploaded_reasons)
     except OSError:
         pass
     log.info("GitHub log uploaded: %s", issue_url or "ok")
     return True
+
+
+def upload_pending(reason="crash", force=False):
+    with _upload_lock:
+        return _upload_pending(reason, force)
 
 
 def start_pending_upload(reason="startup"):
@@ -247,11 +342,11 @@ def start_pending_upload(reason="startup"):
 
 def queue_diagnostic(reason):
     """Mark a non-crash diagnostic and upload it without blocking the UI."""
-    try:
-        with open(PENDING_FILE, "a", encoding="ascii"):
-            pass
-    except OSError as exc:
-        log.warning("cannot queue diagnostic %s: %s", reason, exc)
+    if not bool(getattr(state, "auto_upload_logs", True)):
+        log.info("diagnostic upload disabled: reason=%s", _clean_reason(reason))
+        return None
+    reason = _clean_reason(reason)
+    if not _remember_pending_reason(reason):
         return None
     return start_pending_upload(reason)
 

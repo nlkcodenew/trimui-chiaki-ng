@@ -152,13 +152,26 @@ class SettingsScreen(BaseScreen):
                 callback(values[idx])
             except Exception as exc:
                 log.warning("setting callback %s failed: %s", key, exc)
+                try:
+                    from ..log_uploader import queue_diagnostic
+                    queue_diagnostic("settings_callback_failed")
+                except Exception as report_exc:
+                    log.warning("cannot queue settings diagnostic: %s", report_exc)
 
     def _save(self):
-        state.save_settings()
-        log.info("settings saved: res=%s fps=%d bitrate=%d vol=%d auto=%s log=%s lang=%s",
-                 state.video_resolution, state.video_fps, state.video_bitrate,
-                 state.audio_volume, state.auto_update, state.enable_logging,
-                 state.current_lang)
+        saved = state.save_settings()
+        if not saved:
+            log.error("settings save failed")
+            try:
+                from ..log_uploader import queue_diagnostic
+                queue_diagnostic("settings_save_failed")
+            except Exception as exc:
+                log.warning("cannot queue settings save diagnostic: %s", exc)
+        else:
+            log.info("settings saved: res=%s fps=%d bitrate=%d vol=%d auto=%s log=%s lang=%s",
+                     state.video_resolution, state.video_fps, state.video_bitrate,
+                     state.audio_volume, state.auto_update, state.enable_logging,
+                     state.current_lang)
 
     def render(self, engine):
         engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, 13, 17, 28, 255)

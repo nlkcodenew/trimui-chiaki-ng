@@ -92,8 +92,16 @@ GitHub yêu cầu xác thực khi tạo Issue. Tạo fine-grained token chỉ c�
 3. Không gửi token cho người khác và không đăng nội dung file lên Issue/chat.
 
 Token chỉ nằm trên thẻ nhớ; OTA và Release không đọc, ghi đè hoặc đóng gói file
-này. Khi crash, log được lọc dữ liệu nhạy cảm rồi tạo GitHub Issue. Nếu mất mạng,
-app giữ yêu cầu và thử lại ở lần mở sau.
+này. Từ v0.3.13, crash và lỗi vận hành kết thúc thật sự (OTA, lưu settings,
+discovery socket, pair, chuẩn bị stream) được lọc rồi tạo GitHub Issue. Nếu mất
+mạng, app giữ các nguyên nhân pending và thử lại ở lần mở sau. Issue có mã cài
+đặt `CHI-xxxx`, model và mã phần cứng băm `HW-xxxxxxxxxxxx`; không chứa serial,
+MAC, token hoặc khóa thật. Quét 0 host không được coi là lỗi.
+
+Không rút cáp USB hoặc tháo thẻ khi máy/Windows đang đọc ghi. exFAT không có
+journal; ngắt kết nối giữa lúc ghi có thể tạo hai directory entry trùng tên.
+Updater có `fsync` file/thư mục để giảm cửa sổ chưa flush nhưng không thể bảo vệ
+khỏi việc rút cáp vật lý đang ghi.
 
 Luồng này đã được xác nhận hoạt động trên máy thật ngày 2026-09-23: thiết bị đã
 tự tạo Issue trong repo sau khi `secrets.json` được cấu hình đúng.
