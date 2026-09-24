@@ -1,306 +1,267 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.14)
+# trimui-chiaki-ng — trạng thái dự án v0.3.14
 
-> Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-24.
-> v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
-> **Mốc đã đạt trên máy thật:** stream có hình, nhận input và chơi được qua LAN.
-> v0.3.3 giữ nguyên giao thức đã chạy tốt, giảm tải log/render, thêm báo cáo chất
-> lượng 5 giây, bitrate 3000 kbps và lựa chọn 1080p để đo giới hạn máy thật.
-> v0.3.4 thêm xóa/giới hạn log an toàn, retry Issue pending khi Thoát và fallback
-> nút vật lý START/SELECT để trở về menu mà không cần tắt PS4.
-> v0.3.5 sửa modal xóa log bị nháy/tự đóng: mọi modal chung dùng button edge và
-> Confirm đóng trước khi callback mở hộp kết quả.
-> v0.3.6 mapping A/B/X/Y đã được xác nhận đúng. v0.3.7 thêm host paired offline
-> và gửi WAKEUP để bật PS4 từ Rest Mode; pair/session pre-10 giữ nguyên.
-> v0.3.8 sửa packet WAKEUP theo upstream và tự gửi Issue chẩn đoán khi timeout.
-> Issue #26/#27 vẫn 0 host sau unicast; v0.3.9 thêm broadcast LAN và retry.
-> Issue #28-#30 vẫn timeout; v0.3.10 tắt WAKEUP và host offline trong giao diện,
-> quay lại luồng bật PS4 bằng tay rồi quét/kết nối như v0.3.6.
-> v0.3.11 thêm Mozilla CA bundle và TLS context dùng chung cho OTA/GitHub Issue
-> trên Brick Pro Stock OS; không thay đổi native stream của Smart Pro S/Spruce.
-> v0.3.12 chỉ hiện OTA khi version server mới hơn, tránh popup cùng version do
-> hash file lệch sau cài thủ công; cơ chế apply `version.py` cuối vẫn giữ nguyên.
-> v0.3.13 tự báo lỗi OTA/runtime có ý nghĩa, đưa `CHI-...` + `HW-...` + model
-> vào Issue, không lộ serial/MAC thô, và fsync OTA để giảm rủi ro trên exFAT.
-> v0.3.14 chỉ cảnh báo/gửi Issue khi mọi nguồn manifest đều thất bại; lỗi DNS
-> của một nguồn được fallback thành công chỉ ghi INFO.
->
-> Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
+> Cập nhật: 2026-09-24. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
+> session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
 
-## Stream native v0.3.4
+## 1. Release hiện tại
 
-- Binary `files/bin/chiaki-stream` là ELF AArch64 build bằng SDK TG5050 chính hãng.
-- Session dùng khóa thật từ `paired_hosts.json`; khóa đi qua file tạm `0600`,
-  được native xóa ngay khi đọc và không xuất hiện trong command line/log.
-- Renderer nhận frame H264 từ `chiaki_ffmpeg_decoder`, chuyển về YUV420P khi
-  cần và hiển thị bằng SDL texture đúng tỉ lệ trên màn 1280×720.
-- Audio giải mã Opus và phát bằng SDL queued audio; input map A/B/X/Y, D-pad,
-  analog, L/R, trigger, L3/R3, START/SELECT/PS; hỗ trợ rung đơn.
-- Menu đóng SDL trước khi chạy native và tự mở lại khi stream kết thúc.
-- Giữ START+SELECT 1,2 giây để thoát. Native stdout/stderr và `ldd` được ghi
-  vào `Chiaki-debug.log`/`Chiaki-loi.txt`.
-- Trace packet/frame native không còn bật theo `enable_logging`; mặc định chỉ ghi
-  INFO/WARNING/ERROR, buffer stdout 64 KB và không `fflush` từng dòng.
-- Renderer cache đích hiển thị, bỏ clear toàn màn hình khi frame phủ kín 1280×720
-  và ghi tên renderer/accelerated/vsync để phát hiện fallback software.
-- Mỗi 5 giây ghi `rendered`, `lost`, `fec`, FPS thực và số log bị lược; khi thoát
-  bình thường launcher tự gửi Issue `native_stream_quality`.
-- Cài đặt có thêm bitrate 3000 kbps và 1080p. 1080p được decode rồi scale về màn
-  1280×720, chỉ dùng để thử sức decoder/GPU.
-- Màn hình chính hiện rõ `giữ START + SELECT 1,2 giây để về menu`. Native nhận
-  cả GameController và raw joystick button 8/9 cho riêng tổ hợp thoát, tránh lỗi
-  mapping khiến người dùng trước đây phải tắt PS4 mới quay lại menu. Khi đủ tổ
-  hợp, native nhả OPTIONS/SHARE khỏi input gửi sang PS4 để tránh tác dụng phụ.
-- **Cài đặt → XÓA LOG CŨ** có xác nhận; không xóa nếu còn `.pending_crash` để
-  bảo vệ report chưa gửi. Launcher cắt giữ phần cuối log native sau mỗi phiên.
-- Khi chọn **THOÁT**, launcher retry report pending đồng bộ rồi mới đóng; nếu
-  không có pending marker thì không tạo Issue mới không cần thiết.
-- Đã xác nhận trên Smart Pro S thật ngày 2026-09-23: màn hình PS4 xuất hiện,
-  điều khiển hoạt động và chơi game qua LAN được; cảm nhận ban đầu khá ổn.
-- Chưa xong: PS5/H265 và Internet/RUDP. WAKEUP đã được thử và tắt ở v0.3.10.
+| Mục | Giá trị |
+|---|---|
+| Latest | `v0.3.14` |
+| Commit/tag | `d09142a` |
+| OTA files | 110 |
+| ZIP entries | 113 |
+| ZIP SHA-256 | `8ece098b41c494e83add3d6647b44383b53946e8dcc0cf27acd590a33e715bbd` |
+| Unittest | 69/69 đạt |
+| Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
+| CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
-## 1. Mục tiêu
+GitHub Release có ba asset:
 
-Viết app PS4/PS5 Remote Play cho TrimUI Smart Pro S (Allwinner A523 8xA55 2.0GHz, Mali-G57, 1GB RAM,
-màn 1280x720, WiFi 6, firmware Linux 1.1.1 TG5050).
-Mô hình hoạt động copy theo RetroHub: app Python + SDL nằm trong `Apps/Chiaki/` trên thẻ nhớ, chạy qua `launch.sh`.
+- `manifest.json`.
+- `trimui-chiaki-ng-v0.3.14.zip`.
+- `trimui-chiaki-ng-v0.3.14.zip.sha256`.
 
-## 2. Đã làm được
+Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
+mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
+`secrets.json` hay dữ liệu máy thật.
 
-### Hạ tầng
-- Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`, nhánh `main`
-- Build release: `tools/make_release.py` quét `files/` -> `manifest.json` (sha256) + ZIP `App/Chiaki/...`
-  với mode Unix đúng (0755 cho `.sh`), kèm file `.sha256`.
-- Verify: `tools/verify_release.py` kiểm tra manifest/ZIP, cấm rò rỉ `secrets.json`, log runtime,
-  chặn `settings.json` mặc định có `device_id`.
-- CI: `.github/workflows/release.yml` (push tag `v*` -> checkout -> verify tag == `APP_VERSION` ->
-  compileall -> make_release -> verify -> publish bằng `softprops/action-gh-release`).
-- 40 unittest pass tại `tests/test_release_and_logs.py`.
+## 2. Ma trận nền tảng
 
-### Ghép nối PS4 thật — v0.3.0-beta
-- Xóa hoàn toàn `stub-rp-key-*`; chỉ báo thành công khi PS4 trả HTTP 200 và đủ `PS4-RegistKey`, `RP-Key`, `RP-KeyType`, MAC.
-- Thực hiện đúng handshake upstream: UDP `SRC2`/`RES2` cổng 9295, TCP `/sie/ps4/rp/sess/rgst`, `RP-Version: 10.0`, HMAC-SHA256 và AES-128-CFB.
-- Không kết nối dịch vụ PSN. PS4 firmware 9.00 dùng PIN LAN, Account-ID offline 8 byte bằng 0 và giao thức pre-10 (`/sce/rp/regist`, `RP-Version: 9.0`).
-- Lưu riêng `psn_account_id`, `rp_key`, `rp_key_type`, `regist_key`, `server_mac`; tự vô hiệu dữ liệu giả của alpha.
-- Sửa enum target theo đúng upstream (`800/900/1000/1000100`) và ưu tiên protocol header để PS4 không còn bị lưu thành PS5.
-- Chưa hỗ trợ đăng ký PS5 trong beta; không tạo khóa giả khi người dùng thử PS5.
-- Bản vá sau beta đầu tiên dùng AES-128-CFB thuần Python vì firmware máy thật không có executable `openssl`.
+| Nền tảng | UI/app | TLS/OTA | Pair/stream | Ghi chú |
+|---|---:|---:|---:|---|
+| Smart Pro S/TG5050 | Đã xác nhận | Đã dùng OTA | Đã stream PS4 thật | Baseline chính |
+| Spruce OS | Giữ tương thích | Không thay đổi | Chưa có log mới | Không sửa native trong chuỗi Brick Pro |
+| Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.13` | Chưa xác nhận đầy đủ | `v0.3.14` chờ test OTA |
+| PS4 Pro 9.00/GoldHEN | — | — | Pair/session pre-10 đạt | Không cần PSN |
+| PS5/H265 | — | — | Chưa kiểm thử | Không tuyên bố hỗ trợ máy thật |
 
-### OTA
-- Fix lỗi vòng lặp RetroHub: `settings.json`, `secrets.json` không vào manifest/ZIP; `pending_files()`
-  bỏ qua `settings.json`; `skipped_versions` chỉ chặn khi có version mới thực sự.
-- Manifest dùng `release_tag: vX.Y.Z/files` và `base_url: .../vX.Y.Z/files` để tương thích updater cũ
-  (ghép thẳng tag với path).
-- Payload ưu tiên tag bất biến, fallback ghproxy/jsDelivr, kiểm SHA256.
+Hiện một release chung vẫn phù hợp. Chỉ tách release khi có bằng chứng native
+binary, ABI hoặc library path khác nhau không thể xử lý an toàn trong launcher.
 
-### Sửa lỗi đã phát hiện trên máy thật
-- v0.2.3: crash `SDL_GAMECONTROLLER_BUTTON_A` -> đổi sang enum số 0..14 (`files/rh/inputs.py`).
-- v0.2.4: tiếng Việt không dấu -> chuyển toàn bộ VI sang có dấu (`files/rh/i18n.py`).
-- v0.2.5: crash Cài đặt `language`/`current_lang` -> map key `current_lang` -> `language`.
-- v0.2.6: popup Cập nhật nháy + không đóng + không tải được -> chuyển popup sang `edges`, close phải xóa
-  `engine.active_modal`, sửa payload URL thiếu `/files/`, thêm log mạng chi tiết, tự restart sau cài.
-- v0.2.7: A trong Cài đặt thoát ngay -> đổi A thành đổi giá trị + save, B thoát.
-- v0.2.8: B vẫn save rồi mới thoát -> đổi B chỉ thoát (tồn tại ngắn), hiện version trên header.
-- v0.2.9: Không thoát được Cài đặt khi kẹt -> thêm dòng cuối `QUAY LẠI →` (key `back`),
-  mọi nút A/B/Trái/Phải tại dòng này đều pop về menu chính.
-- v0.2.10: **Sửa tận gốc bug P0 "A và B đều chỉnh sửa"** (chi tiết ở mục 4.1).
+## 3. Kiến trúc runtime
 
-### Ghi log
-- `files/rh/logger.py`: 2 file `Chiaki-loi.txt` (WARNING+) và `Chiaki-debug.log`
-  (DEBUG khi `enable_logging`), xoay vòng; hỗ trợ xóa an toàn và cap log native.
-- `files/launch.sh`: giữ log khi có `.pending_crash`, xuất `CHIAKI_STDERR_LOG`,
-  gửi quality sau stream, retry pending khi Thoát và cap kích thước log.
+### Python UI
 
-## 3. Tự động gửi log về GitHub — ĐÃ XÁC NHẬN TRÊN MÁY THẬT
+- `files/app.py`: bootstrap, logger, identity, uploader pending và engine.
+- `files/rh/engine.py`: SDL window/render loop, screen/modal stack.
+- `files/rh/screens/home.py`: scan, chọn host, update và start stream.
+- `files/rh/screens/pair.py`: nhập PIN, registration và lưu khóa.
+- `files/rh/screens/settings.py`: cấu hình, xóa log và lưu settings.
+- `files/rh/state.py`: state runtime và lưu `settings.json` atomically.
 
-**Mã đã xong:**
-- `files/rh/log_uploader.py`: đọc `secrets.json` hoặc env `CHIAKI_GITHUB_TOKEN`, lọc token/PSN/IP/MAC/serial,
-  giới hạn 24KB/log, 60K body, fingerprint dedupe qua `.log_upload_state.json`, chỉ gửi khi có
-  `.pending_crash`, retry ở lần khởi động sau; tiêu đề Issue có model, `CHI-...` và `HW-...`.
-- `files/app.py` gọi `start_pending_upload("startup_retry")` và lazy import SDL sau logger.
-- `files/launch.sh` gọi `python -m rh.log_uploader` khi crash.
-- `files/secrets.example.json` mẫu, `.gitignore` loại trừ `secrets.json`.
+### Remote Play
 
-Người dùng đã cấu hình fine-grained token chỉ có quyền Issues cho repo này và
-thiết bị đã tạo Issue `#1`, `#2`. Từ v0.3.4, nút xóa log bảo vệ marker pending;
-launcher retry report khi người dùng chọn Thoát.
-  Đây là thiết kế bảo mật, không phải bug.
+- `files/rh/chiaki.py`: discovery, registration wrapper, wakeup cũ và launcher.
+- `files/rh/ps4_regist.py`: handshake PS4/PS5 registration.
+- `files/bin/chiaki-stream`: native AArch64 Remote Play helper.
+- `files/launch.sh`: chọn Python, library path, crash marker và stream lifecycle.
 
-**Để kích hoạt:**
-- Tạo fine-grained PAT chỉ cho repo `nlkcodenew/trimui-chiaki-ng`, quyền `Issues: Read and write`,
-  copy `secrets.example.json` thành `secrets.json` trên thẻ nhớ, điền `github_token`. Không commit file này.
+### Network/release
 
-## 4. Bug / việc còn dở
+- `files/rh/ssl_context.py`: TLS context dùng CA hệ thống + Mozilla bundle.
+- `files/rh/updater.py`: manifest fallback, SHA-256, staging, apply và restart.
+- `files/rh/log_uploader.py`: sanitize, pending queue, dedupe và GitHub Issue.
+- `files/rh/device_identity.py`: model, install ID và hardware pseudonym.
+- `tools/make_release.py`: manifest/ZIP deterministic.
+- `tools/verify_release.py`: release build gate.
 
-### 4.1 P0 — Cài đặt: cả A và B đều chỉnh sửa → ĐÃ SỬA TRONG v0.2.10
+## 4. TLS và OTA
 
-**Triệu chứng bạn báo:** ở màn CÀI ĐẶT, cả nút A và nút B đều làm thay đổi giá trị; B không thoát ra menu chính.
+### Bảo mật
 
-**Nguyên nhân gốc (không phải `settings.py` như giả định ở v0.2.7–v0.2.9):** nằm ở `files/rh/inputs.py`.
+- Giữ `ssl.CERT_REQUIRED` và `check_hostname=True`.
+- Không dùng `CERT_NONE`, `_create_unverified_context` hoặc tắt hostname check.
+- CA bundle Mozilla đi kèm để bù CA store thiếu trên Brick Pro Stock OS.
+- Updater và uploader dùng cùng helper verified context.
 
-1. **Map nút GameController bị ngược.** SDL2 đặt tên nút theo layout Xbox
-   (`BUTTON_A` = ô Nam/south, `BUTTON_B` = ô Đông/east), còn TrimUI Smart Pro S dùng layout kiểu Nintendo:
-   nút **A vật lý ở ô Đông**, nút **B vật lý ở ô Nam**. Map cũ `0: "btn_a", 1: "btn_b"` khiến
-   **nút B vật lý phát ra `btn_a`**. Vì `settings.py` check `btn_a` trước `btn_b`, bấm B bị hiểu là "đổi giá trị".
-   -> Đã đảo `A<->B` và `X<->Y`, giống hệt cách `repohubtool/files/rh/inputs.py` xử lý
-   (`SDL_CONTROLLER_BUTTON_B # Physical A (East)` -> `btn_a`).
+### Quy tắc manifest
 
-2. **Sự kiện JOY* trùng với CONTROLLER.*** Khi SDL đã mở GameController, mỗi lần bấm nút sinh
-   **cả** `SDL_CONTROLLERBUTTONDOWN` **và** `SDL_JOYBUTTONDOWN` cho cùng một hành động.
-   `feed_event` trước đây xử lý cả hai, nên một nút bấm tạo 2 edge ngược nhau
-   (ví dụ B vật lý: controller id 0 + joy id 0 -> `btn_b`, đồng thời profile trimui `btn_a: [1]`/joy
-   bị ánh xạ chéo gây nhiễu). -> Đã bỏ qua `JOY*` khi `self.controller is not None`,
-   đúng như `repohubtool` làm (`elif not has_controller and etype == sdl2.SDL_JOYBUTTONDOWN`).
+- Ưu tiên GitHub Release latest, sau đó Raw GitHub và fallback phù hợp.
+- Chỉ hiện update khi remote version mới hơn `APP_VERSION`.
+- Hash drift cùng version không tạo popup lặp.
+- `settings.json` bị loại ở build và `pending_files()`.
+- Payload URL trỏ tag bất biến `vX.Y.Z/files`.
 
-3. **Lớp phòng thủ trong `settings.py`:** `handle_input` giờ check `btn_b`/`quit` **trước** `btn_a`,
-   nên dù hai edge đến cùng khung hình thì "thoát" vẫn thắng "đổi giá trị".
-   Riêng dòng `back`: `B`/`quit` và `A`/`Left`/`Right` đều pop.
+### Quy tắc lỗi v0.3.14
 
-**Kiểm chứng:** thêm 3 test mới trong `tests/test_release_and_logs.py`:
-- `test_gamecontroller_physical_b_maps_to_btn_b_not_btn_a` — B vật lý (id 0) phải ra `btn_b`.
-- `test_joystick_events_ignored_when_controller_attached` — có controller thì JOY* bị bỏ qua, không sinh edge.
-- `test_settings_integration_physical_buttons` — mô phỏng đúng chuỗi bấm máy thật: B vật lý chỉ pop (không save),
-  A vật lý đổi giá trị + save.
+- Một source lỗi nhưng fallback thành công: log INFO, không report.
+- Mọi source lỗi xác minh TLS: `tls_error` + `ota_manifest_tls_error`.
+- Mọi source lỗi mạng/DNS/dữ liệu: `network_error` +
+  `ota_manifest_network_error`.
+- Lỗi hash/download/staging/install/restart có reason riêng.
 
-Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10.
+### An toàn ghi file
 
-**Đã xác nhận trên máy thật (v0.2.10):** nút A đổi giá trị + lưu ngay, nút B thoát ra menu chính, dòng `QUAY LẠI` hoạt động. Bug P0 đã đóng.
+- Tải vào `.update_staging`.
+- Kiểm SHA-256 trước khi apply.
+- Flush + `fsync` từng file staging.
+- `os.replace` từng file và `fsync` thư mục đích.
+- Apply `rh/version.py` cuối.
+- Không thể bảo vệ khỏi rút cáp/thẻ vật lý trong lúc I/O.
 
-### 4.2 P1 — Tiêu đề hiển thị version — ĐÃ XONG (v0.2.8)
-`HomeScreen.get_header_title` trả `CHIAKI-NG vX.Y.Z`. Bạn thấy trên máy ở header rồi. Coi như đóng.
+## 5. GitHub Issue và quyền riêng tư
 
-### 4.3 OTA — v0.2.10/v0.2.11 đã phát hành
-`v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
-để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
+Uploader chỉ dùng fine-grained token trong `secrets.json` hoặc env. Token không
+nằm trong Git, OTA manifest hoặc ZIP release.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.10 tắt WAKEUP
-`HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
-`bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
-`chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
-720p30, 8000 kbps.
+Sanitizer lọc:
 
-**Đã xác nhận thành công trên máy thật ngày 2026-09-23:** sau khi pair lại đúng
-protocol pre-10, Smart Pro S hiển thị màn hình PS4 Pro GoldHEN 9.00, nhận input
-và chơi game qua LAN được. Chất lượng ban đầu khá ổn nhưng drop FPS xảy ra khá
-nhiều. P2 kết nối/stream cơ bản đã đóng; công việc tiếp theo là profiling và tune
-decode/render/network để giảm drop FPS.
+- GitHub token, password và secret.
+- `regist_key`, `rp_key`, PSN Account ID/Online ID.
+- Host name/address và private IP.
+- MAC address, serial number, chip ID và machine-id.
 
-Issue `#2` cho thấy phiên kết nối thành công có `rendered=338`, `lost=21`, bitrate
-mục tiêu 8000 kbps nhưng bitrate đo được chỉ khoảng 1,96–2,89 Mbps, RTT khoảng
-946–988 ms, kèm nhiều FEC failure/missing unit/IDR request. Bằng chứng hiện tại
-nghiêng mạnh về packet loss/độ trễ mạng; đồng thời `CHIAKI_LOG_ALL` và `fflush`
-từng dòng xuống thẻ SD là tải phụ đáng kể. v0.3.3 xử lý phần tải log/render có thể
-sửa trong app và bổ sung số đo để kiểm chứng phần mạng trên thiết bị.
+Identity gửi lên Issue:
 
-**Kết quả các phiên test ngày 2026-09-23:** renderer của mọi phiên là
-`opengles2 accelerated=1 vsync=1`; không có bằng chứng fallback software.
+- Model đã làm sạch.
+- `CHI-xxxx`: ID ngẫu nhiên lưu trong settings của bản cài/thẻ.
+- `HW-xxxxxxxxxxxx`: SHA-256 pseudonym từ nguồn phần cứng ưu tiên.
+- `APP-xxxxxxxxxxxx`: fallback nếu không có ID phần cứng.
 
-- Issue `#4`, 960x540@30, 4000 kbps: `5304/0/0` rendered/lost/FEC, phần lớn
-  29–30 FPS. Đây là profile ổn định nhất và khớp cảm nhận chơi khá mượt.
-- Issue `#5`, 960x540@60, 6000 kbps: `8142/20/0`, phần lớn 57–60 FPS nhưng có
-  cảnh báo codec buffer đầy. FEC bằng 0 nên phần drop nhỏ này thuộc decode/render.
-- Issue `#6`, 1280x720@30, 4000 kbps: phiên riêng kết thúc khoảng `2731/0/0`,
-  phần lớn gần 30 FPS. 720p30 chạy được nhưng ít dư địa hơn 540p.
-- Issue `#15`, 1280x720@60 (profile bị cắt khỏi tail Issue, suy ra từ chuỗi test,
-  first frame và FPS): `4897/343/47`, FPS trung bình khoảng 51,5. Đây là lỗi hỗn
-  hợp: FEC/network và decoder backlog cùng xuất hiện.
-- Issue `#17`, 1920x1080@30: `1672/391/88`, khoảng 12,8–25,9 FPS, trung bình
-  19,6. Ngay cả cửa sổ FEC=0 cũng có FPS thấp; 1080p vượt khả năng decode/render
-  hiện tại, sau đó packet loss/IDR làm tình hình nặng thêm.
-- Issue `#18`, phiên trước, ghi 960x540@60 **15000 kbps**: `2838/202/50`, trung
-  bình khoảng 47,2 FPS; bitrate cao gây FEC/IDR dù độ phân giải thấp.
-- Issue `#19` là lần kết nối thất bại do PS4 reset Ctrl, không phải phiên đo
-  chất lượng.
-- Issue `#20`, 960x540@60/15000, đạt khoảng `40798/1357/295` rendered/lost/FEC;
-  nhiều FEC, IDR và decoder-buffer warning, nên profile này không phù hợp.
-- Issue `#21`, 1280x720@30/4000, đạt `6565/2/0` rendered/lost/FEC và native cuối
-  `6654/2`; FPS ổn định 29,8–30,0 trong các cửa sổ chạy, là profile ưu tiên.
-- Issue `#29/#30`, v0.3.9: PS4 ở Rest Mode vẫn không phản hồi unicast hoặc
-  broadcast WAKEUP. Sau khi bật PS4 bằng tay, discovery chuyển từ 0 lên 1 host
-  trong khoảng 9 giây. Lần stream đầu sau đó lỗi Ctrl và giữ lease phía PS4;
-  `#31-#33` báo Remote Play đang được dùng. Khoảng hai phút sau, `#34` kết nối
-  thành công ở 540p60/6000: `3430 rendered / 2 lost / 0 FEC`, phần lớn 57-59 FPS.
-  Đây là lease PS4 đã thấy từ v0.3.5, không phải thời gian chờ mới của WAKEUP.
+Máy Brick Pro đang thử có `sun50iw10 / CHI-E545 / HW-C3A2FEFAB3F5`.
 
-`StreamConnection measured bitrate` dùng đơn vị **MBit/s**, không phải MB/s và
-chỉ là bitrate video nhận được trong cửa sổ thống kê; nó không đo giới hạn
-throughput Wi-Fi. Các Issue v0.3.5 không có dòng measured bitrate đáng tin để kết
-luận băng thông tối đa, nên không suy diễn từ bitrate mục tiêu 4000–15000 kbps.
+Không report:
 
-Sau khi thoát một phiên, Issue `#7` cho thấy session request kế tiếp thành công
-nhưng Ctrl bị PS4 reset. Issue `#8`–`#14`, thử lại cách nhau khoảng 13–20 giây,
-đều bị `Remote Play on Console is already in use`; khoảng hai phút sau `#15` mới
-kết nối lại. Phiên trước đã log gửi Disconnect, đóng Takion và dừng Ctrl sạch,
-nên hiện tượng này được xem là lease Remote Play phía PS4 chưa nhả, không phải
-lỗi pair/key. Chưa sửa session; khi đổi profile cần chờ khoảng hai phút rồi thử
-lại để tránh tạo hàng loạt Issue lỗi tạm thời.
+- Scan bình thường trả `0 host`.
+- User cancel/user exit.
+- Source OTA trung gian lỗi nhưng fallback thành công.
+- Cùng fingerprint/reason đã upload thành công.
 
-### 4.5 P1 — Tự gửi log GitHub — ĐÃ XÁC NHẬN TRÊN MÁY THẬT
-Người dùng đã cấu hình `Apps/Chiaki/secrets.json` bằng fine-grained token chỉ có
-quyền Issues. App đã tự tạo Issue `#1` và `#2` trong repo, xác nhận marker crash,
-lọc dữ liệu và retry startup hoạt động end-to-end. Không cần gửi hai file log bằng
-tay trong các lần lỗi tiếp theo, trừ khi uploader mất token hoặc mất mạng kéo dài.
+Report:
 
-### 4.6 P0 — Quét PS4/PS5 luôn trả 0 host — ĐÃ SỬA TRONG v0.2.11
-**Triệu chứng:** dù PS4 Pro bật cùng WiFi, `QUÉT MÁY PS4/PS5` luôn báo `0 host` (log 3 lần đều 0).
-**Nguyên nhân gốc (đối chiếu `E:\Trimiu Brick Pro\Project APPS\chiaki-ng-tmp\lib\include\chiaki\discovery.h`):**
-`CHIAKI_DISCOVERY_PORT_PS4=987`, `PORT_PS5=9302` là cổng **đích** gửi SRCH; `9303-9319` chỉ là cổng **nguồn** để nhận phản hồi.
-Code cũ gửi SRCH tới chính `9303-9308` (cổng nguồn) nên packet không bao giờ tới PS4/PS5.
-**Đã sửa:** `files/rh/chiaki.py` gửi SRCH tới `987`/`9302` với socket nguồn bind `9303-9319`, packet `SRCH ...\n...\n\x00`
-khớp `chiaki_discovery_packet_fmt`, parser chấp nhận `\r\n`/`\n` và mã `200`/`620`. Thêm 5 test trong
-`tests/test_release_and_logs.py` (packet format, dest ports, parse ready/standby). 23/23 pass.
-**Việc còn lại:** cập nhật lên `v0.2.11` rồi test lại `QUÉT MÁY PS4/PS5` với PS4 Pro trong cùng mạng
-(tắt Bluetooth trên TrimUI để tránh nhiễu WiFi).
+- Crash/exit bất thường.
+- Thất bại OTA cuối cùng.
+- Settings load/save/callback lỗi.
+- Discovery socket exception.
+- Pair registration/screen/save lỗi.
+- Native helper thiếu hoặc chuẩn bị stream lỗi.
+- `native_stream_quality` sau phiên stream để theo dõi hiệu năng.
 
-## 5. Cách cài / cập nhật
+## 6. Pair, discovery và stream
 
-- **Lần đầu:** tải `trimui-chiaki-ng-vX.Y.Z.zip` từ Releases, giải nén trực tiếp vào gốc thẻ nhớ
-  -> có `Apps/Chiaki/launch.sh`.
-- **OTA:** trong app -> `CẬP NHẬT` -> `CÀI NGAY`. Từ v0.2.4 trở đi OTA dùng tag bất biến.
-- **Log thủ công:** lấy `Apps/Chiaki/Chiaki-loi.txt` + `Chiaki-debug.log` trên thẻ gửi cho dev
-  nếu chưa cấu hình token.
+### Discovery
 
-## 6. Lệnh nhanh cho session mới
+- PS4 destination port `987`; PS5 destination port `9302`.
+- Source socket bind `9303–9319`.
+- SRCH packet dùng LF và byte NUL cuối, parser chấp nhận LF/CRLF.
+- Chỉ host đang phản hồi xuất hiện trong UI từ `v0.3.10`.
+
+### PS4 registration
+
+- PS4 firmware 9.00 dùng LAN PIN và protocol pre-10.
+- Không kết nối PSN.
+- Chỉ báo thành công khi response có khóa thật cần thiết.
+- `stub-rp-key-*` đã bị loại bỏ.
+- Pair/session đã chạy thật từ `v0.3.0-beta.1` và stream từ `v0.3.2`.
+
+### Input và thoát stream
+
+- SDL GameController A/B/X/Y đã xác nhận đúng từ `v0.3.6`.
+- Khi controller attached, JOY fallback không tạo double input.
+- START+SELECT khoảng 1,2 giây dừng native stream và quay lại app.
+- Có fallback physical button 8/9 cho firmware TrimUI.
+
+### Chất lượng đã đo
+
+- `720p30/4000` — Issue `#21`: khoảng `6565 rendered / 2 lost / 0 FEC`,
+  FPS 29,8–30,0; đây là baseline.
+- `540p60/15000` — Issue `#20`: khoảng
+  `40798 rendered / 1357 lost / 295 FEC`; không khuyến nghị.
+- 1080p chỉ là bài test tải vì màn mục tiêu 1280×720.
+- Measured bitrate trong log là MBit/s video nhận được, không phải throughput
+  tối đa của Wi-Fi.
+
+PS4 có thể giữ Remote Play lease khoảng hai phút sau khi client shutdown. Chờ
+trước khi kết nối lại để tránh nhiều Issue `already in use`.
+
+## 7. WAKEUP
+
+Lịch sử:
+
+- `v0.3.7`: host paired offline và WAKEUP.
+- `v0.3.8`: packet khớp upstream, source port đúng, timeout diagnostic.
+- `v0.3.9`: broadcast LAN và retry hai vòng.
+- Issue `#26–#30`: console vẫn không phản hồi trong môi trường thật.
+- `v0.3.10`: tắt WAKEUP/offline host trong UI, trở lại bật PS4 bằng tay.
+
+Không tiếp tục sửa packet nếu không có môi trường mạng/console khác chứng minh
+WAKEUP có thể hoạt động.
+
+## 8. Brick Pro và exFAT
+
+### Kết quả đã xác nhận
+
+- Cài tay `v0.3.11` sửa CA/TLS.
+- OTA `v0.3.11 → v0.3.12` thành công.
+- OTA `v0.3.12 → v0.3.13` thành công qua Raw fallback sau lỗi DNS Release URL.
+- App `v0.3.13` log đúng identity máy.
+- Không có pending marker/Issue cho source lỗi trung gian.
+
+### Duplicate directory
+
+Hai thư mục `Chiaki` cùng tên là hỏng directory entry exFAT sau rút cáp khi I/O.
+`chkdsk D: /F` sửa filesystem và đổi entry trùng thành `CHIAKI-1`. Cài sạch rồi
+OTA lại không tái hiện. Đây không được coi là updater tự tạo thư mục.
+
+## 9. Lịch sử release rút gọn
+
+| Version | Thay đổi chính |
+|---|---|
+| `v0.2.10` | Sửa A/B trong settings và UI cơ bản |
+| `v0.2.11` | Sửa discovery destination ports |
+| `v0.3.0-beta.1` | Pair PS4 thật bằng PIN/pre-10 |
+| `v0.3.2` | Stream PS4 thật hoạt động |
+| `v0.3.3` | Giảm tải I/O/render và quality metrics |
+| `v0.3.4` | Quản lý log và START+SELECT |
+| `v0.3.5` | Sửa modal nhận lại nút đang giữ |
+| `v0.3.6` | Sửa mapping A/B/X/Y native |
+| `v0.3.7–v0.3.9` | Thử WAKEUP unicast/broadcast |
+| `v0.3.10` | Tắt WAKEUP, giữ active-host flow |
+| `v0.3.11` | CA/TLS verified cho Brick Pro |
+| `v0.3.12` | Không popup update cùng version |
+| `v0.3.13` | Device-specific runtime/OTA Issues và fsync |
+| `v0.3.14` | Không cảnh báo giả khi fallback OTA thành công |
+
+## 10. Kiểm thử và build gate
+
+Lệnh chuẩn:
 
 ```powershell
-Set-Location 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng'
 python -m compileall -q files tools tests
 python -m unittest discover -s tests -v
-python tools/make_release.py; python tools/verify_release.py
+python tools/make_release.py
+python tools/verify_release.py
+git diff --check
 ```
 
-Phát hành tag mới (vd v0.2.11):
+69 unittest bao phủ:
 
-```powershell
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' fetch origin
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' add files tests tools README.md docs manifest.json
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' commit -m 'fix: discovery sends SRCH to ports 987/9302 in v0.2.11'
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin main
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' tag -a v0.2.11 -m 'v0.2.11: fix PS4/PS5 discovery'
-git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
-```
+- TLS context và CA fallback.
+- OTA version/fallback/hash/settings exclusion.
+- Uploader sanitize/dedupe/pending concurrency/identity.
+- Reproducible release bytes trên Windows/Linux.
+- Discovery packet/ports/parser.
+- Registration crypto và target validation.
+- Input mapping, settings/modal edges và home flow.
+- Native launcher không đưa khóa vào script.
 
-## 7. File quan trọng
+Verifier kiểm:
 
-- `files/rh/inputs.py` — **nguyên nhân gốc P0**: map nút GameController + gate JOY*
-- `files/rh/screens/settings.py` — logic A đổi giá trị / B thoát, ưu tiên `btn_b` trước `btn_a`
-- `files/rh/screens/home.py` — header version
-- `files/rh/updater.py` — OTA + log mạng
-- `files/rh/log_uploader.py` — auto Issue
-- `tools/make_release.py` / `tools/verify_release.py` — build gate
-- `tests/test_release_and_logs.py` — 69 tests
-- `E:\Trimiu Brick Pro\Project APPS\repohubtool\files\rh\inputs.py` — tham chiếu chuẩn cho mapping nút
+- Tag/version/base URL.
+- CA checksum và ELF64 AArch64.
+- Manifest source hash và từng payload trong ZIP.
+- ZIP/sidecar SHA-256.
+- File bắt buộc và file cấm.
+- `settings.json` mặc định không có generated device ID.
 
+## 11. Việc tiếp theo
 
-## 8. Bước kiểm thử tiếp theo
-
-1. Nếu muốn bài test sạch, vào **Cài đặt → XÓA LOG CŨ → A → Có**.
-2. Dùng `720p30/4000` làm baseline đã xác nhận; chơi ít nhất 2 phút rồi giữ
-   START+SELECT 1,2 giây.
-3. Sau khi về menu, chờ khoảng hai phút trước khi bắt đầu profile khác để PS4
-   nhả lease Remote Play; không pair lại và không tắt PS4.
-4. Từ `v0.3.10`, bật PS4 bằng tay, chờ auto-login rồi quét. Nếu chưa thấy máy,
-   chờ thêm và quét lại. Không còn host `[offline]` hoặc nút WAKEUP.
-5. Không ưu tiên 1080p hoặc 15000 kbps trên màn 720p; số liệu v0.3.5 đã chứng
-   minh chúng tăng tải mà không đem lại độ phân giải hiển thị cao hơn.
-
-Lưu ý phần cứng: RAM 1 GB và màn 720p, nên 720p30 vẫn là cấu hình ưu tiên.
+1. Test OTA Brick Pro `v0.3.13 → v0.3.14`.
+2. Xác nhận lỗi source trung gian chỉ ở debug log mức INFO và không vào
+   `Chiaki-loi.txt` khi fallback thành công.
+3. Xác nhận một Issue lỗi thật từ Brick Pro có model/`CHI`/`HW` và không lộ raw
+   identifier hoặc secret.
+4. Test native stream/input/audio trên Brick Pro.
+5. Giữ baseline Smart Pro S `720p30/4000`; không sửa pair/native nếu không có
+   log chứng minh regression.

@@ -1,150 +1,172 @@
-# Cài đặt trimui-chiaki-ng vào TrimUI Smart Pro S
+# Cài đặt trimui-chiaki-ng trên TrimUI
+
+Hướng dẫn này áp dụng cho `v0.3.14`, dùng chung cho TrimUI Smart Pro S/Spruce
+OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
 
-- Smart Pro S chạy firmware Linux custom 1.1.1 (TG5050), đã có sẵn:
-  - Python 3.10+
-  - `libSDL2.so`, `libSDL2_ttf.so` (ở `/usr/lib64` hoặc `/usr/lib`)
-  - `libopus.so`, `libcurl.so` (ở `/usr/lib`)
-- Thẻ nhớ micro SD format FAT32 hoặc exFAT
-- Quyền ghi vào thư mục `Apps/` trên thẻ
+- Máy TrimUI Linux có Python 3.10+.
+- SDL2/SDL2_ttf, Opus và các thư viện hệ thống cần bởi native helper.
+- Thẻ microSD FAT32 hoặc exFAT có quyền ghi vào `Apps/`.
+- PS4/PS5 và máy TrimUI ở cùng LAN khi quét/ghép nối.
 
-## Cài bản GitHub Release
+Native helper đi kèm là ELF64 AArch64. Smart Pro S/TG5050 đã được xác nhận
+stream PS4 thật. Brick Pro Stock OS đã xác nhận app, TLS và OTA đến `v0.3.13`;
+stream native trên Brick Pro vẫn cần thêm kiểm thử máy thật.
 
-**Nếu máy đang có v0.2.0/v0.2.1 lỗi `ModuleNotFoundError: No module named
-'sdl2'`, hãy xoá thư mục cũ trước khi cài.**
+## Cài GitHub Release
 
-1. Tải `trimui-chiaki-ng-vX.Y.Z.zip` tại
-   `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-   Không tải mục **Source code** do GitHub tự tạo.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
+2. Tải `trimui-chiaki-ng-v0.3.14.zip`. Không tải **Source code**.
+3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
+4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
-2. Tháo thẻ khỏi máy và cắm vào PC. Nếu đang dùng bản v0.2.0/v0.2.1, xoá
-   thư mục `Apps/Chiaki/` cũ.
-
-3. Giải nén ZIP vào thư mục gốc của thẻ. Không tạo thêm một lớp thư mục mang
-   tên file ZIP.
-
-   Nội dung cuối cùng phải có:
-   ```
+   ```text
    Apps/Chiaki/
      app.py
      config.json
      launch.sh
-     bin/chiaki-stream   (ELF AArch64 bắt buộc)
      settings.json
-     rh/                  (engine.py, chiaki.py, updater.py, ...)
-     vendor/
-       sdl2/              (50 file .py - bắt buộc có)
+     assets/
+     bin/chiaki-stream
+     certs/cacert.pem
+     rh/
+     vendor/sdl2/
    ```
 
-4. Lắp thẻ lại vào máy, vào **Apps** → **Chiaki-ng**.
+5. Eject thẻ an toàn, lắp lại và mở **Apps → Chiaki-ng**.
 
-## Thử stream PS4 LAN
+Nếu đang dùng bản rất cũ thiếu `vendor/sdl2`, nên xóa thư mục `Apps/Chiaki/` cũ
+trước khi giải nén. Không xóa `settings.json`, `paired_hosts.json` hoặc
+`secrets.json` của bản đang hoạt động nếu muốn giữ cấu hình, khóa ghép nối và
+token; hãy backup chúng trước khi cài sạch.
 
-Luồng này đã được xác nhận thành công trên Smart Pro S thật với PS4 Pro firmware
-9.00 GoldHEN và `v0.3.2`: có hình PS4 trên máy cầm tay và chơi được qua LAN.
-`v0.3.10` tắt WAKEUP và host offline sau khi thử nghiệm v0.3.7-v0.3.9 cho thấy
-PS4 Wi-Fi/GoldHEN không phản hồi packet đánh thức. Luồng quét/kết nối trở lại như
-v0.3.6. Mapping A/B/X/Y và pair/session vẫn được giữ nguyên.
-`v0.3.5` giữ nguyên pair/session đã chạy tốt, sửa hộp xóa log bị nháy/tự đóng,
-đồng thời kế thừa quản lý log an toàn và tổ hợp thoát stream của v0.3.4.
-Ứng dụng không cần PSN.
+## Trường hợp Brick Pro trước v0.3.11
 
-1. Đặt PS4 và Smart Pro S cùng Wi-Fi/LAN 5 GHz.
-2. Với PS4 firmware 9.00 GoldHEN, không cần và không được đăng nhập PSN. Sau khi
-   cập nhật từ v0.3.1, bấm **Y** và nhập PIN lại đúng một lần để tạo khóa pre-10.
-3. Bật PS4 bằng nút nguồn hoặc tay cầm thật, chờ auto-login rồi mở app để quét.
-   App chỉ hiện máy đang phản hồi. Nếu chưa thấy PS4, chờ thêm rồi quét lại;
-   sau khi thấy máy, chọn máy và bấm A để kết nối.
-4. Bắt đầu bằng profile đã xác nhận tốt `720p`, 30 FPS, 4000 kbps. Nếu cần giảm
-   tải, dùng `540p`, 30 FPS, 4000 kbps. Chỉ thử profile khác để so sánh; không
-   dùng 15000 kbps làm cấu hình thường xuyên vì test thực tế cho thấy
-   FEC/lost/IDR tăng mạnh.
-5. Giữ **START + SELECT** khoảng 1,2 giây để thoát stream về menu app.
-   Dòng hướng dẫn màu xanh luôn hiện trên màn hình chính. Không cần tắt PS4.
-6. Sau khi thoát bình thường, app tự tạo Issue `native_stream_quality` khi token
-   đã được cấu hình. Issue có thống kê 5 giây gồm `fps`, `rendered`, `lost`, `fec`
-   và renderer. Nếu chưa có token, chép cả `Chiaki-debug.log` và
-   `Chiaki-loi.txt`. Dòng `native stream preflight` sẽ liệt kê thư viện thiếu.
+Nếu log có `CERTIFICATE_VERIFY_FAILED` và app cũ hơn `v0.3.11`, phải cài ZIP
+`v0.3.11` hoặc mới hơn bằng tay một lần. Updater cũ phụ thuộc CA hệ thống của
+Stock OS nên không thể tải chính bản vá CA.
+
+Từ `v0.3.11`, app dùng thêm `certs/cacert.pem` nhưng vẫn giữ
+`ssl.CERT_REQUIRED` và hostname verification. Không xóa CA bundle và không sửa
+mã để dùng `CERT_NONE` hoặc unverified context.
 
 ## Cập nhật OTA
 
-Nếu Brick Pro Stock OS đang chạy bản trước v0.3.11 và log có
-`CERTIFICATE_VERIFY_FAILED`, hãy tải và giải nén ZIP v0.3.11 thủ công một lần.
-Bản cũ không thể OTA lên bản vá vì chưa có CA để tải manifest. Từ v0.3.11, OTA
-và GitHub Issue uploader dùng thêm Mozilla CA bundle nhưng vẫn bắt buộc xác minh
-certificate và hostname. Smart Pro S/Spruce OS tiếp tục dùng cùng gói cài đặt.
+Mỗi lần vào màn hình chính, app kiểm tra manifest của GitHub Release mới nhất và
+các URL dự phòng. Khi có version mới:
 
-Mỗi lần khởi động app sẽ kiểm tra GitHub Release mới. Nếu có bản mới, popup
-hiện ra để chọn:
+- **CÀI NGAY**: tải các file thay đổi, kiểm SHA-256, cài và restart.
+- **ĐỂ SAU**: đóng popup; lần mở sau app hỏi lại.
+- **BỎ QUA**: lưu version vào `skipped_versions`.
 
-- **CÀI NGAY**: tải về ~30s, tự kiểm tra `sha256`, ghi đè vào chỗ thật, restart.
-- **ĐỂ SAU**: đóng popup, lần sau mở app sẽ hỏi lại.
-- **BỎ QUA**: ghi vào `skipped_versions`, không hỏi nữa cho bản đó.
+Từ `v0.3.14`, lỗi DNS/TLS/mạng của một nguồn không phải lỗi kết thúc nếu fallback
+thành công. Trường hợp đó chỉ ghi `INFO`, không gửi Issue. Chỉ khi mọi nguồn đều
+thất bại app mới ghi `WARNING`, hiển thị lỗi kiểm tra cập nhật và tạo report.
 
-## Bật tự gửi crash log
+Updater không ghi đè `settings.json`, `secrets.json`, log hoặc marker runtime.
+File tải về được ghi vào staging, kiểm hash, `fsync` và thay atomically;
+`rh/version.py` được thay cuối. Không rút cáp hoặc tháo thẻ trong quá trình này.
 
-GitHub yêu cầu xác thực khi tạo Issue. Tạo fine-grained token chỉ cấp quyền
-**Issues: Read and write** cho riêng repo `nlkcodenew/trimui-chiaki-ng`.
+## Ghép nối và stream PS4
 
-1. Copy `Apps/Chiaki/secrets.example.json` thành `Apps/Chiaki/secrets.json`.
-2. Điền token vào trường `github_token`.
-3. Không gửi token cho người khác và không đăng nội dung file lên Issue/chat.
+Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro S:
 
-Token chỉ nằm trên thẻ nhớ; OTA và Release không đọc, ghi đè hoặc đóng gói file
-này. Từ v0.3.13, crash và lỗi vận hành kết thúc thật sự (OTA, lưu settings,
-discovery socket, pair, chuẩn bị stream) được lọc rồi tạo GitHub Issue. Nếu mất
-mạng, app giữ các nguyên nhân pending và thử lại ở lần mở sau. Issue có mã cài
-đặt `CHI-xxxx`, model và mã phần cứng băm `HW-xxxxxxxxxxxx`; không chứa serial,
-MAC, token hoặc khóa thật. Quét 0 host không được coi là lỗi.
+1. Bật PS4 bằng nút nguồn hoặc tay cầm và chờ auto-login.
+2. Dùng LAN hoặc Wi-Fi 5 GHz; tắt Bluetooth nếu cần giảm nhiễu.
+3. Mở app và quét. App chỉ hiện console đang phản hồi.
+4. Nếu chưa có khóa pre-10, chọn console, bấm **Y**, mở màn hình PIN Remote Play
+   trên PS4 và nhập đủ 8 số.
+5. Quét lại, chọn console đã ghép và bấm **A**.
+6. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và quay lại app.
 
-Không rút cáp USB hoặc tháo thẻ khi máy/Windows đang đọc ghi. exFAT không có
-journal; ngắt kết nối giữa lúc ghi có thể tạo hai directory entry trùng tên.
-Updater có `fsync` file/thư mục để giảm cửa sổ chưa flush nhưng không thể bảo vệ
-khỏi việc rút cáp vật lý đang ghi.
+Không cần PSN cho PS4 firmware 9.00 trong luồng này. Không đăng PIN, Account ID,
+`regist_key` hoặc `rp_key` lên chat/Issue.
 
-Luồng này đã được xác nhận hoạt động trên máy thật ngày 2026-09-23: thiết bị đã
-tự tạo Issue trong repo sau khi `secrets.json` được cấu hình đúng.
+Profile khuyến nghị:
 
-## File log cục bộ
+- Baseline: `720p`, `30 FPS`, `4000 kbps`.
+- Fallback: `540p`, `30 FPS`, `4000 kbps`.
+- Không ưu tiên `15000 kbps`, 60 FPS hoặc 1080p trên màn 720p.
 
-Khi app chạy, 2 file log nằm ngay trong `Apps/Chiaki/`:
+Nếu PS4 báo Remote Play đang được dùng sau một lần thoát/kết nối lỗi, chờ khoảng
+hai phút để console nhả lease rồi thử lại; không bấm kết nối liên tục.
 
-- `Chiaki-loi.txt` - lỗi + cảnh báo, xoay vòng 3 file backup 256 KB
-- `Chiaki-debug.log` - toàn bộ hoạt động, xoay vòng 1 file backup 512 KB
+## Tự gửi lỗi lên GitHub
 
-Native stream ghi handshake, trạng thái audio/video, số frame mất, FEC, FPS và
-exit code vào hai file trên. Log packet/frame lặp lại bị tắt mặc định để tránh I/O
-thẻ nhớ làm giảm FPS. PIN và khóa ghép nối không được ghi vào log.
+1. Tạo fine-grained GitHub token chỉ có quyền **Issues: Read and write** cho
+   `nlkcodenew/trimui-chiaki-ng`.
+2. Copy `Apps/Chiaki/secrets.example.json` thành
+   `Apps/Chiaki/secrets.json` — đúng một dấu chấm trước `json`.
+3. Điền token vào `github_token` và giữ file trên thẻ.
 
-App đã có xoay vòng log. Từ v0.3.4, launcher còn giới hạn lại kích thước sau mỗi
-phiên native. Để có log sạch cho một bài test, vào **Cài đặt → XÓA LOG CŨ → A →
-Có**. App không cho xóa nếu `.pending_crash` cho biết vẫn còn báo cáo chưa gửi.
-Khi chọn **THOÁT**, launcher thử gửi lại report pending trước khi đóng ứng dụng.
+Release/OTA không đóng gói hoặc ghi đè `secrets.json`. App lọc token, password,
+khóa ghép nối, PSN ID, IP nội bộ, MAC, serial và chip ID trước khi gửi.
 
-Format mỗi dòng: `[YYYY-MM-DD HH:MM:SS.mmm] [LEVEL] [Thread] module - message`
+Từ `v0.3.13`, report có:
 
-`enable_logging` chỉ điều khiển debug Python. Chỉ đặt biến môi trường
-`CHIAKI_NATIVE_VERBOSE=1` khi thật sự cần trace native đầy đủ vì chế độ này có thể
-làm giảm FPS. Nếu không cấu hình tự gửi, copy hai file để gửi thủ công.
+- Model thiết bị, ví dụ `sun50iw10`.
+- ID cài đặt/thẻ `CHI-xxxx`.
+- ID phần cứng băm `HW-xxxxxxxxxxxx`.
+- Version, loại lỗi, fingerprint và phần cuối log đã lọc.
 
-## Đọc báo cáo chất lượng
+ID `RH-xxxx` của RetroHub không phải serial phần cứng. Nếu không đọc được nguồn
+phần cứng, app dùng fallback `APP-...` dựa trên ID cài đặt thay vì gửi raw ID.
 
-Mỗi dòng `quality` bao phủ khoảng 5 giây:
+Các lỗi được báo gồm thất bại OTA cuối cùng, lỗi lưu settings, socket discovery,
+pair, chuẩn bị stream và crash. App không báo quét `0 host`, thao tác hủy, thoát
+bình thường hoặc một nguồn OTA lỗi nhưng fallback thành công.
+
+## Log cục bộ
+
+Các file chính trong `Apps/Chiaki/`:
+
+- `Chiaki-debug.log`: log đầy đủ, xoay vòng và giữ tail.
+- `Chiaki-loi.txt`: stderr/cảnh báo/lỗi quan trọng.
+- `.pending_crash`: các loại lỗi chưa gửi được.
+- `.log_upload_state.json`: fingerprint và URL Issue gần nhất.
+
+Để bắt đầu bài test sạch, chọn **Cài đặt → XÓA LOG CŨ → A → Có**. App từ chối
+xóa nếu còn report pending. Khi chọn **THOÁT**, launcher thử gửi pending trước
+khi đóng.
+
+Một dòng chất lượng native có dạng:
 
 ```text
 [native] quality: rendered=150 lost=0 fec=0 fps=30.0 suppressed=0 totals=...
 ```
 
 - `fps` gần mức đặt và `fec/lost=0`: decode/render đang theo kịp.
-- `fec` hoặc `lost` tăng: ưu tiên giảm bitrate, dùng Wi-Fi 5 GHz và tắt Bluetooth.
-- 1080p vẫn được thu nhỏ về màn 1280×720; đây là bài test tải decoder/GPU.
+- `fec` hoặc `lost` tăng: giảm bitrate, ưu tiên 5 GHz và tắt Bluetooth.
+- `native stream preflight`: liệt kê thư viện hoặc điều kiện thiếu trước stream.
+
+## An toàn thẻ nhớ
+
+Không rút dây USB hoặc tháo thẻ khi máy/PC đang đọc ghi. exFAT không có journal;
+ngắt giữa lúc I/O có thể tạo hai directory entry cùng tên. Nếu xảy ra:
+
+1. Dừng mọi thao tác ghi.
+2. Chạy `chkdsk <ổ>: /F` trên Windows.
+3. Chỉ xóa/copy lại thư mục sau khi filesystem đã được sửa.
+
+Updater dùng `fsync` để giảm rủi ro nhưng không thể chống việc ngắt vật lý khi
+đang ghi.
 
 ## Gỡ lỗi nhanh
 
-**Crash `ModuleNotFoundError: No module named 'sdl2'`**: bản cũ chưa bundle
-pysdl2. Xoá `Apps/Chiaki/` rồi giải nén bản Release mới nhất vào gốc thẻ.
+**Không thấy bản cập nhật:** kiểm tra `Chiaki-debug.log`. Một dòng
+`source unavailable; trying fallback` ở mức INFO không phải lỗi nếu sau đó có
+`OTA manifest ready`. Chỉ dòng `OTA manifest unavailable after ...` mới là thất
+bại cuối cùng.
 
-**Crash `ImportError: PySDL2 not loaded`**: firmware TrimUI thiếu `libSDL2.so`. Cập nhật firmware lên 1.0.4 trở lên (có sẵn libSDL2 2.30.8).
+**`ModuleNotFoundError: No module named 'sdl2'`:** cài ZIP Release đầy đủ, không
+dùng Source code và đảm bảo `Apps/Chiaki/vendor/sdl2/` tồn tại.
 
-**App không khởi động, không log gì**: kiểm tra `/mnt/SDCARD/Chiaki-loi.txt` hoặc `Apps/Chiaki/Chiaki-loi.txt` có mới không. Nếu rỗng, kiểm tra quyền thực thi của `launch.sh`.
+**`ImportError: PySDL2 not loaded`:** firmware thiếu hoặc không tìm thấy
+`libSDL2.so`; cập nhật firmware hoặc kiểm tra library path của OS.
+
+**App không khởi động:** kiểm tra `Apps/Chiaki/Chiaki-loi.txt`, file log ở gốc
+thẻ nếu launcher dùng fallback, quyền thực thi `launch.sh` và Python 3.10+.
+
+**Hai thư mục Chiaki cùng tên:** đây có thể là hỏng directory entry exFAT do
+ngắt cáp khi I/O, không phải updater cố ý tạo thư mục thứ hai. Chạy `chkdsk` trước.
