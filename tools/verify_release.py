@@ -84,6 +84,12 @@ def verify_aarch64_elf(path, label):
         fail("%s is not an AArch64 binary" % label)
 
 
+def verify_symbol_version(path, version, label):
+    with open(path, "rb") as handle:
+        if version.encode("ascii") not in handle.read():
+            fail("%s does not contain symbol version %s" % (label, version))
+
+
 def main():
     manifest_path = os.path.join(ROOT, "manifest.json")
     with open(manifest_path, encoding="utf-8") as handle:
@@ -109,6 +115,7 @@ def main():
 
     native_path = os.path.join(FILES_DIR, "bin", "chiaki-stream")
     verify_aarch64_elf(native_path, "chiaki-stream")
+    verify_symbol_version(native_path, "OPENSSL_1_1_1", "chiaki-stream")
 
     runtime_dir = os.path.join(FILES_DIR, "libs", "brick-stock")
     for name, expected_hash in sorted(BRICK_RUNTIME.items()):
@@ -116,6 +123,9 @@ def main():
         verify_aarch64_elf(runtime_path, "Brick runtime %s" % name)
         if sha256_file(runtime_path) != expected_hash:
             fail("Brick runtime checksum mismatch: %s" % name)
+    for name in ("libcrypto.so.1.1", "libssl.so.1.1"):
+        verify_symbol_version(
+            os.path.join(runtime_dir, name), "OPENSSL_1_1_1", "Brick runtime %s" % name)
 
     listed = set()
     for item in manifest.get("files", []):

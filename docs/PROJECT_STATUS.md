@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.15
+# trimui-chiaki-ng — trạng thái dự án v0.3.16
 
 > Cập nhật: 2026-09-24. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
@@ -7,20 +7,20 @@
 
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.15` |
-| Tag | `v0.3.15` |
+| Latest | `v0.3.16` |
+| Tag | `v0.3.16` |
 | OTA files | 125 |
 | ZIP entries | 128 |
-| ZIP SHA-256 | `34fb15de42f6eaacff9b7f867d7e8d036d74d4e0a1270e4037f4168f9cca4379` |
-| Unittest | 71/71 đạt |
+| ZIP SHA-256 | `1e065c9deb69431bf18f658094f6904952df9e868f4d12a0a24eace49b398a4e` |
+| Unittest | 72/72 đạt |
 | Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 GitHub Release có ba asset:
 
 - `manifest.json`.
-- `trimui-chiaki-ng-v0.3.15.zip`.
-- `trimui-chiaki-ng-v0.3.15.zip.sha256`.
+- `trimui-chiaki-ng-v0.3.16.zip`.
+- `trimui-chiaki-ng-v0.3.16.zip.sha256`.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -32,7 +32,7 @@ mới có `settings.json` mặc định với `device_id` rỗng nhưng không c
 |---|---:|---:|---:|---|
 | Smart Pro S/TG5050 | Đã xác nhận | Đã dùng OTA | Đã stream PS4 thật | Baseline chính |
 | Spruce OS | Đã xác nhận | Không thay đổi | Stream tốt ở `v0.3.14` | Issue `#35`, model `sun55iw3` |
-| Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.14` | Pair đạt; stream chờ retest | Issue `#36`/`#37`, model `sun50iw10` |
+| Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.15` | Pair đạt; stream chờ retest | Issue `#38`, OpenSSL hệ thống quá cũ |
 | PS4 Pro 9.00/GoldHEN | — | — | Pair/session pre-10 đạt | Không cần PSN |
 | PS5/H265 | — | — | Chưa kiểm thử | Không tuyên bố hỗ trợ máy thật |
 
@@ -226,6 +226,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.13` | Device-specific runtime/OTA Issues và fsync |
 | `v0.3.14` | Không cảnh báo giả khi fallback OTA thành công |
 | `v0.3.15` | Runtime AArch64 biệt lập cho Brick Pro Stock OS |
+| `v0.3.16` | Preload OpenSSL 1.1.1 tương thích chỉ cho Brick stream |
 
 ## 10. Kiểm thử và build gate
 
@@ -239,7 +240,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-71 unittest bao phủ:
+72 unittest bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.
@@ -262,9 +263,9 @@ Verifier kiểm:
 
 ## 11. Việc tiếp theo
 
-1. Test OTA Brick Pro `v0.3.14 → v0.3.15`.
-2. Xác nhận preflight ghi `native runtime: brick-stock` và không còn thiếu
-   shared library/exit `127`.
+1. Test OTA Brick Pro `v0.3.15 → v0.3.16`.
+2. Xác nhận preflight ghi `native OpenSSL: bundled 1.1.1` và không còn lỗi
+   `OPENSSL_1_1_1 not found`.
 3. Test native stream/video/audio/input trên Brick Pro; đọc Issue tự động mới.
 4. Nếu còn lỗi ABI/GPU dù dependency closure đầy đủ, tách release theo OS.
 5. Giữ baseline Smart Pro S `720p30/4000`; không sửa pair/native nếu không có

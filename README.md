@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release mới nhất: `v0.3.15`.**
+**Release mới nhất: `v0.3.16`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -20,11 +20,13 @@
   GitHub Issue.
 - `v0.3.15` thêm runtime AArch64 biệt lập cho Brick Pro Stock OS sau khi Issue
   `#36`/`#37` cho thấy pair đã thành công nhưng loader thiếu `libjson-c.so.5`.
+- `v0.3.16` sửa Issue `#38`: Stock OS có OpenSSL 1.1 cũ nhưng thiếu symbol
+  `OPENSSL_1_1_1`; launcher Brick preload đúng OpenSSL 1.1.1 đã đóng gói.
 
 Brick Pro Stock OS đã OTA thành công đến `v0.3.14`. Pair PS4 ở `v0.3.14` cũng
 thành công; kết nối dừng trước khi chạy vì Stock OS thiếu shared library của
-native helper. `v0.3.15` đóng gói dependency closure riêng cho model
-`sun50iw10`; stream/input/audio vẫn cần xác nhận lại trên máy thật.
+native helper. `v0.3.15` đã qua bước thiếu file nhưng chọn nhầm OpenSSL hệ thống
+quá cũ; `v0.3.16` sửa thứ tự này. Stream/input/audio vẫn cần xác nhận lại.
 
 Native binary, pair/session pre-10 và mapping SDL của Smart Pro S/Spruce không
 thay đổi. Model `sun55iw3` tiếp tục dùng library hệ thống; chỉ `sun50iw10` có
@@ -50,14 +52,14 @@ theo OS thay vì làm hỏng nền tảng đang hoạt động.
 |---|---|
 | Smart Pro S/TG5050 | Stream PS4 thật có hình, âm thanh và input |
 | Spruce OS | Stream tốt trên `sun55iw3`; tiếp tục dùng library hệ thống |
-| Brick Pro Stock OS | OTA/pair đạt ở `v0.3.14`; `v0.3.15` chờ test stream |
+| Brick Pro Stock OS | OTA/pair đạt; `v0.3.16` chờ test stream sau lỗi OpenSSL |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
 | PS5/H265 | Có mã hỗ trợ trong helper nhưng chưa được kiểm thử máy thật |
 | WAKEUP PS4 Rest Mode | Đã thử thất bại trên môi trường hiện tại và tắt từ `v0.3.10` |
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.3.15.zip` tại
+1. Tải `trimui-chiaki-ng-v0.3.16.zip` tại
    [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
@@ -119,7 +121,7 @@ chip ID và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.15 reason fingerprint
+[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.16 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.

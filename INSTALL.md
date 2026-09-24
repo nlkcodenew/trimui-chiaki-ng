@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.3.15`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho `v0.3.16`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
@@ -12,12 +12,12 @@ OS và TrimUI Brick Pro Stock OS.
 
 Native helper đi kèm là ELF64 AArch64. Smart Pro S/TG5050 với Spruce OS đã được
 xác nhận stream PS4 thật. Brick Pro Stock OS đã xác nhận app, TLS, OTA và pair
-đến `v0.3.14`; runtime `v0.3.15` vẫn cần kiểm thử stream trên máy thật.
+đến `v0.3.15`; runtime `v0.3.16` vẫn cần kiểm thử stream trên máy thật.
 
 ## Cài GitHub Release
 
 1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.15.zip`. Không tải **Source code**.
+2. Tải `trimui-chiaki-ng-v0.3.16.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -59,6 +59,11 @@ Smart Pro S/Spruce model `sun55iw3` không dùng bundle này và tiếp tục ch
 library hệ thống đã được xác nhận. Chưa cần tách ZIP theo OS; chỉ tách release
 nếu test Brick tiếp theo cho thấy ABI/GPU thực sự không thể dùng chung native
 binary.
+
+Issue `#38` cho thấy `v0.3.15` đã tìm được dependency closure, nhưng loader ưu
+tiên `/usr/lib/libssl.so.1.1` và `/usr/lib/libcrypto.so.1.1` quá cũ, không export
+`OPENSSL_1_1_1`. `v0.3.16` preload đúng hai file OpenSSL 1.1.1 đóng gói chỉ cho
+native stream trên Brick. SDL/FFmpeg vẫn ưu tiên Stock OS; Spruce không preload.
 
 Từ `v0.3.11`, app dùng thêm `certs/cacert.pem` nhưng vẫn giữ
 `ssl.CERT_REQUIRED` và hostname verification. Không xóa CA bundle và không sửa
@@ -154,6 +159,7 @@ Một dòng chất lượng native có dạng:
 - `native stream preflight`: liệt kê thư viện hoặc điều kiện thiếu trước stream.
 - `native runtime: brick-stock`: Brick đã chọn bundle riêng; Spruce phải ghi
   `native runtime: system`.
+- `native OpenSSL: bundled 1.1.1`: Brick đã chọn đúng OpenSSL tương thích.
 
 ## An toàn thẻ nhớ
 

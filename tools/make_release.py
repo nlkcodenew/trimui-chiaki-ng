@@ -154,8 +154,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: thêm runtime biệt lập cho Brick Pro Stock OS; giữ nguyên Spruce." % version,
-            "en": "v%s: add an isolated Brick Pro Stock OS runtime without changing Spruce." % version,
+            "vi": "v%s: buộc Brick dùng OpenSSL 1.1.1 tương thích; giữ nguyên Spruce." % version,
+            "en": "v%s: force the compatible OpenSSL 1.1.1 on Brick without changing Spruce." % version,
         },
         "files": files,
         "remove": [],

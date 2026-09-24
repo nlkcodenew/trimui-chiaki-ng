@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.15
+# Bàn giao session mới — trimui-chiaki-ng v0.3.16
 
 > Cập nhật: 2026-09-24. Đọc file này trước khi tiếp tục dự án.
 
@@ -7,13 +7,13 @@
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`.
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
-- Release mới nhất: `v0.3.15`.
-- Nội dung: runtime biệt lập cho Brick Pro Stock OS, không đổi native.
+- Release mới nhất: `v0.3.16`.
+- Nội dung: preload OpenSSL 1.1.1 tương thích chỉ cho Brick, không đổi native.
 - GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
-- SHA-256 ZIP `v0.3.15`:
-  `34fb15de42f6eaacff9b7f867d7e8d036d74d4e0a1270e4037f4168f9cca4379`.
+- SHA-256 ZIP `v0.3.16`:
+  `1e065c9deb69431bf18f658094f6904952df9e868f4d12a0a24eace49b398a4e`.
 - Manifest có 125 file OTA; ZIP có 128 entry; không có settings/secrets/log.
-- 71/71 unittest đạt; `compileall`, build release và verifier đều đạt.
+- 72/72 unittest đạt; `compileall`, build release và verifier đều đạt.
 - Native SHA-256 vẫn là
   `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.
 
@@ -68,6 +68,12 @@ tồn tại và metadata khi cần.
   model `sun50iw10`, tránh override SDL/video/audio hệ thống của Brick.
 - Spruce `sun55iw3` tiếp tục dùng runtime `system`; Issue `#35` xác nhận stream
   `v0.3.14` vẫn hoạt động tốt.
+
+Issue `#38` ở `v0.3.15` tiến thêm một bước: loader đã tìm đủ thư viện nhưng lấy
+`/usr/lib/libssl.so.1.1` và `libcrypto.so.1.1` của Stock OS. Hai file này có cùng
+SONAME nhưng không export `OPENSSL_1_1_1`. Bundle SDK có đúng symbol đó.
+`v0.3.16` dùng `LD_PRELOAD` với đường dẫn tuyệt đối tới đúng hai file bundle;
+SDL/FFmpeg vẫn ưu tiên Stock OS và Spruce không nhận preload.
 
 Trong lần lên `v0.3.13`, URL GitHub Release lỗi DNS lúc `10:38:46`:
 
@@ -210,8 +216,8 @@ Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SH
 
 Ưu tiên theo thứ tự:
 
-1. Xác nhận OTA `v0.3.14 → v0.3.15` trên Brick Pro.
-2. Kiểm tra preflight có `native runtime: brick-stock`, không còn exit `127`.
+1. Xác nhận OTA `v0.3.15 → v0.3.16` trên Brick Pro.
+2. Kiểm tra preflight có `native OpenSSL: bundled 1.1.1`, không còn lỗi symbol.
 3. Kiểm thử native video/audio/input trên Brick Pro và đọc Issue mới nếu có.
 4. Chỉ tách release nếu dependency closure vẫn không tương thích ABI/GPU.
 5. Tiếp tục dùng `720p30/4000` làm baseline Smart Pro S.
@@ -250,7 +256,7 @@ Trước commit/release, xác nhận không stage:
 ## 9. Quy trình phát hành
 
 1. Tăng `APP_VERSION` và release note.
-2. Chạy compile, 71 unittest, build và verifier.
+2. Chạy compile, 72 unittest, build và verifier.
 3. Kiểm manifest có CA/native, không có settings/secrets/log.
 4. Commit/push `main`.
 5. Tạo annotated tag đúng version và push tag.
@@ -263,8 +269,8 @@ Trước commit/release, xác nhận không stage:
 ```text
 Tiếp tục repo E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước.
-Release v0.3.15 thêm runtime chỉ cho Brick sun50iw10 sau lỗi exit 127 thiếu
-libjson-c.so.5. Cần xác nhận OTA và stream thật; Spruce sun55iw3 phải tiếp tục
-dùng runtime system. Không tắt TLS, không đọc/tiết lộ token, không thay native
-stream/pair/input đang hoạt động trên Smart Pro S/Spruce.
+Release v0.3.16 preload OpenSSL bundle chỉ cho Brick sun50iw10 sau Issue #38.
+Cần xác nhận OTA và stream thật; Spruce sun55iw3 phải tiếp tục dùng runtime
+system và không preload. Không tắt TLS, không đọc/tiết lộ token, không thay
+native stream/pair/input đang hoạt động trên Smart Pro S/Spruce.
 ```

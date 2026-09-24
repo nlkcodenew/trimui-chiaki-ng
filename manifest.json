@@ -1,13 +1,13 @@
 {
-  "version": "0.3.15",
+  "version": "0.3.16",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-24T21:53:35+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.15/files",
-  "release_tag": "v0.3.15/files",
+  "built": "2026-09-24T22:09:54+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.16/files",
+  "release_tag": "v0.3.16/files",
   "note": {
-    "vi": "v0.3.15: thêm runtime biệt lập cho Brick Pro Stock OS; giữ nguyên Spruce.",
-    "en": "v0.3.15: add an isolated Brick Pro Stock OS runtime without changing Spruce."
+    "vi": "v0.3.16: buộc Brick dùng OpenSSL 1.1.1 tương thích; giữ nguyên Spruce.",
+    "en": "v0.3.16: force the compatible OpenSSL 1.1.1 on Brick without changing Spruce."
   },
   "files": [
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "1d225993e3e44e69619ed74df175dbc2df34768a1814d09a2ff53f6bb6f228fd",
-      "size": 25620
+      "sha256": "fe8ea1b4f562f74645df282ec77975d6300a88d156d2b391305cf771fbbb420e",
+      "size": 26093
     },
     {
       "path": "rh/device_identity.py",
@@ -197,7 +197,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "15434c35f63baf3398c7fc5653dc40b9f84be4eef2081f2f14cd98d5f757f43d",
+      "sha256": "4cf2d8dab6edd55e8c1777a1559aeffbfefdc1dde087d1a6a0c20b95cc49e210",
       "size": 1178
     },
     {
@@ -638,8 +638,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.15.zip",
-    "sha256": "34fb15de42f6eaacff9b7f867d7e8d036d74d4e0a1270e4037f4168f9cca4379",
-    "size": 10757796
+    "name": "trimui-chiaki-ng-v0.3.16.zip",
+    "sha256": "1e065c9deb69431bf18f658094f6904952df9e868f4d12a0a24eace49b398a4e",
+    "size": 10758107
   }
 }

@@ -89,6 +89,15 @@ def _native_runtime(app_dir, model=None):
         return "brick-stock", runtime_dir
     return "system", ""
 
+
+def _native_preload_prefix(runtime_dir):
+    if not runtime_dir:
+        return ""
+    return (
+        'LD_PRELOAD="${OPENSSL_PRELOAD:+$OPENSSL_PRELOAD'
+        '${LD_PRELOAD:+:$LD_PRELOAD}}" '
+    )
+
 def _paired_credentials(addr):
     from .paths import APP_DIR
 
@@ -275,10 +284,15 @@ def prepare_stream_launch(host):
                 "    LD_LIBRARY_PATH=\"$RUNTIME\"",
                 "fi",
                 "export LD_LIBRARY_PATH",
+                "OPENSSL_PRELOAD=\"$RUNTIME/libcrypto.so.1.1:$RUNTIME/libssl.so.1.1\"",
+                "echo \"native OpenSSL: bundled 1.1.1\" >> \"$DEBUG\"",
             ])
+        preload = _native_preload_prefix(runtime_dir)
         lines.extend([
-            "LD_TRACE_LOADED_OBJECTS=1 \"%sBIN\" >> \"%sDEBUG\" 2>&1 || true" % (dollar, dollar),
-            "\"%sBIN\" \"%sSESSION\" >> \"%sDEBUG\" 2>> \"%sERROR_LOG\"" % (dollar, dollar, dollar, dollar),
+            "%sLD_TRACE_LOADED_OBJECTS=1 \"%sBIN\" >> \"%sDEBUG\" 2>&1 || true" % (
+                preload, dollar, dollar),
+            "%s\"%sBIN\" \"%sSESSION\" >> \"%sDEBUG\" 2>> \"%sERROR_LOG\"" % (
+                preload, dollar, dollar, dollar, dollar),
             "RC=%s?" % dollar,
             "echo \"[%s(date '+%%Y-%%m-%%d %%H:%%M:%%S')] native stream exit=%sRC\" >> \"%sDEBUG\"" % (dollar, dollar, dollar),
             "exit \"%sRC\"" % dollar,

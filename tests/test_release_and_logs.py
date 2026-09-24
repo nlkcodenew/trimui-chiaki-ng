@@ -1152,6 +1152,13 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("LD_LIBRARY_PATH=", script)
         self.assertIn(os.path.join("libs", "brick-stock"), script)
         self.assertIn('${LD_LIBRARY_PATH%:}:$RUNTIME', script)
+        self.assertIn(
+            'OPENSSL_PRELOAD="$RUNTIME/libcrypto.so.1.1:$RUNTIME/libssl.so.1.1',
+            script,
+        )
+        self.assertIn('LD_PRELOAD="${OPENSSL_PRELOAD:+', script)
+        self.assertNotIn("export LD_PRELOAD", script)
+        self.assertIn("native OpenSSL: bundled 1.1.1", script)
         session_line = next(line for line in script.splitlines() if line.startswith("SESSION="))
         session_path = session_line.split("=", 1)[1].strip("'")
         if os.name != "nt":
@@ -1186,6 +1193,14 @@ class LogUploaderTests(unittest.TestCase):
         name, path = chiaki._native_runtime(self.app_dir, "sun55iw3")
         self.assertEqual(name, "system")
         self.assertEqual(path, "")
+        self.assertEqual(chiaki._native_preload_prefix(path), "")
+
+    def test_brick_preloads_only_bundled_openssl(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        prefix = chiaki._native_preload_prefix("/app/libs/brick-stock")
+        self.assertIn("OPENSSL_PRELOAD", prefix)
+        self.assertIn("LD_PRELOAD", prefix)
+        self.assertTrue(prefix.endswith(" "))
 
     def test_native_stream_rejects_pair_from_wrong_protocol_target(self):
         chiaki = importlib.import_module("rh.chiaki")
