@@ -6,10 +6,12 @@ import json
 import logging
 import os
 import shutil
+import ssl
 import sys
 import tempfile
 import types
 import unittest
+import urllib.error
 from unittest import mock
 
 
@@ -23,9 +25,11 @@ class LogUploaderTests(unittest.TestCase):
         sys.path.insert(0, cls.app_dir)
         cls.uploader = importlib.import_module("rh.log_uploader")
         cls.updater = importlib.import_module("rh.updater")
+        cls.ssl_context = importlib.import_module("rh.ssl_context")
         cls.inputs = importlib.import_module("rh.inputs")
         cls.logger_module = importlib.import_module("rh.logger")
         cls.common_modals = importlib.import_module("rh.modals.common")
+        cls.home_module = importlib.import_module("rh.screens.home")
         cls.settings_module = importlib.import_module("rh.screens.settings")
         cls.update_modal_module = importlib.import_module("rh.modals.update")
 
@@ -100,6 +104,113 @@ class LogUploaderTests(unittest.TestCase):
                                   side_effect=OSError("offline")):
             self.assertFalse(self.uploader.upload_pending("exit_1"))
         self.assertTrue(os.path.exists(self.uploader.PENDING_FILE))
+
+    def test_ssl_context_keeps_certificate_and_hostname_verification(self):
+        context = self.ssl_context.create_ssl_context()
+        self.assertEqual(context.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(context.check_hostname)
+        self.assertGreater(len(context.get_ca_certs()), 0)
+        self.assertTrue(os.path.isfile(self.ssl_context.CA_BUNDLE_FILE))
+
+    def test_ssl_context_loads_bundle_when_system_store_is_empty(self):
+        empty_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        self.assertEqual(len(empty_context.get_ca_certs()), 0)
+        with mock.patch.object(self.ssl_context.ssl, "create_default_context",
+                               return_value=empty_context):
+            context = self.ssl_context.create_ssl_context()
+        self.assertIs(context, empty_context)
+        self.assertEqual(context.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(context.check_hostname)
+        self.assertGreater(len(context.get_ca_certs()), 0)
+
+    def test_updater_https_uses_shared_verified_context(self):
+        context = object()
+
+        class FakeResponse:
+            status = 200
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self, _size):
+                return b""
+
+        with mock.patch.object(self.updater, "create_ssl_context",
+                               return_value=context), \
+                mock.patch.object(self.updater.urllib.request, "urlopen",
+                                  return_value=FakeResponse()) as urlopen:
+            self.assertEqual(self.updater._get("https://example.com/a", 10), b"")
+        self.assertIs(urlopen.call_args.kwargs["context"], context)
+
+    def test_uploader_https_uses_shared_verified_context(self):
+        context = object()
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self, _size):
+                return b'{"html_url":"https://github.com/example/issues/1"}'
+
+        with mock.patch.object(self.uploader, "create_ssl_context",
+                               return_value=context), \
+                mock.patch.object(self.uploader.urllib.request, "urlopen",
+                                  return_value=FakeResponse()) as urlopen:
+            result = self.uploader._post_issue(
+                "github_pat_TEST_TOKEN", "owner/repo", "title", "body")
+        self.assertEqual(result, "https://github.com/example/issues/1")
+        self.assertIs(urlopen.call_args.kwargs["context"], context)
+
+    def test_manifest_tls_failures_have_distinct_status(self):
+        reason = ssl.SSLCertVerificationError(
+            1, "certificate verify failed: unable to get local issuer certificate")
+        with mock.patch.object(self.updater, "candidate_manifest_urls",
+                               return_value=["https://example.com/manifest.json"]), \
+                mock.patch.object(self.updater, "_get",
+                                  side_effect=urllib.error.URLError(reason)):
+            self.assertIsNone(self.updater.fetch_manifest())
+        self.assertEqual(self.updater.last_check_status(), "tls_error")
+
+    def test_misnamed_secrets_file_is_not_read_or_logged(self):
+        os.remove(self.uploader.SECRETS_FILE)
+        misnamed = os.path.join(self.work_dir, "secrets..json")
+        with open(misnamed, "w", encoding="utf-8") as handle:
+            json.dump({"github_token": "github_pat_DO_NOT_LOG"}, handle)
+        with mock.patch.dict(os.environ, {}, clear=True), \
+                self.assertLogs(self.uploader.log, level="WARNING") as captured:
+            token, _repo, _enabled = self.uploader._configuration()
+        output = "\n".join(captured.output)
+        self.assertEqual(token, "")
+        self.assertIn("requires secrets.json", output)
+        self.assertNotIn("DO_NOT_LOG", output)
+
+    def test_release_tools_exclude_misnamed_secrets_file(self):
+        root = os.path.dirname(os.path.dirname(__file__))
+        with open(os.path.join(root, "tools", "make_release.py"),
+                  encoding="utf-8") as handle:
+            make_release = handle.read()
+        with open(os.path.join(root, "tools", "verify_release.py"),
+                  encoding="utf-8") as handle:
+            verify_release = handle.read()
+        self.assertIn('"secrets..json"', make_release)
+        self.assertIn('"secrets..json"', verify_release)
+
+    def test_manual_update_check_reports_tls_failure(self):
+        screen = self.home_module.HomeScreen(types.SimpleNamespace())
+        with mock.patch.object(self.updater, "check_for_update", return_value=None), \
+                mock.patch.object(self.updater, "last_check_status",
+                                  return_value="tls_error"):
+            screen._force_update_check()
+        self.assertEqual(
+            screen.toast,
+            self.home_module.tr("update_tls_failed"),
+        )
 
     def test_quality_report_is_not_described_as_crash(self):
         body = self.uploader._issue_body(

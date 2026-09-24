@@ -15,7 +15,6 @@ import json
 import os
 import platform
 import re
-import ssl
 import threading
 import time
 import urllib.request
@@ -24,6 +23,7 @@ from . import state
 from .paths import APP_DIR
 from .version import APP_VERSION
 from .logger import get_logger
+from .ssl_context import create_ssl_context
 
 log = get_logger()
 
@@ -59,6 +59,9 @@ def _read_json(path):
 
 def _configuration():
     cfg = _read_json(SECRETS_FILE)
+    misnamed_file = os.path.join(os.path.dirname(SECRETS_FILE), "secrets..json")
+    if not os.path.isfile(SECRETS_FILE) and os.path.isfile(misnamed_file):
+        log.warning("found secrets..json but uploader requires secrets.json; file contents were not read")
     token = os.environ.get("CHIAKI_GITHUB_TOKEN") or cfg.get("github_token", "")
     repo = (cfg.get("github_issue_repo") or
             getattr(state, "github_issue_repo", "") or
@@ -129,13 +132,13 @@ def _device_hash():
 def _issue_body(sections, reason, fingerprint):
     reason = _sanitize(str(reason).replace("`", ""))[:80]
     if reason == "native_stream_quality":
-        summary = "Báo cáo chất lượng stream được gửi tự động từ TrimUI Smart Pro S."
+        summary = "Báo cáo chất lượng stream được gửi tự động từ thiết bị TrimUI."
     elif reason.startswith("wakeup_"):
         summary = "Báo cáo chẩn đoán đánh thức PlayStation được gửi tự động."
     elif reason.endswith("_retry"):
         summary = "Báo cáo đang chờ được gửi lại khi ứng dụng thoát."
     else:
-        summary = "Log được gửi tự động từ TrimUI Smart Pro S sau khi ứng dụng lỗi."
+        summary = "Log được gửi tự động từ thiết bị TrimUI sau khi ứng dụng lỗi."
     lines = [
         summary,
         "",
@@ -171,10 +174,8 @@ def _post_issue(token, repo, title, body):
             "Content-Type": "application/json",
         },
     )
-    # Khong tat verify TLS vi request mang token GitHub. Neu firmware thieu CA,
-    # uploader se ghi loi va thu lai o lan khoi dong sau.
     with urllib.request.urlopen(request, timeout=TIMEOUT,
-                                context=ssl.create_default_context()) as response:
+                                context=create_ssl_context()) as response:
         result = json.loads(response.read(128 * 1024).decode("utf-8"))
     return result.get("html_url", "")
 

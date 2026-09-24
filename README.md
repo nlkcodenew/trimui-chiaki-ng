@@ -1,12 +1,13 @@
 # trimui-chiaki-ng
 
-Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
+Ứng dụng PS4 / PS5 Remote Play cho TrimUI Smart Pro S/Spruce OS và TrimUI Brick
+Pro Stock OS.
 
-**Trạng thái**: v0.3.10 - tắt WAKEUP và không còn đưa host đã lưu nhưng offline
-vào kết quả quét. Quy trình lại giống v0.3.6: bật PS4 bằng tay, đợi máy xuất hiện
-khi quét LAN rồi kết nối. Các thử nghiệm v0.3.7-v0.3.9 xác nhận packet WAKEUP đã
-được gửi đúng nhưng PS4 Wi-Fi/GoldHEN không phản hồi. Pair/session pre-10,
-mapping nút đã xác nhận, quản lý log và thao tác thoát stream được giữ nguyên.
+**Trạng thái**: v0.3.11 đóng gói Mozilla CA bundle và dùng chung TLS context có
+xác minh cho OTA/GitHub Issue trên Brick Pro Stock OS. CA hệ thống vẫn được giữ,
+`CERT_REQUIRED` và kiểm tra hostname không bị tắt, nên cùng artifact tiếp tục
+dùng cho Smart Pro S/Spruce OS. Native stream, pair/session pre-10, SDL/input và
+luồng quét máy đang bật của v0.3.10 không thay đổi.
 
 **Nền tảng v0.3.4:** bổ sung quản lý log và sửa thao tác thoát stream trên
 TrimUI. Màn hình chính luôn hiện hướng dẫn giữ `START + SELECT` 1,2 giây; native
@@ -72,6 +73,10 @@ sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
    không chứa PIN, `regist_key` hoặc `rp_key`.
 
 ## Cài đặt từ GitHub Releases
+
+**Brick Pro đang ở v0.3.9/v0.3.10:** phải cài ZIP v0.3.11 thủ công lần đầu vì
+updater cũ không có CA để tải chính bản vá CA. Sau khi v0.3.11 đã chạy, OTA và
+GitHub Issue uploader dùng bundle CA đóng gói. Không cần tắt xác minh TLS.
 
 1. Mở [trang Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
 2. Tải `trimui-chiaki-ng-vX.Y.Z.zip` (không tải Source code ZIP của GitHub).

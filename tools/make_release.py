@@ -30,11 +30,13 @@ EXCLUDE_FILES = {"desktop.ini", ".DS_Store"}
 EXCLUDE_USER_FILES = {
     "settings.json",
     "secrets.json",
+    "secrets..json",
     ".log_upload_state.json",
     ".pending_crash",
 }
 ARCHIVE_EXCLUDE_FILES = {
     "secrets.json",
+    "secrets..json",
     "settings.json.tmp",
 }
 ARCHIVE_EXCLUDE_PREFIXES = (
@@ -143,8 +145,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: tắt WAKEUP; chỉ hiện PS4 đang phản hồi khi quét LAN." % version,
-            "en": "v%s: disable WAKEUP; only show consoles responding on LAN." % version,
+            "vi": "v%s: thêm CA tin cậy cho OTA và GitHub Issue trên Brick Pro Stock OS." % version,
+            "en": "v%s: add trusted CA support for OTA and GitHub Issues on Brick Pro Stock OS." % version,
         },
         "files": files,
         "remove": [],

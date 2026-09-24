@@ -1,13 +1,13 @@
 {
-  "version": "0.3.10",
+  "version": "0.3.11",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-24T08:20:29+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.10/files",
-  "release_tag": "v0.3.10/files",
+  "built": "2026-09-24T09:06:20+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.11/files",
+  "release_tag": "v0.3.11/files",
   "note": {
-    "vi": "v0.3.10: tắt WAKEUP; chỉ hiện PS4 đang phản hồi khi quét LAN.",
-    "en": "v0.3.10: disable WAKEUP; only show consoles responding on LAN."
+    "vi": "v0.3.11: thêm CA tin cậy cho OTA và GitHub Issue trên Brick Pro Stock OS.",
+    "en": "v0.3.11: add trusted CA support for OTA and GitHub Issues on Brick Pro Stock OS."
   },
   "files": [
     {
@@ -46,6 +46,16 @@
       "size": 1253944
     },
     {
+      "path": "certs/README.txt",
+      "sha256": "15b1e79f092a44395d30f6f9cec2099c98777bc48a9ae31fbc2193928bcf484d",
+      "size": 443
+    },
+    {
+      "path": "certs/cacert.pem",
+      "sha256": "f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9",
+      "size": 188900
+    },
+    {
       "path": "rh/chiaki.py",
       "sha256": "ff9c21eddcce055247f0687a7df2c041f13e901c122b789eae321e849277af70",
       "size": 24181
@@ -62,8 +72,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "cd5d57a1f6d98c50392942169cd1381e3c67e398675442964470c6ec787a0cfd",
-      "size": 7913
+      "sha256": "d5b7db0a1a3c434079548213b0dcc3bf677da6977ff4c00994d721e79a65b465",
+      "size": 8455
     },
     {
       "path": "rh/inputs.py",
@@ -72,8 +82,8 @@
     },
     {
       "path": "rh/log_uploader.py",
-      "sha256": "87583cc84926d306d682804e64dbfe724057b221f41d325983965fb2db04f12b",
-      "size": 8963
+      "sha256": "e7b123bd1c2a520e7ee3c2078e41ca094d30e54cfa2b22021ab3b5b67137839c",
+      "size": 9115
     },
     {
       "path": "rh/logger.py",
@@ -91,18 +101,23 @@
       "size": 13660
     },
     {
+      "path": "rh/ssl_context.py",
+      "sha256": "a7dd3364b361284a2493248d2508295e99f70e825885542079f878deadd0970d",
+      "size": 433
+    },
+    {
       "path": "rh/state.py",
       "sha256": "bf219a6836955b1a9471cb5f3c9e5d48d55ac6c7cb4a465e75fbbd21eeb6504c",
       "size": 5062
     },
     {
       "path": "rh/updater.py",
-      "sha256": "42b7bfa53f3d555a6a8985a280dce34a557493af9718ee413c6162b2bfbceda8",
-      "size": 14262
+      "sha256": "d6dfc483528fffe13851d34ea8ee58e4986ef980315f671b5eb167ae90360567",
+      "size": 15075
     },
     {
       "path": "rh/version.py",
-      "sha256": "135d1768b0d7d527384e3338cd054fc19d89412e7674c7304b567a35c54d95d3",
+      "sha256": "e1861beba8fcc0832206ee23ff65e874144cca6f0081c742d8c5566f446abb4b",
       "size": 1178
     },
     {
@@ -137,8 +152,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "f2252888bf996a2cffe977e1cdfb73554e26fd63891685911d149370ccb3ce5a",
-      "size": 9463
+      "sha256": "bb184e4a17ebc06b4d23c3ce8d67928868f1466be41efdca860238625804d7ba",
+      "size": 9857
     },
     {
       "path": "rh/screens/pair.py",
@@ -543,8 +558,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.10.zip",
-    "sha256": "91298b9553bab35327dff5065a062b15aaf857cd4df778f8b7bc4a230f7bfd08",
-    "size": 1239782
+    "name": "trimui-chiaki-ng-v0.3.11.zip",
+    "sha256": "b8ac6ca11ee9e5749cbe5c1306a5d0274fd8c31775332a2c0b4973f093dbdcbf",
+    "size": 1349997
   }
 }

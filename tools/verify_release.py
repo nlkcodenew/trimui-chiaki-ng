@@ -12,10 +12,12 @@ import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILES_DIR = os.path.join(ROOT, "files")
+CA_BUNDLE_SHA256 = "f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9"
 
 FORBIDDEN_MANIFEST = {
     "settings.json",
     "secrets.json",
+    "secrets..json",
     ".log_upload_state.json",
     ".pending_crash",
 }
@@ -30,6 +32,8 @@ REQUIRED_ARCHIVE = {
     "App/Chiaki/secrets.example.json",
     "App/Chiaki/assets/fallback.ttf",
     "App/Chiaki/bin/chiaki-stream",
+    "App/Chiaki/certs/README.txt",
+    "App/Chiaki/certs/cacert.pem",
     "App/Chiaki/vendor/sdl2/__init__.py",
 }
 
@@ -72,6 +76,10 @@ def main():
     if default_settings.get("device_id"):
         fail("default settings.json must not contain a generated device_id")
 
+    ca_bundle_path = os.path.join(FILES_DIR, "certs", "cacert.pem")
+    if sha256_file(ca_bundle_path) != CA_BUNDLE_SHA256:
+        fail("bundled CA checksum does not match the reviewed Mozilla bundle")
+
     native_path = os.path.join(FILES_DIR, "bin", "chiaki-stream")
     with open(native_path, "rb") as handle:
         elf_header = handle.read(20)
@@ -94,6 +102,9 @@ def main():
         if sha256_file(source) != item.get("sha256"):
             fail("manifest hash mismatch: %s" % rel)
         listed.add(rel)
+
+    if "certs/cacert.pem" not in listed:
+        fail("bundled CA is missing from OTA manifest")
 
     archives = glob.glob(os.path.join(ROOT, "dist", "trimui-chiaki-ng-v*.zip"))
     if len(archives) != 1:
@@ -118,7 +129,7 @@ def main():
         fail("ZIP is missing: %s" % ", ".join(sorted(missing)))
     for name in names:
         base = os.path.basename(name)
-        if base == "secrets.json" or base.startswith(".log_upload_state"):
+        if base in ("secrets.json", "secrets..json") or base.startswith(".log_upload_state"):
             fail("secret/runtime file appears in ZIP: %s" % name)
         if base.startswith(".pending_crash") or base.startswith("Chiaki-loi.txt"):
             fail("log/runtime file appears in ZIP: %s" % name)

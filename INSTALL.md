@@ -69,6 +69,12 @@ v0.3.6. Mapping A/B/X/Y và pair/session vẫn được giữ nguyên.
 
 ## Cập nhật OTA
 
+Nếu Brick Pro Stock OS đang chạy bản trước v0.3.11 và log có
+`CERTIFICATE_VERIFY_FAILED`, hãy tải và giải nén ZIP v0.3.11 thủ công một lần.
+Bản cũ không thể OTA lên bản vá vì chưa có CA để tải manifest. Từ v0.3.11, OTA
+và GitHub Issue uploader dùng thêm Mozilla CA bundle nhưng vẫn bắt buộc xác minh
+certificate và hostname. Smart Pro S/Spruce OS tiếp tục dùng cùng gói cài đặt.
+
 Mỗi lần khởi động app sẽ kiểm tra GitHub Release mới. Nếu có bản mới, popup
 hiện ra để chọn:
 

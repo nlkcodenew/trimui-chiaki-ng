@@ -1,11 +1,11 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.10
+# Bàn giao session mới — trimui-chiaki-ng v0.3.11
 
 > Cập nhật: 2026-09-24. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
 ## 1. Mục tiêu hiện tại
 
-Mục tiêu session tiếp theo chuyển sang hỗ trợ **TrimUI Brick Pro chạy Stock OS**,
-đồng thời không làm hỏng bản đang hoạt động trên TrimUI Smart Pro S/Spruce OS.
+`v0.3.11` thêm hỗ trợ HTTPS cho **TrimUI Brick Pro chạy Stock OS**, đồng thời
+giữ nguyên phần stream đang hoạt động trên TrimUI Smart Pro S/Spruce OS.
 Người dùng đã chép v0.3.9 vào `D:/Apps/Chiaki` trên Brick Pro và thử OTA lên
 v0.3.10. Hai lỗi đầu tiên cần xử lý là HTTPS/CA của OTA và uploader GitHub.
 
@@ -31,8 +31,8 @@ WAKEUP/host offline trong giao diện và trở lại luồng quét máy đang b
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
 - Bản stream/mapping đã kiểm thử máy thật: `v0.3.6`; WAKEUP đã tắt ở `v0.3.10`
-- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.10`
-- `manifest.json` phải trả về đúng `0.3.10`, có
+- Release mục tiêu: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.11`
+- `manifest.json` phải trả về đúng `0.3.11`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 2.1 Bàn giao Brick Pro Stock OS — cần làm ngay
@@ -49,9 +49,9 @@ Không đưa file token vào repo hoặc log. Kết luận đã xác nhận:
    ghproxy đều lỗi `SSL: CERTIFICATE_VERIFY_FAILED: unable to get local issuer
    certificate`. Thông báo "chưa có bản mới" chỉ là UI fallback gây hiểu nhầm,
    không phải server thiếu v0.3.10.
-3. Stock OS thiếu/không tìm thấy CA root phù hợp. `updater._get()` hiện gọi
-   `ssl.create_default_context()` và phụ thuộc CA hệ thống. Uploader cũng dùng
-   HTTPS qua `urllib` và sẽ gặp cùng lớp lỗi sau khi thực sự POST.
+3. Stock OS thiếu/không tìm thấy CA root phù hợp. Trong v0.3.9,
+   `updater._get()` chỉ gọi `ssl.create_default_context()` và phụ thuộc CA hệ
+   thống. Uploader cũ cũng dùng HTTPS qua `urllib` và gặp cùng lớp lỗi khi POST.
 4. File người dùng đặt tên `secrets..json` (hai dấu chấm), trong khi app chỉ đọc
    `secrets.json`. JSON hợp lệ và có đúng các key cần thiết, nhưng app không thể
    thấy file do sai tên. Không ghi hoặc tiết lộ giá trị token.
@@ -59,17 +59,21 @@ Không đưa file token vào repo hoặc log. Kết luận đã xác nhận:
    GitHub, nên chưa có bằng chứng uploader đã thử gửi. Muốn test uploader cần
    tên file đúng và một report pending/chức năng gửi chẩn đoán thực sự được gọi.
 
-Kế hoạch sửa tối thiểu cho session mới:
+Đã triển khai trong v0.3.11:
 
-- Đóng gói CA bundle tin cậy trong app (hoặc tìm CA hệ thống theo danh sách path
-  an toàn) và tạo một helper SSL context dùng chung cho updater/uploader.
-- Không dùng context bỏ xác minh TLS (`CERT_NONE`, `check_hostname=False`) và
-  không ghi token vào log.
-- Phân biệt UI "không có bản mới" với "không thể kiểm tra cập nhật do TLS/mạng".
-- Cân nhắc cảnh báo an toàn khi thấy `secrets..json` nhưng thiếu `secrets.json`;
-  không tự in, sao chép hoặc commit nội dung token.
-- Thêm test cho CA bundle/context, lỗi TLS của OTA, uploader HTTPS và filename
-  secrets; chạy toàn bộ test/build/release verify trước khi phát hành.
+- Đóng gói Mozilla CA bundle đã đối chiếu SHA-256 và tạo helper SSL context dùng
+  chung cho updater/uploader. Context vẫn giữ CA hệ thống, `CERT_REQUIRED` và
+  hostname verification.
+- Phân biệt UI "đã là bản mới nhất", lỗi TLS và lỗi mạng/kiểm tra cập nhật.
+- Cảnh báo khi chỉ thấy `secrets..json`; không đọc hoặc log nội dung file sai tên.
+- Giữ nguyên native binary, SDL/input, pair/session và discovery của v0.3.10;
+  hiện chưa cần tách release theo OS.
+- Bản trước v0.3.11 không thể OTA để lấy chính CA bundle, nên Brick Pro cần cài
+  ZIP v0.3.11 thủ công một lần. Các lần OTA sau mới dùng được bản vá này.
+
+Việc còn phải xác nhận trên máy thật:
+
+- OTA và GitHub Issue uploader trên Brick Pro Stock OS sau khi cài ZIP v0.3.11.
 - Kiểm tra thêm khả năng chạy native binary, SDL/input/audio và đường dẫn mount
   trên Brick Pro Stock OS sau khi OTA/uploader hoạt động; chưa giả định binary
   Smart Pro S tương thích hoàn toàn với Brick Pro.

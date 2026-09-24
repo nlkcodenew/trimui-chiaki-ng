@@ -29,6 +29,7 @@ from . import state
 from .paths import APP_DIR
 from .version import APP_VERSION, is_newer
 from .logger import get_logger
+from .ssl_context import create_ssl_context
 
 log = get_logger()
 
@@ -55,6 +56,22 @@ SETTINGS_REL = "settings.json"
 MAX_FILE_BYTES = 16 * 1024 * 1024
 
 STAGING_DIR = os.path.join(APP_DIR, ".update_staging")
+_last_check_status = "idle"
+
+
+def last_check_status():
+    return _last_check_status
+
+
+def _is_tls_verification_error(exc):
+    current = exc
+    seen = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if isinstance(current, ssl.SSLCertVerificationError):
+            return True
+        current = getattr(current, "reason", None)
+    return "CERTIFICATE_VERIFY_FAILED" in str(exc).upper()
 
 
 def base_url():
@@ -124,7 +141,7 @@ def _get(url, max_bytes, timeout=TIMEOUT):
     req = urllib.request.Request(url, headers=headers)
     kwargs = {"timeout": timeout}
     if url.startswith("https://"):
-        kwargs["context"] = ssl.create_default_context()
+        kwargs["context"] = create_ssl_context()
     started = time.time()
     log.info("network GET start: %s timeout=%ss", url, timeout)
     with urllib.request.urlopen(req, **kwargs) as resp:
@@ -189,6 +206,9 @@ def sha256_of(path):
 
 
 def fetch_manifest():
+    global _last_check_status
+    _last_check_status = "checking"
+    failures = []
     for manifest_url in candidate_manifest_urls():
         try:
             separator = "&" if "?" in manifest_url else "?"
@@ -210,12 +230,18 @@ def fetch_manifest():
                     ok = False
                     break
             if ok:
+                _last_check_status = "ok"
                 log.info("OTA manifest ready: version=%s files=%d source=%s",
                          parsed.get("version"), len(files), manifest_url)
                 return parsed
         except (urllib.error.URLError, OSError, ValueError, UnicodeDecodeError) as exc:
+            failures.append(exc)
             log.warning("OTA manifest failed: source=%s error=%s", manifest_url, exc)
             continue
+    if failures and all(_is_tls_verification_error(exc) for exc in failures):
+        _last_check_status = "tls_error"
+    else:
+        _last_check_status = "network_error"
     return None
 
 

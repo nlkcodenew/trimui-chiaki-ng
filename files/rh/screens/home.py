@@ -198,14 +198,24 @@ class HomeScreen(BaseScreen):
             self.engine.quit("user_exit")
 
     def _force_update_check(self):
-        from ..updater import check_for_update
-        res = check_for_update(force=True)
+        from ..updater import check_for_update, last_check_status
+        try:
+            res = check_for_update(force=True)
+        except Exception as exc:
+            log.warning("manual update check failed: %s", exc)
+            res = None
         if res:
             manifest, files = res
             self.engine.open_modal("update", {"manifest": manifest, "files": files})
         else:
-            self.toast = tr("update_no_network")
-            self.toast_until = time.time() + 3
+            status = last_check_status()
+            if status == "ok":
+                self.toast = tr("update_current")
+            elif status == "tls_error":
+                self.toast = tr("update_tls_failed")
+            else:
+                self.toast = tr("update_check_failed")
+            self.toast_until = time.time() + 5
 
     def update(self, dt):
         if self.toast and time.time() > self.toast_until:
