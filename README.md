@@ -3,11 +3,11 @@
 Ứng dụng PS4 / PS5 Remote Play cho TrimUI Smart Pro S/Spruce OS và TrimUI Brick
 Pro Stock OS.
 
-**Trạng thái**: v0.3.11 đóng gói Mozilla CA bundle và dùng chung TLS context có
-xác minh cho OTA/GitHub Issue trên Brick Pro Stock OS. CA hệ thống vẫn được giữ,
-`CERT_REQUIRED` và kiểm tra hostname không bị tắt, nên cùng artifact tiếp tục
-dùng cho Smart Pro S/Spruce OS. Native stream, pair/session pre-10, SDL/input và
-luồng quét máy đang bật của v0.3.10 không thay đổi.
+**Trạng thái**: v0.3.12 sửa OTA tự báo lại cùng phiên bản sau khi cài thủ công.
+App chỉ hiện popup khi version trên server thực sự mới hơn; sai khác hash trong
+cùng version không còn tạo vòng lặp cập nhật. TLS/CA của v0.3.11 vẫn được giữ,
+không tắt xác minh certificate/hostname. Native stream, pair/session pre-10,
+SDL/input và luồng quét máy đang bật của v0.3.10 không thay đổi.
 
 **Nền tảng v0.3.4:** bổ sung quản lý log và sửa thao tác thoát stream trên
 TrimUI. Màn hình chính luôn hiện hướng dẫn giữ `START + SELECT` 1,2 giây; native

@@ -238,6 +238,33 @@ class LogUploaderTests(unittest.TestCase):
         urls = self.updater.candidate_manifest_urls()
         self.assertIn("releases/latest/download/manifest.json", urls[0])
 
+    def test_same_version_hash_drift_does_not_offer_update(self):
+        manifest = {
+            "version": self.updater.APP_VERSION,
+            "files": [{"path": "app.py", "sha256": "0" * 64}],
+        }
+        with mock.patch.object(self.updater, "fetch_manifest",
+                               return_value=manifest), \
+                mock.patch.object(self.updater, "pending_files") as pending:
+            self.assertIsNone(self.updater.check_for_update(force=False))
+            self.assertIsNone(self.updater.check_for_update(force=True))
+        pending.assert_not_called()
+
+    def test_newer_version_still_offers_pending_files(self):
+        manifest = {
+            "version": "99.0.0",
+            "files": [{"path": "app.py", "sha256": "0" * 64}],
+        }
+        expected = manifest["files"]
+        with mock.patch.object(self.updater, "fetch_manifest",
+                               return_value=manifest), \
+                mock.patch.object(self.updater, "pending_files",
+                                  return_value=expected):
+            self.assertEqual(
+                self.updater.check_for_update(force=True),
+                (manifest, expected),
+            )
+
     def test_payload_urls_include_repository_files_directory(self):
         urls = self.updater.payload_base_urls(
             {"release_tag": "v0.2.6/files"}, "app.py")

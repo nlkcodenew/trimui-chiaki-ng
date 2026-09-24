@@ -263,12 +263,10 @@ def check_for_update(force=False):
     """Tra ve (manifest, files) neu co ban moi, None neu khong.
 
     Quy tac:
-        - Neu remote version moi hon APP_VERSION (is_newer=True) va user BO QUA
-          -> return None, khong hoi lai.
-        - Neu chi con file pending (catalog-only/runtime-only chua dong bo),
-          KHONG ap dung skipped_versions, de user van duoc nhan nhac fix catalog
-          sau khi skip.
-        - Neu khong co gi moi -> return None.
+        - Chi hien cap nhat khi remote version moi hon APP_VERSION.
+        - Sai khac hash trong cung version khong duoc tao popup cap nhat lap.
+        - version.py duoc apply cuoi cung, nen update bi gian do van giu version
+          cu va se duoc de nghi lai o lan kiem tra ke tiep.
     """
     try:
         m = fetch_manifest()
@@ -277,15 +275,13 @@ def check_for_update(force=False):
         return None
     if not m:
         return None
-    files = pending_files(m)
     is_new_version = is_newer(m["version"], APP_VERSION)
-    if not is_new_version and not files:
+    if not is_new_version:
         return None
-    # Skipped_versions chi chan popup version-moi that su, khong chan catalog-only.
     if (not force
-            and is_new_version
             and m["version"] in (state.skipped_versions or [])):
         return None
+    files = pending_files(m)
     return m, files
 
 

@@ -1,13 +1,13 @@
 {
-  "version": "0.3.11",
+  "version": "0.3.12",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-24T09:06:20+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.11/files",
-  "release_tag": "v0.3.11/files",
+  "built": "2026-09-24T09:26:12+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.12/files",
+  "release_tag": "v0.3.12/files",
   "note": {
-    "vi": "v0.3.11: thêm CA tin cậy cho OTA và GitHub Issue trên Brick Pro Stock OS.",
-    "en": "v0.3.11: add trusted CA support for OTA and GitHub Issues on Brick Pro Stock OS."
+    "vi": "v0.3.12: không còn báo cập nhật lặp khi máy đã chạy cùng phiên bản.",
+    "en": "v0.3.12: stop repeated update prompts when already on the same version."
   },
   "files": [
     {
@@ -112,12 +112,12 @@
     },
     {
       "path": "rh/updater.py",
-      "sha256": "d6dfc483528fffe13851d34ea8ee58e4986ef980315f671b5eb167ae90360567",
-      "size": 15075
+      "sha256": "fd7450faf029cdacb19cf94ebf9ce863307ad73a45969ee439442274084d7fbf",
+      "size": 14884
     },
     {
       "path": "rh/version.py",
-      "sha256": "e1861beba8fcc0832206ee23ff65e874144cca6f0081c742d8c5566f446abb4b",
+      "sha256": "1a4ba5ad73ff16c7dcc9a1dd0b95a6cf4b4f54c8eeb9c50343c280afd633bd0f",
       "size": 1178
     },
     {
@@ -558,8 +558,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.11.zip",
-    "sha256": "b8ac6ca11ee9e5749cbe5c1306a5d0274fd8c31775332a2c0b4973f093dbdcbf",
-    "size": 1349997
+    "name": "trimui-chiaki-ng-v0.3.12.zip",
+    "sha256": "37098e4e17d4e57761752d08fe9a237879deb9b0cd4f95f56107398386e2430b",
+    "size": 1349934
   }
 }

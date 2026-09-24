@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.11)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.12)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-24.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
@@ -17,6 +17,8 @@
 > quay lại luồng bật PS4 bằng tay rồi quét/kết nối như v0.3.6.
 > v0.3.11 thêm Mozilla CA bundle và TLS context dùng chung cho OTA/GitHub Issue
 > trên Brick Pro Stock OS; không thay đổi native stream của Smart Pro S/Spruce.
+> v0.3.12 chỉ hiện OTA khi version server mới hơn, tránh popup cùng version do
+> hash file lệch sau cài thủ công; cơ chế apply `version.py` cuối vẫn giữ nguyên.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 

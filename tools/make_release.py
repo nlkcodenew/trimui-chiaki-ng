@@ -145,8 +145,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: thêm CA tin cậy cho OTA và GitHub Issue trên Brick Pro Stock OS." % version,
-            "en": "v%s: add trusted CA support for OTA and GitHub Issues on Brick Pro Stock OS." % version,
+            "vi": "v%s: không còn báo cập nhật lặp khi máy đã chạy cùng phiên bản." % version,
+            "en": "v%s: stop repeated update prompts when already on the same version." % version,
         },
         "files": files,
         "remove": [],
