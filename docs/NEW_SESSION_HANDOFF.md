@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.13
+# Bàn giao session mới — trimui-chiaki-ng v0.3.14
 
 > Cập nhật: 2026-09-24. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
@@ -7,7 +7,8 @@
 `v0.3.11` thêm hỗ trợ HTTPS cho **TrimUI Brick Pro chạy Stock OS**. `v0.3.12`
 sửa popup OTA lặp lại khi app và manifest đã cùng version nhưng một file cài
 thủ công lệch hash. `v0.3.13` tự báo Issue cho lỗi OTA/runtime có ý nghĩa, thêm
-ID phần cứng băm và fsync OTA cho exFAT. Phần stream Smart Pro S/Spruce vẫn giữ.
+ID phần cứng băm và fsync OTA cho exFAT. `v0.3.14` hạ lỗi nguồn manifest trung
+gian xuống INFO nếu fallback thành công. Phần stream Smart Pro S/Spruce vẫn giữ.
 Người dùng đã chép v0.3.9 vào `D:/Apps/Chiaki` trên Brick Pro và thử OTA lên
 v0.3.10. Hai lỗi đầu tiên cần xử lý là HTTPS/CA của OTA và uploader GitHub.
 
@@ -33,8 +34,8 @@ WAKEUP/host offline trong giao diện và trở lại luồng quét máy đang b
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
 - Bản stream/mapping đã kiểm thử máy thật: `v0.3.6`; WAKEUP đã tắt ở `v0.3.10`
-- Release mục tiêu: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.13`
-- `manifest.json` phải trả về đúng `0.3.13`, có
+- Release mục tiêu: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.14`
+- `manifest.json` phải trả về đúng `0.3.14`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 2.1 Bàn giao Brick Pro Stock OS — cần làm ngay

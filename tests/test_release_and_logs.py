@@ -318,10 +318,12 @@ class LogUploaderTests(unittest.TestCase):
                                return_value=["https://example.com/manifest.json"]), \
                 mock.patch.object(self.updater, "_get",
                                   side_effect=urllib.error.URLError(reason)), \
-                mock.patch.object(self.updater, "_report_error") as report:
+                mock.patch.object(self.updater, "_report_error") as report, \
+                mock.patch.object(self.updater.log, "warning") as warning:
             self.assertIsNone(self.updater.fetch_manifest())
         self.assertEqual(self.updater.last_check_status(), "tls_error")
         report.assert_called_once_with("ota_manifest_tls_error")
+        warning.assert_called_once()
 
     def test_manifest_fallback_success_does_not_report_transient_failure(self):
         manifest = json.dumps({"version": "99.0.0", "files": []}).encode("utf-8")
@@ -332,10 +334,12 @@ class LogUploaderTests(unittest.TestCase):
                 mock.patch.object(
                     self.updater, "_get",
                     side_effect=[urllib.error.URLError("offline"), manifest]), \
-                mock.patch.object(self.updater, "_report_error") as report:
+                mock.patch.object(self.updater, "_report_error") as report, \
+                mock.patch.object(self.updater.log, "warning") as warning:
             result = self.updater.fetch_manifest()
         self.assertEqual(result["version"], "99.0.0")
         report.assert_not_called()
+        warning.assert_not_called()
 
     def test_misnamed_secrets_file_is_not_read_or_logged(self):
         os.remove(self.uploader.SECRETS_FILE)

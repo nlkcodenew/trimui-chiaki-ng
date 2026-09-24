@@ -3,8 +3,10 @@
 Ứng dụng PS4 / PS5 Remote Play cho TrimUI Smart Pro S/Spruce OS và TrimUI Brick
 Pro Stock OS.
 
-**Trạng thái**: v0.3.13 tự gửi Issue cho lỗi OTA và lỗi vận hành kết thúc thật
-sự, kể cả lỗi nhỏ như lưu settings, discovery socket, pair hoặc chuẩn bị stream.
+**Trạng thái**: v0.3.14 không còn ghi WARNING giả khi một nguồn manifest lỗi DNS
+nhưng URL dự phòng tải thành công. Chỉ thất bại toàn bộ nguồn mới tạo Issue.
+Nền tảng v0.3.13 tự gửi Issue cho lỗi OTA và lỗi vận hành kết thúc thật sự,
+kể cả lỗi nhỏ như lưu settings, discovery socket, pair hoặc chuẩn bị stream.
 Mỗi Issue có mã cài đặt `CHI-xxxx`, mã phần cứng băm `HW-xxxxxxxxxxxx` và model
 để phân biệt nhiều máy mà không gửi serial/MAC thô. Không gửi Issue cho trạng
 thái bình thường như quét 0 host hoặc một URL fallback lỗi rồi URL sau thành công.

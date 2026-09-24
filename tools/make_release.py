@@ -154,8 +154,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: tự gửi Issue cho lỗi OTA và lỗi vận hành nhỏ có ý nghĩa." % version,
-            "en": "v%s: auto-report meaningful OTA and runtime errors as GitHub Issues." % version,
+            "vi": "v%s: không báo lỗi giả khi URL OTA dự phòng tải thành công." % version,
+            "en": "v%s: avoid false OTA warnings when a fallback URL succeeds." % version,
         },
         "files": files,
         "remove": [],

@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.13)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.14)
 
 > Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-24.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
@@ -21,6 +21,8 @@
 > hash file lệch sau cài thủ công; cơ chế apply `version.py` cuối vẫn giữ nguyên.
 > v0.3.13 tự báo lỗi OTA/runtime có ý nghĩa, đưa `CHI-...` + `HW-...` + model
 > vào Issue, không lộ serial/MAC thô, và fsync OTA để giảm rủi ro trên exFAT.
+> v0.3.14 chỉ cảnh báo/gửi Issue khi mọi nguồn manifest đều thất bại; lỗi DNS
+> của một nguồn được fallback thành công chỉ ghi INFO.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 

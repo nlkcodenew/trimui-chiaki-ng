@@ -1,13 +1,13 @@
 {
-  "version": "0.3.13",
+  "version": "0.3.14",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-24T10:32:13+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.13/files",
-  "release_tag": "v0.3.13/files",
+  "built": "2026-09-24T10:45:41+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.14/files",
+  "release_tag": "v0.3.14/files",
   "note": {
-    "vi": "v0.3.13: tự gửi Issue cho lỗi OTA và lỗi vận hành nhỏ có ý nghĩa.",
-    "en": "v0.3.13: auto-report meaningful OTA and runtime errors as GitHub Issues."
+    "vi": "v0.3.14: không báo lỗi giả khi URL OTA dự phòng tải thành công.",
+    "en": "v0.3.14: avoid false OTA warnings when a fallback URL succeeds."
   },
   "files": [
     {
@@ -117,12 +117,12 @@
     },
     {
       "path": "rh/updater.py",
-      "sha256": "544a2bce67b9a56597d9d6c66ce8d1af72ca08f30555dcb54075d999380cd76c",
-      "size": 16097
+      "sha256": "25fb6d67f6395b74670f3047b6a6fc6e336e972fc3f0b10fceaed8a33517faff",
+      "size": 16414
     },
     {
       "path": "rh/version.py",
-      "sha256": "9c0ae44fbef601a7bf47aafeeebd66f5c8e110ca03eb51648cd80c54ed7e684e",
+      "sha256": "b51dfea62381d769017185eac5d6f769035057e7acb90c77f2c724fd1ded8482",
       "size": 1178
     },
     {
@@ -563,8 +563,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.13.zip",
-    "sha256": "1924ca56dd127fcd9e89562aef39f465baa42ca3392d0d11389bd8ba735d8804",
-    "size": 1353260
+    "name": "trimui-chiaki-ng-v0.3.14.zip",
+    "sha256": "8ece098b41c494e83add3d6647b44383b53946e8dcc0cf27acd590a33e715bbd",
+    "size": 1353351
   }
 }

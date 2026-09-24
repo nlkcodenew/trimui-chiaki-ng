@@ -234,7 +234,8 @@ def fetch_manifest():
     global _last_check_status
     _last_check_status = "checking"
     failures = []
-    for manifest_url in candidate_manifest_urls():
+    manifest_urls = candidate_manifest_urls()
+    for manifest_url in manifest_urls:
         try:
             separator = "&" if "?" in manifest_url else "?"
             url = "%s%s_t=%d" % (manifest_url, separator, int(time.time()))
@@ -261,14 +262,19 @@ def fetch_manifest():
                 return parsed
         except (urllib.error.URLError, OSError, ValueError, UnicodeDecodeError) as exc:
             failures.append(exc)
-            log.warning("OTA manifest failed: source=%s error=%s", manifest_url, exc)
+            log.info("OTA manifest source unavailable; trying fallback: source=%s error=%s",
+                     manifest_url, exc)
             continue
     if failures and all(_is_tls_verification_error(exc) for exc in failures):
         _last_check_status = "tls_error"
-        _report_error("ota_manifest_tls_error")
+        reason = "ota_manifest_tls_error"
     else:
         _last_check_status = "network_error"
-        _report_error("ota_manifest_network_error")
+        reason = "ota_manifest_network_error"
+    last_error = failures[-1] if failures else "invalid manifest"
+    log.warning("OTA manifest unavailable after %d source(s): status=%s last_error=%s",
+                len(manifest_urls), _last_check_status, last_error)
+    _report_error(reason)
     return None
 
 
