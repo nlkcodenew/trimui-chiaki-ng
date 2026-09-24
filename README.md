@@ -23,16 +23,15 @@
 - `v0.3.16` sửa Issue `#38`: Stock OS có OpenSSL 1.1 cũ nhưng thiếu symbol
   `OPENSSL_1_1_1`; launcher Brick preload đúng OpenSSL 1.1.1 đã đóng gói.
 
-Brick Pro Stock OS đã OTA thành công đến `v0.3.14`. Pair PS4 ở `v0.3.14` cũng
-thành công; kết nối dừng trước khi chạy vì Stock OS thiếu shared library của
-native helper. `v0.3.15` đã qua bước thiếu file nhưng chọn nhầm OpenSSL hệ thống
-quá cũ; `v0.3.16` sửa thứ tự này. Stream/input/audio vẫn cần xác nhận lại.
+Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật có hình,
+âm thanh, input. Issue `#39` ghi nhận native exit `0`, tổng `8968` frame,
+`lost=0`, `FEC=0`, phần lớn giữ 29,4–30,2 FPS ở profile 540p30/3000.
 
 Native binary, pair/session pre-10 và mapping SDL của Smart Pro S/Spruce không
 thay đổi. Model `sun55iw3` tiếp tục dùng library hệ thống; chỉ `sun50iw10` có
-`libs/brick-stock` làm fallback sau library Stock OS. Vì runtime đã cô lập nên chưa cần tách
-release. Nếu test máy thật chứng minh ABI/GPU không tương thích, sẽ tách release
-theo OS thay vì làm hỏng nền tảng đang hoạt động.
+`libs/brick-stock` làm fallback sau library Stock OS. Cả hai nền tảng đã stream
+thật với đường runtime riêng nên không cần tách release hiện tại. Chỉ xem xét
+tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể cô lập an toàn.
 
 ## Tính năng
 
@@ -52,7 +51,7 @@ theo OS thay vì làm hỏng nền tảng đang hoạt động.
 |---|---|
 | Smart Pro S/TG5050 | Stream PS4 thật có hình, âm thanh và input |
 | Spruce OS | Stream tốt trên `sun55iw3`; tiếp tục dùng library hệ thống |
-| Brick Pro Stock OS | OTA/pair đạt; `v0.3.16` chờ test stream sau lỗi OpenSSL |
+| Brick Pro Stock OS | `v0.3.16` stream PS4 thật có hình, âm thanh và input |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
 | PS5/H265 | Có mã hỗ trợ trong helper nhưng chưa được kiểm thử máy thật |
 | WAKEUP PS4 Rest Mode | Đã thử thất bại trên môi trường hiện tại và tắt từ `v0.3.10` |

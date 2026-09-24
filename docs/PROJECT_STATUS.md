@@ -32,14 +32,13 @@ mới có `settings.json` mặc định với `device_id` rỗng nhưng không c
 |---|---:|---:|---:|---|
 | Smart Pro S/TG5050 | Đã xác nhận | Đã dùng OTA | Đã stream PS4 thật | Baseline chính |
 | Spruce OS | Đã xác nhận | Không thay đổi | Stream tốt ở `v0.3.14` | Issue `#35`, model `sun55iw3` |
-| Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.15` | Pair đạt; stream chờ retest | Issue `#38`, OpenSSL hệ thống quá cũ |
+| Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.16` | Đã stream PS4 thật | Issue `#39`, video/audio/input đạt |
 | PS4 Pro 9.00/GoldHEN | — | — | Pair/session pre-10 đạt | Không cần PSN |
 | PS5/H265 | — | — | Chưa kiểm thử | Không tuyên bố hỗ trợ máy thật |
 
-Một release chung vẫn phù hợp vì native binary và pair protocol giống nhau.
-`sun50iw10` dùng dependency closure riêng trong `libs/brick-stock`; `sun55iw3`
-không nhận path này và tiếp tục dùng library hệ thống. Chỉ tách release nếu test
-máy thật chứng minh ABI/GPU không thể cô lập an toàn trong launcher.
+Một release chung đã được xác nhận trên máy thật. `sun50iw10` dùng dependency
+closure riêng trong `libs/brick-stock`; `sun55iw3` không nhận path này và tiếp
+tục dùng library hệ thống. Không cần tách release ở trạng thái hiện tại.
 
 ## 3. Kiến trúc runtime
 
@@ -171,6 +170,8 @@ Report:
   FPS 29,8–30,0; đây là baseline.
 - `540p60/15000` — Issue `#20`: khoảng
   `40798 rendered / 1357 lost / 295 FEC`; không khuyến nghị.
+- Brick Stock OS `540p30/3000` — Issue `#39`: `8968 rendered / 0 lost / 0 FEC`,
+  phần lớn 29,4–30,2 FPS, native exit `0`; hình, âm thanh và input hoạt động.
 - 1080p chỉ là bài test tải vì màn mục tiêu 1280×720.
 - Measured bitrate trong log là MBit/s video nhận được, không phải throughput
   tối đa của Wi-Fi.
@@ -261,12 +262,11 @@ Verifier kiểm:
 - File bắt buộc và file cấm.
 - `settings.json` mặc định không có generated device ID.
 
-## 11. Việc tiếp theo
+## 11. Trạng thái chốt
 
-1. Test OTA Brick Pro `v0.3.15 → v0.3.16`.
-2. Xác nhận preflight ghi `native OpenSSL: bundled 1.1.1` và không còn lỗi
-   `OPENSSL_1_1_1 not found`.
-3. Test native stream/video/audio/input trên Brick Pro; đọc Issue tự động mới.
-4. Nếu còn lỗi ABI/GPU dù dependency closure đầy đủ, tách release theo OS.
-5. Giữ baseline Smart Pro S `720p30/4000`; không sửa pair/native nếu không có
-   log chứng minh regression.
+1. Smart Pro S/Spruce và Brick Pro Stock OS đều đã stream PS4 thật thành công.
+2. Giữ một release chung với runtime Brick cô lập theo model; chưa cần tách OS.
+3. Giữ baseline Smart Pro S `720p30/4000`; Brick đã ổn ở `540p30/3000`.
+4. Không sửa pair/native/input nếu không có Issue mới chứng minh regression.
+5. `setterm: not found`, H264 `no frame!` lúc khởi động và server shutdown khi
+   kết thúc phiên hiện là cảnh báo vô hại, không phải lỗi stream.

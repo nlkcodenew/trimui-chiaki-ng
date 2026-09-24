@@ -8,6 +8,7 @@
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
 - Release mới nhất: `v0.3.16`.
+- Commit release: `dac81d6` — preload OpenSSL tương thích cho Brick.
 - Nội dung: preload OpenSSL 1.1.1 tương thích chỉ cho Brick, không đổi native.
 - GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
 - SHA-256 ZIP `v0.3.16`:
@@ -35,8 +36,8 @@ Các nguyên tắc không được phá vỡ:
 6. Nếu các OS thật sự cần native binary/thư viện khác nhau, tách release theo OS
    thay vì sửa gói chung theo cách làm hỏng nền tảng đang hoạt động.
 
-Hiện chưa cần tách release: runtime Brick được cô lập theo model. Nếu test máy
-thật còn lỗi ABI/GPU, tách release theo OS thay vì thay đường chạy Spruce.
+Không cần tách release: runtime Brick được cô lập theo model và cả Brick/Spruce
+đều đã stream thật thành công bằng cùng native binary.
 
 ## 3. Brick Pro Stock OS — trạng thái máy thật
 
@@ -57,6 +58,7 @@ tồn tại và metadata khi cần.
 4. OTA `v0.3.12 → v0.3.13` thành công: 12 file được tải, kiểm hash, cài và
    restart đúng.
 5. OTA lên `v0.3.14` đã thành công; Issue `#36`/`#37` được gửi đúng từ Brick.
+6. OTA `v0.3.15 → v0.3.16` thành công; stream PS4 thật hoạt động đầy đủ.
 
 ### Pair và lỗi stream v0.3.14
 
@@ -74,6 +76,14 @@ Issue `#38` ở `v0.3.15` tiến thêm một bước: loader đã tìm đủ th�
 SONAME nhưng không export `OPENSSL_1_1_1`. Bundle SDK có đúng symbol đó.
 `v0.3.16` dùng `LD_PRELOAD` với đường dẫn tuyệt đối tới đúng hai file bundle;
 SDL/FFmpeg vẫn ưu tiên Stock OS và Spruce không nhận preload.
+
+Issue `#39` xác nhận kết quả cuối trên Brick `sun50iw10`:
+
+- Hình, âm thanh và input hoạt động khi chơi thực tế.
+- Native stream kết thúc bình thường với exit `0`.
+- `8968 rendered / 0 lost / 0 FEC`; phần lớn 29,4–30,2 FPS.
+- `setterm: not found`, một H264 `no frame!` lúc khởi động và server shutdown
+  khi kết thúc phiên là cảnh báo vô hại, không phải regression.
 
 Trong lần lên `v0.3.13`, URL GitHub Release lỗi DNS lúc `10:38:46`:
 
@@ -185,13 +195,14 @@ trong khi retry cùng lỗi được dedupe.
 
 ## 6. Stream đã xác nhận
 
-Mốc stream thật ổn định về chức năng là `v0.3.2` trên Smart Pro S/TG5050 với
-PS4 Pro firmware 9.00/GoldHEN:
+Stream thật đã xác nhận trên Smart Pro S/Spruce và Brick Pro Stock OS với PS4
+Pro firmware 9.00/GoldHEN:
 
 - Có hình, âm thanh và input qua LAN.
 - Pair bằng PIN LAN, protocol pre-10, không dùng PSN.
 - Mapping A/B/X/Y đã xác nhận đúng từ `v0.3.6`.
 - Giữ START+SELECT khoảng 1,2 giây để thoát stream về app.
+- Brick `v0.3.16` đạt `8968/0/0` rendered/lost/FEC trong Issue `#39`.
 
 Profile ưu tiên:
 
@@ -212,17 +223,12 @@ Không tiếp tục sửa WAKEUP nếu không có môi trường mới chứng m
 Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SHA-256:
 `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.
 
-## 7. Việc còn lại
+## 7. Trạng thái kết thúc session
 
-Ưu tiên theo thứ tự:
-
-1. Xác nhận OTA `v0.3.15 → v0.3.16` trên Brick Pro.
-2. Kiểm tra preflight có `native OpenSSL: bundled 1.1.1`, không còn lỗi symbol.
-3. Kiểm thử native video/audio/input trên Brick Pro và đọc Issue mới nếu có.
-4. Chỉ tách release nếu dependency closure vẫn không tương thích ABI/GPU.
-5. Tiếp tục dùng `720p30/4000` làm baseline Smart Pro S.
-
-Không thay native binary, pair/session hoặc SDL mapping đã chạy trên Spruce.
+- Không còn lỗi phát hành hoặc kiểm thử máy thật đang chờ xử lý.
+- `v0.3.16` là latest và đã xác nhận trên Brick Pro Stock OS.
+- Tiếp tục dùng `720p30/4000` trên Smart Pro S và `540p30/3000` trên Brick.
+- Không thay native binary, pair/session hoặc SDL mapping nếu không có Issue mới.
 
 ## 8. Lệnh kiểm tra
 
@@ -269,8 +275,8 @@ Trước commit/release, xác nhận không stage:
 ```text
 Tiếp tục repo E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước.
-Release v0.3.16 preload OpenSSL bundle chỉ cho Brick sun50iw10 sau Issue #38.
-Cần xác nhận OTA và stream thật; Spruce sun55iw3 phải tiếp tục dùng runtime
-system và không preload. Không tắt TLS, không đọc/tiết lộ token, không thay
-native stream/pair/input đang hoạt động trên Smart Pro S/Spruce.
+Release v0.3.16 đã stream thật thành công trên Brick sun50iw10; Issue #39 đạt
+8968/0/0 rendered/lost/FEC và exit 0. Spruce sun55iw3 vẫn dùng runtime system.
+Không tắt TLS, không đọc/tiết lộ token và không sửa native/pair/input nếu không
+có Issue mới chứng minh regression.
 ```

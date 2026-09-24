@@ -10,9 +10,8 @@ OS và TrimUI Brick Pro Stock OS.
 - Thẻ microSD FAT32 hoặc exFAT có quyền ghi vào `Apps/`.
 - PS4/PS5 và máy TrimUI ở cùng LAN khi quét/ghép nối.
 
-Native helper đi kèm là ELF64 AArch64. Smart Pro S/TG5050 với Spruce OS đã được
-xác nhận stream PS4 thật. Brick Pro Stock OS đã xác nhận app, TLS, OTA và pair
-đến `v0.3.15`; runtime `v0.3.16` vẫn cần kiểm thử stream trên máy thật.
+Native helper đi kèm là ELF64 AArch64. Smart Pro S/TG5050 với Spruce OS và Brick
+Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm thanh và input.
 
 ## Cài GitHub Release
 
@@ -56,14 +55,15 @@ dependency closure AArch64 tại `Apps/Chiaki/libs/brick-stock/` và chỉ thêm
 làm fallback sau library Stock OS khi model là `sun50iw10`.
 
 Smart Pro S/Spruce model `sun55iw3` không dùng bundle này và tiếp tục chạy với
-library hệ thống đã được xác nhận. Chưa cần tách ZIP theo OS; chỉ tách release
-nếu test Brick tiếp theo cho thấy ABI/GPU thực sự không thể dùng chung native
-binary.
+library hệ thống đã được xác nhận. Brick `sun50iw10` và Spruce đều đã stream
+thành công bằng cùng native binary, nên hiện không cần tách ZIP theo OS.
 
 Issue `#38` cho thấy `v0.3.15` đã tìm được dependency closure, nhưng loader ưu
 tiên `/usr/lib/libssl.so.1.1` và `/usr/lib/libcrypto.so.1.1` quá cũ, không export
 `OPENSSL_1_1_1`. `v0.3.16` preload đúng hai file OpenSSL 1.1.1 đóng gói chỉ cho
 native stream trên Brick. SDL/FFmpeg vẫn ưu tiên Stock OS; Spruce không preload.
+Issue `#39` xác nhận bản sửa hoạt động: stream kết thúc `exit=0`, `8968` frame,
+không mất frame và không có FEC failure.
 
 Từ `v0.3.11`, app dùng thêm `certs/cacert.pem` nhưng vẫn giữ
 `ssl.CERT_REQUIRED` và hostname verification. Không xóa CA bundle và không sửa
