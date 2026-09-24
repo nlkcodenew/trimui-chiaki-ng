@@ -43,6 +43,9 @@ ARCHIVE_EXCLUDE_PREFIXES = (
     "Chiaki-loi.txt",
     "Chiaki-debug.log",
 )
+LF_NORMALIZED_EXTENSIONS = {
+    ".json", ".md", ".py", ".sh", ".txt", ".yaml", ".yml",
+}
 
 
 def _runtime_file(name):
@@ -61,10 +64,17 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def release_bytes(path):
+    with open(path, "rb") as handle:
+        data = handle.read()
+    if os.path.splitext(path)[1].lower() in LF_NORMALIZED_EXTENSIONS:
+        data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return data
+
+
 def _archive_file(archive, source, target, executable=False):
     """Ghi file với mode Unix ổn định, kể cả khi build trên Windows."""
-    with open(source, "rb") as handle:
-        data = handle.read()
+    data = release_bytes(source)
     info = zipfile.ZipInfo(target, date_time=(2020, 1, 1, 0, 0, 0))
     info.compress_type = zipfile.ZIP_DEFLATED
     info.create_system = 3
@@ -123,8 +133,7 @@ def main():
                 continue
             fp = os.path.join(root, fn)
             rel = os.path.relpath(fp, FILES_DIR).replace(os.sep, "/")
-            with open(fp, "rb") as f:
-                data = f.read()
+            data = release_bytes(fp)
             files.append({
                 "path": rel,
                 "sha256": sha256(data),

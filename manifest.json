@@ -2,7 +2,7 @@
   "version": "0.3.13",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-24T10:25:49+07:00",
+  "built": "2026-09-24T10:32:13+07:00",
   "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.13/files",
   "release_tag": "v0.3.13/files",
   "note": {
@@ -17,8 +17,8 @@
     },
     {
       "path": "config.json",
-      "sha256": "3bc874b170bccf4e8329c5b3239b047577cdeccdcf1304276a2b1b05f55998df",
-      "size": 108
+      "sha256": "5a47c332cf016c4f96704bd9bf3da66abad070d78116a15f1ee1103c8d1cb619",
+      "size": 107
     },
     {
       "path": "icon.png",
@@ -117,8 +117,8 @@
     },
     {
       "path": "rh/updater.py",
-      "sha256": "c67518e432443580e385f77ae95b360a9eb466c4cb2d93f3f221c19e1594a39b",
-      "size": 16098
+      "sha256": "544a2bce67b9a56597d9d6c66ce8d1af72ca08f30555dcb54075d999380cd76c",
+      "size": 16097
     },
     {
       "path": "rh/version.py",
@@ -142,8 +142,8 @@
     },
     {
       "path": "rh/modals/update.py",
-      "sha256": "acea90dbf1ecb33f43789099bff6c6ca984be6e0d580bea165fb756170488b3d",
-      "size": 7644
+      "sha256": "ce93963934a45be09a019645ce19d32f03cb6905f17e4215300cd54af72e9bc4",
+      "size": 7519
     },
     {
       "path": "rh/screens/__init__.py",
@@ -564,7 +564,7 @@
   "remove": [],
   "release_asset": {
     "name": "trimui-chiaki-ng-v0.3.13.zip",
-    "sha256": "80b60f316459be71e965f354eb017d5d5f553ebca0ea59dc4dd63884943d0935",
-    "size": 1353300
+    "sha256": "1924ca56dd127fcd9e89562aef39f465baa42ca3392d0d11389bd8ba735d8804",
+    "size": 1353260
   }
 }

@@ -10,6 +10,8 @@ import re
 import sys
 import zipfile
 
+from make_release import release_bytes
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILES_DIR = os.path.join(ROOT, "files")
 CA_BUNDLE_SHA256 = "f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9"
@@ -99,7 +101,7 @@ def main():
         source = os.path.join(FILES_DIR, *rel.split("/"))
         if not os.path.isfile(source):
             fail("manifest source is missing: %s" % rel)
-        if sha256_file(source) != item.get("sha256"):
+        if hashlib.sha256(release_bytes(source)).hexdigest() != item.get("sha256"):
             fail("manifest hash mismatch: %s" % rel)
         listed.add(rel)
 
@@ -124,6 +126,10 @@ def main():
 
     with zipfile.ZipFile(archive_path) as archive:
         names = set(archive.namelist())
+        for item in manifest.get("files", []):
+            archived = archive.read("App/Chiaki/%s" % item["path"])
+            if hashlib.sha256(archived).hexdigest() != item.get("sha256"):
+                fail("ZIP payload hash mismatch: %s" % item["path"])
     missing = REQUIRED_ARCHIVE - names
     if missing:
         fail("ZIP is missing: %s" % ", ".join(sorted(missing)))

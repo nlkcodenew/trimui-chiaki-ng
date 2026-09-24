@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import importlib
+import importlib.util
 import base64
+import hashlib
 import json
 import logging
 import os
@@ -358,6 +360,27 @@ class LogUploaderTests(unittest.TestCase):
             verify_release = handle.read()
         self.assertIn('"secrets..json"', make_release)
         self.assertIn('"secrets..json"', verify_release)
+
+    def test_release_bytes_normalize_text_but_preserve_binary(self):
+        root = os.path.dirname(os.path.dirname(__file__))
+        path = os.path.join(root, "tools", "make_release.py")
+        spec = importlib.util.spec_from_file_location("release_builder_test", path)
+        release_builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(release_builder)
+        text_path = os.path.join(self.work_dir, "sample.py")
+        binary_path = os.path.join(self.work_dir, "sample.bin")
+        with open(text_path, "wb") as handle:
+            handle.write(b"first\r\nsecond\rthird\n")
+        with open(binary_path, "wb") as handle:
+            handle.write(b"first\r\nsecond\rthird\n")
+        self.assertEqual(
+            release_builder.release_bytes(text_path),
+            b"first\nsecond\nthird\n",
+        )
+        self.assertEqual(
+            release_builder.release_bytes(binary_path),
+            b"first\r\nsecond\rthird\n",
+        )
 
     def test_manual_update_check_reports_tls_failure(self):
         screen = self.home_module.HomeScreen(types.SimpleNamespace())
