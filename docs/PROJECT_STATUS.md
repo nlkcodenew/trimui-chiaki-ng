@@ -1,6 +1,6 @@
-# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.9)
+# trimui-chiaki-ng — Trạng thái dự án (đến v0.3.10)
 
-> Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-23.
+> Tài liệu tổng hợp cho session mới. Cập nhật: 2026-09-24.
 > v0.3.2 sửa đăng ký/session pre-10 cho PS4 Pro firmware 9.00 GoldHEN.
 > **Mốc đã đạt trên máy thật:** stream có hình, nhận input và chơi được qua LAN.
 > v0.3.3 giữ nguyên giao thức đã chạy tốt, giảm tải log/render, thêm báo cáo chất
@@ -13,6 +13,8 @@
 > và gửi WAKEUP để bật PS4 từ Rest Mode; pair/session pre-10 giữ nguyên.
 > v0.3.8 sửa packet WAKEUP theo upstream và tự gửi Issue chẩn đoán khi timeout.
 > Issue #26/#27 vẫn 0 host sau unicast; v0.3.9 thêm broadcast LAN và retry.
+> Issue #28-#30 vẫn timeout; v0.3.10 tắt WAKEUP và host offline trong giao diện,
+> quay lại luồng bật PS4 bằng tay rồi quét/kết nối như v0.3.6.
 >
 > Bàn giao session mới và quy trình gửi log: `docs/NEW_SESSION_HANDOFF.md`.
 
@@ -46,8 +48,7 @@
   không có pending marker thì không tạo Issue mới không cần thiết.
 - Đã xác nhận trên Smart Pro S thật ngày 2026-09-23: màn hình PS4 xuất hiện,
   điều khiển hoạt động và chơi game qua LAN được; cảm nhận ban đầu khá ổn.
-- Chưa xong: xác nhận WAKEUP v0.3.9 trên máy thật, PS5/H265 và
-  Internet/RUDP.
+- Chưa xong: PS5/H265 và Internet/RUDP. WAKEUP đã được thử và tắt ở v0.3.10.
 
 ## 1. Mục tiêu
 
@@ -163,7 +164,7 @@ Tổng 20/20 test pass; `make_release.py` + `verify_release.py` pass cho v0.2.10
 `v0.2.9` và `v0.2.10` đã success trên Actions, `latest` hiện là `v0.2.10`. `v0.2.11` đang chuẩn bị phát hành
 để sửa discovery. Máy đang ở `v0.2.10` đã xác nhận OTA `CẬP NHẬT -> CÀI NGAY` hoạt động.
 
-### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.9 thêm broadcast WAKEUP
+### 4.4 P2 — Stream PS4 LAN đã triển khai; v0.3.10 tắt WAKEUP
 `HomeScreen` tạo phiên tạm bảo mật rồi thoát SDL menu; `launch.sh` chạy
 `bin/chiaki-stream` và mở lại menu sau khi phiên kết thúc. Native helper dùng
 `chiaki_session_*`, FFmpeg H264, SDL renderer/input/audio với cấu hình mặc định
@@ -205,6 +206,12 @@ sửa trong app và bổ sung số đo để kiểm chứng phần mạng trên 
   nhiều FEC, IDR và decoder-buffer warning, nên profile này không phù hợp.
 - Issue `#21`, 1280x720@30/4000, đạt `6565/2/0` rendered/lost/FEC và native cuối
   `6654/2`; FPS ổn định 29,8–30,0 trong các cửa sổ chạy, là profile ưu tiên.
+- Issue `#29/#30`, v0.3.9: PS4 ở Rest Mode vẫn không phản hồi unicast hoặc
+  broadcast WAKEUP. Sau khi bật PS4 bằng tay, discovery chuyển từ 0 lên 1 host
+  trong khoảng 9 giây. Lần stream đầu sau đó lỗi Ctrl và giữ lease phía PS4;
+  `#31-#33` báo Remote Play đang được dùng. Khoảng hai phút sau, `#34` kết nối
+  thành công ở 540p60/6000: `3430 rendered / 2 lost / 0 FEC`, phần lớn 57-59 FPS.
+  Đây là lease PS4 đã thấy từ v0.3.5, không phải thời gian chờ mới của WAKEUP.
 
 `StreamConnection measured bitrate` dùng đơn vị **MBit/s**, không phải MB/s và
 chỉ là bitrate video nhận được trong cửa sổ thống kê; nó không đo giới hạn
@@ -283,9 +290,8 @@ git -C 'E:\Trimiu Brick Pro\Project APPS\chiaki-ng' push origin v0.2.11
    START+SELECT 1,2 giây.
 3. Sau khi về menu, chờ khoảng hai phút trước khi bắt đầu profile khác để PS4
    nhả lease Remote Play; không pair lại và không tắt PS4.
-4. Sau khi nhận `v0.3.9`, quét khi PS4 ở Rest Mode, chọn host `[offline]`, bấm
-   **A – ĐÁNH THỨC**, chờ `ready` rồi bấm A để stream.
-   Nếu timeout, kiểm tra Issue `wakeup_timeout`; không dán credential vào chat.
+4. Từ `v0.3.10`, bật PS4 bằng tay, chờ auto-login rồi quét. Nếu chưa thấy máy,
+   chờ thêm và quét lại. Không còn host `[offline]` hoặc nút WAKEUP.
 5. Không ưu tiên 1080p hoặc 15000 kbps trên màn 720p; số liệu v0.3.5 đã chứng
    minh chúng tăng tải mà không đem lại độ phân giải hiển thị cao hơn.
 

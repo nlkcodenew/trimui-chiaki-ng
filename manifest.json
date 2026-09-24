@@ -1,13 +1,13 @@
 {
-  "version": "0.3.9",
+  "version": "0.3.10",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-23T23:48:37+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.9/files",
-  "release_tag": "v0.3.9/files",
+  "built": "2026-09-24T08:20:29+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.10/files",
+  "release_tag": "v0.3.10/files",
   "note": {
-    "vi": "v0.3.9: gửi WAKEUP PS4 bằng unicast và broadcast LAN có retry.",
-    "en": "v0.3.9: send PS4 WAKEUP over unicast and LAN broadcast with retry."
+    "vi": "v0.3.10: tắt WAKEUP; chỉ hiện PS4 đang phản hồi khi quét LAN.",
+    "en": "v0.3.10: disable WAKEUP; only show consoles responding on LAN."
   },
   "files": [
     {
@@ -102,8 +102,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "15a581360fb9b39e1a260dd3784ffd9600e07175995eaed87634db96323c45ee",
-      "size": 1177
+      "sha256": "135d1768b0d7d527384e3338cd054fc19d89412e7674c7304b567a35c54d95d3",
+      "size": 1178
     },
     {
       "path": "rh/modals/__init__.py",
@@ -137,8 +137,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "5f8ee69fbb4c744ab1d231a67f1a5f096c1b7feeb59a928ff048dfa598e588f1",
-      "size": 12182
+      "sha256": "f2252888bf996a2cffe977e1cdfb73554e26fd63891685911d149370ccb3ce5a",
+      "size": 9463
     },
     {
       "path": "rh/screens/pair.py",
@@ -543,8 +543,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.9.zip",
-    "sha256": "f202bfe6861780aaada2a96f150da274dfffae213c645bd463d94bf5c62e64a3",
-    "size": 1240460
+    "name": "trimui-chiaki-ng-v0.3.10.zip",
+    "sha256": "91298b9553bab35327dff5065a062b15aaf857cd4df778f8b7bc4a230f7bfd08",
+    "size": 1239782
   }
 }

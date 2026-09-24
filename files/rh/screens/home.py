@@ -67,8 +67,6 @@ class HomeScreen(BaseScreen):
             host = self.hosts[self.host_selected]
             paired = self._is_paired(host) if self.hosts else False
             if paired:
-                if getattr(host, "state", "") in ("offline", "standby", "waking"):
-                    return [("A", tr("wake")), ("Y", tr("pair")), ("B", tr("back"))]
                 return [("A", tr("connect")), ("Y", tr("pair")), ("B", tr("back"))]
             return [("A", tr("pair")), ("B", tr("back"))]
         return [("A", tr("select"))]
@@ -84,20 +82,16 @@ class HomeScreen(BaseScreen):
 
     def _do_scan(self):
         try:
-            discovered = chiaki.discovery_broadcast(timeout=3.0)
-            hosts = chiaki.paired_hosts_for_discovery(discovered)
+            hosts = chiaki.discovery_broadcast(timeout=3.0)
         except Exception as exc:
             log.error("scan exception: %s", exc)
-            hosts = chiaki.paired_hosts_for_discovery([])
+            hosts = []
         self.hosts = hosts
         self.scanning = False
-        if any(getattr(host, "state", "") != "offline" for host in hosts):
+        if hosts:
             self.toast = tr("scan_done") % len(hosts)
             log.info("scan: %d host(s) %s",
                      len(hosts), [h.addr for h in hosts])
-        elif hosts:
-            self.toast = tr("scan_paired_offline")
-            log.info("scan: paired host offline %s", [host.addr for host in hosts])
         else:
             self.toast = tr("scan_none")
             log.info("scan: khong thay host")
@@ -143,65 +137,12 @@ class HomeScreen(BaseScreen):
             self.toast = tr("pair_required") if "pair_required" in tr("pair_required") else "Chưa ghép - bấm Y để nhập PIN"
             self._open_pair(host)
             return
-        if getattr(host, "state", "") in ("offline", "standby", "waking"):
-            self._wake_host(host)
-            return
         log.info("home: yeu cau stream toi %s (%s)", host.name or host.addr, host.addr)
         ok, message = chiaki.prepare_stream_launch(host)
         self.toast = message
         self.toast_until = time.time() + 4
         if ok:
             self.engine.quit("stream_launch")
-
-    def _wake_host(self, host):
-        if self.scanning:
-            return
-        if not chiaki.wake_paired_host(host):
-            log.error("wakeup send failed: host=%s state=%s", host.addr, host.state)
-            self.toast = tr("wake_failed")
-            self.toast_until = time.time() + 4
-            self._report_wakeup("wakeup_send_failed")
-            return
-        host.state = "waking"
-        self.scanning = True
-        self.toast = tr("wake_sent")
-        self.toast_until = time.time() + 20
-        threading.Thread(target=self._wait_for_wakeup, args=(host.addr,), daemon=True).start()
-
-    def _wait_for_wakeup(self, addr):
-        try:
-            for attempt in range(1, 7):
-                hosts = chiaki.paired_hosts_for_discovery(
-                    chiaki.discovery_broadcast(timeout=2.0))
-                self.hosts = hosts
-                states = [host.state for host in hosts if host.addr == addr]
-                log.info("wakeup probe: attempt=%d/6 states=%s", attempt, states)
-                for host in hosts:
-                    if host.addr == addr and host.state == "ready":
-                        self.host_selected = hosts.index(host)
-                        self.toast = tr("wake_ready")
-                        self.toast_until = time.time() + 8
-                        return
-                time.sleep(1.0)
-            log.error("wakeup timeout: attempts=6 final_state=offline")
-            self.toast = tr("wake_timeout")
-            self.toast_until = time.time() + 6
-            self._report_wakeup("wakeup_timeout")
-        except Exception as exc:
-            log.error("wakeup scan failed: %s", exc)
-            self.toast = tr("wake_failed")
-            self.toast_until = time.time() + 4
-            self._report_wakeup("wakeup_exception")
-        finally:
-            self.scanning = False
-
-    @staticmethod
-    def _report_wakeup(reason):
-        try:
-            from ..log_uploader import queue_diagnostic
-            queue_diagnostic(reason)
-        except Exception as exc:
-            log.warning("cannot upload wakeup diagnostic: %s", exc)
 
     def handle_input(self, inputs):
         if not inputs:

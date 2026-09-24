@@ -1,6 +1,6 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.9
+# Bàn giao session mới — trimui-chiaki-ng v0.3.10
 
-> Cập nhật: 2026-09-23. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
+> Cập nhật: 2026-09-24. Đây là tài liệu cần đọc đầu tiên khi tiếp tục dự án.
 
 ## 1. Mục tiêu hiện tại
 
@@ -16,6 +16,8 @@ A/B/X/Y ở native SDL GameController và đã được xác nhận đúng trên
 port 9303–9319; timeout tự tạo Issue chẩn đoán `wakeup_timeout`.
 Issue `#26/#27` xác nhận hai lần unicast chuẩn vẫn timeout với 0 discovery host.
 `v0.3.9` thêm broadcast LAN và gửi hai vòng để tránh IP ngủ/ARP/UDP bị mất.
+Issue `#28-#30` vẫn timeout dù bốn packet được gửi thành công. `v0.3.10` tắt
+WAKEUP/host offline trong giao diện và trở lại luồng quét máy đang bật của v0.3.6.
 
 ## 2. Repo và bản phát hành
 
@@ -23,9 +25,9 @@ Issue `#26/#27` xác nhận hai lần unicast chuẩn vẫn timeout với 0 disc
 - Thư mục làm việc: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`
 - Nhánh: `main`
 - Mốc ổn định đã xác nhận trên máy thật: `v0.3.2` (`9605d83`)
-- Bản stream/mapping đã kiểm thử máy thật: `v0.3.6`; bản WAKEUP cần test thật: `v0.3.9`
-- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.9`
-- `manifest.json` phải trả về đúng `0.3.9`, có
+- Bản stream/mapping đã kiểm thử máy thật: `v0.3.6`; WAKEUP đã tắt ở `v0.3.10`
+- Release: `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.10`
+- `manifest.json` phải trả về đúng `0.3.10`, có
   `bin/chiaki-stream` và không có `settings.json`.
 
 ## 3. Phần cứng kiểm thử
@@ -209,8 +211,8 @@ log từ Smart Pro S và không dùng để chẩn đoán stream:
 
 ## 10. Các phần chưa xác nhận
 
-- Xác nhận WAKEUP của `v0.3.9` từ Rest Mode trên máy thật; nếu fail, đọc Issue
-  `wakeup_timeout` chứa source port, payload format, probe states và lỗi mạng.
+- WAKEUP đã được thử trên máy thật và tắt ở v0.3.10; không tiếp tục sửa packet
+  nếu chưa có môi trường mạng khác chứng minh PS4 có thể được đánh thức.
 - Tối ưu decoder/render để 720p60 ổn định hơn.
 - Bitrate tối ưu cho Wi-Fi và RAM 1 GB của Smart Pro S.
 - Khả năng chạy 1080p30/1080p60 trên A523.

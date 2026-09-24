@@ -2,12 +2,11 @@
 
 Ứng dụng PS4 / PS5 Remote Play cho máy TrimUI Smart Pro S (firmware Linux 1.1.1).
 
-**Trạng thái**: v0.3.9 - sau khi log `#26/#27` xác nhận unicast WAKEUP chuẩn vẫn
-không đến PS4 đang ngủ, app gửi packet qua cả IP đã pair và broadcast LAN, lặp
-hai vòng. Timeout vẫn tự gửi Issue chẩn đoán. v0.3.8 sửa packet theo upstream;
-v0.3.7 thêm host đã ghép nối khi offline; v0.3.6 sửa mapping
-bốn nút mặt và đã được xác nhận đúng trên máy thật.
-Các bản này giữ nguyên pair/session pre-10, quản lý log và thao tác thoát stream.
+**Trạng thái**: v0.3.10 - tắt WAKEUP và không còn đưa host đã lưu nhưng offline
+vào kết quả quét. Quy trình lại giống v0.3.6: bật PS4 bằng tay, đợi máy xuất hiện
+khi quét LAN rồi kết nối. Các thử nghiệm v0.3.7-v0.3.9 xác nhận packet WAKEUP đã
+được gửi đúng nhưng PS4 Wi-Fi/GoldHEN không phản hồi. Pair/session pre-10,
+mapping nút đã xác nhận, quản lý log và thao tác thoát stream được giữ nguyên.
 
 **Nền tảng v0.3.4:** bổ sung quản lý log và sửa thao tác thoát stream trên
 TrimUI. Màn hình chính luôn hiện hướng dẫn giữ `START + SELECT` 1,2 giây; native
@@ -59,14 +58,11 @@ sách GitHub Issue/log cần đọc trực tiếp từ thiết bị.
 
 1. Sau khi cập nhật từ v0.3.1, chọn PS4 và bấm **Y – GHÉP NỐI** để nhập PIN lại
    đúng một lần. Khóa cũ được tạo bằng giao thức 10.0 nên không dùng cho FW 9.00.
-2. Để bật từ xa, trên PS4 bật Internet và bật máy qua mạng trong Rest Mode, bật
-   auto-login, rồi đưa PS4 vào Rest Mode thay vì tắt hoàn toàn.
-3. Quét LAN. Nếu PS4 đang nghỉ, host đã ghép nối vẫn hiện `[offline]`; chọn host
-   và bấm **A – ĐÁNH THỨC**. Khi app báo sẵn sàng, bấm A lần nữa để chơi.
-   Tính năng này chỉ hoạt động từ Rest Mode, không bật được PS4 đã tắt hoàn toàn.
-   Nếu PS4 không phản hồi, app ghi các marker `wakeup sent`, `wakeup probe`,
-   `wakeup timeout` và tự gửi Issue `wakeup_timeout` nếu đã cấu hình uploader.
-4. Nếu PS4 đã `ready`, bấm **A – BẮT ĐẦU CHƠI** như trước.
+2. Bật PS4 bằng nút nguồn hoặc tay cầm thật và để auto-login hoàn tất.
+3. Quét LAN. App chỉ hiện PS4 đang phản hồi; nếu chưa thấy, chờ máy khởi động
+   xong rồi quét lại. Chọn PS4 và bấm **A – BẮT ĐẦU CHƠI**.
+4. Nếu một lần kết nối thất bại rồi PS4 báo Remote Play đang được dùng, không
+   bấm liên tục; chờ khoảng hai phút để PS4 nhả phiên rồi quét/kết nối lại.
 5. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại menu.
    Không cần tắt, rest mode hoặc khởi động lại PS4.
 6. Khi thoát stream bình thường, app tự gửi Issue `native_stream_quality` chứa

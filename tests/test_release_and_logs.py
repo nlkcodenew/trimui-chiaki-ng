@@ -927,19 +927,17 @@ class LogUploaderTests(unittest.TestCase):
             os.remove(paired_path)
         wake.assert_called_once_with("192.168.1.45", regist_key, False)
 
-    def test_home_offline_host_wakes_instead_of_starting_stream(self):
+    def test_home_scan_does_not_show_saved_offline_host(self):
         chiaki = importlib.import_module("rh.chiaki")
         home = importlib.import_module("rh.screens.home")
+        i18n = importlib.import_module("rh.i18n")
         screen = home.HomeScreen(mock.Mock())
-        host = chiaki.DiscoveredHost(
-            name="PS4-896", addr="192.168.1.45", state="offline", target=900,
-        )
-        with mock.patch.object(screen, "_is_paired", return_value=True), \
-                mock.patch.object(screen, "_wake_host") as wake, \
-                mock.patch.object(chiaki, "prepare_stream_launch") as prepare:
-            screen._start_stream(host)
-        wake.assert_called_once_with(host)
-        prepare.assert_not_called()
+        with mock.patch.object(chiaki, "discovery_broadcast", return_value=[]), \
+                mock.patch.object(chiaki, "paired_hosts_for_discovery") as merge:
+            screen._do_scan()
+        self.assertEqual(screen.hosts, [])
+        self.assertEqual(screen.toast, i18n.TEXTS["VI"]["scan_none"])
+        merge.assert_not_called()
 
     def test_home_ready_host_starts_stream_without_wakeup(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -950,13 +948,11 @@ class LogUploaderTests(unittest.TestCase):
             name="PS4-896", addr="192.168.1.45", state="ready", target=900,
         )
         with mock.patch.object(screen, "_is_paired", return_value=True), \
-                mock.patch.object(screen, "_wake_host") as wake, \
                 mock.patch.object(
                     chiaki, "prepare_stream_launch", return_value=(True, "ok"),
                 ) as prepare:
             screen._start_stream(host)
         prepare.assert_called_once_with(host)
-        wake.assert_not_called()
         engine.quit.assert_called_once_with("stream_launch")
 
     def test_video_profiles_include_1080p(self):

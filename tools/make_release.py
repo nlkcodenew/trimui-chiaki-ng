@@ -143,8 +143,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: gửi WAKEUP PS4 bằng unicast và broadcast LAN có retry." % version,
-            "en": "v%s: send PS4 WAKEUP over unicast and LAN broadcast with retry." % version,
+            "vi": "v%s: tắt WAKEUP; chỉ hiện PS4 đang phản hồi khi quét LAN." % version,
+            "en": "v%s: disable WAKEUP; only show consoles responding on LAN." % version,
         },
         "files": files,
         "remove": [],
