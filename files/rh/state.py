@@ -11,6 +11,7 @@ import threading
 from .paths import APP_DIR, SETTINGS_FILE
 
 current_lang = "VI"
+VIDEO_RESOLUTIONS = ("360p", "540p", "720p")
 video_resolution = "720p"
 video_fps = 30
 video_bitrate = 8000
@@ -32,8 +33,7 @@ regist_key = ""
 rp_key = ""
 rp_key_type = 0
 server_mac = ""
-auto_upload_logs = True
-github_issue_repo = "nlkcodenew/trimui-chiaki-ng"
+auto_upload_logs = False
 settings_load_error = ""
 settings_save_error = ""
 
@@ -47,7 +47,7 @@ def _load():
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
     global psn_account_id, psn_online_id, regist_key, rp_key, rp_key_type, server_mac
     global host_target
-    global auto_upload_logs, github_issue_repo
+    global auto_upload_logs
     if not os.path.exists(SETTINGS_FILE):
         return
     try:
@@ -57,7 +57,9 @@ def _load():
         settings_load_error = exc.__class__.__name__
         return
     current_lang = cfg.get("language", current_lang)
-    video_resolution = cfg.get("video_resolution", video_resolution)
+    loaded_resolution = cfg.get("video_resolution", video_resolution)
+    video_resolution = (loaded_resolution if loaded_resolution in VIDEO_RESOLUTIONS
+                        else "720p")
     video_fps = int(cfg.get("video_fps", video_fps))
     video_bitrate = int(cfg.get("video_bitrate", video_bitrate))
     audio_volume = int(cfg.get("audio_volume", audio_volume))
@@ -82,7 +84,6 @@ def _load():
         psn_account_id = ""
         regist_key = ""
     auto_upload_logs = bool(cfg.get("auto_upload_logs", auto_upload_logs))
-    github_issue_repo = cfg.get("github_issue_repo", github_issue_repo)
 
 
 def save_settings():
@@ -116,7 +117,6 @@ def save_settings():
                 "rp_key_type": rp_key_type,
                 "server_mac": server_mac,
                 "auto_upload_logs": auto_upload_logs,
-                "github_issue_repo": github_issue_repo,
             }
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)

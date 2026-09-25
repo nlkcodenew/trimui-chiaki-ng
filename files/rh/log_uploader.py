@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Gui crash log len GitHub Issues.
-
-GitHub khong cho tao Issue an danh, vi vay thiet bi can mot fine-grained token
-chi co quyen Issues: Read and write cho duy nhat repo nhan log. Token duoc doc
-tu secrets.json (khong nam trong manifest/Release) hoac CHIAKI_GITHUB_TOKEN.
-
-Uploader chi chay khi co .pending_crash, loc token/key/password/private IP,
-gioi han kich thuoc, va nho fingerprint de khong tao Issue trung lap.
-"""
+"""Gui log da loc qua HTTPS relay; app khong chua GitHub credential."""
 
 import argparse
 import hashlib
@@ -17,6 +9,7 @@ import platform
 import re
 import threading
 import time
+import urllib.parse
 import urllib.request
 
 from . import state
@@ -28,7 +21,7 @@ from .device_identity import diagnostic_identity
 
 log = get_logger()
 
-SECRETS_FILE = os.path.join(APP_DIR, "secrets.json")
+REPORTING_FILE = os.path.join(APP_DIR, "reporting.json")
 STATE_FILE = os.path.join(APP_DIR, ".log_upload_state.json")
 PENDING_FILE = os.path.join(APP_DIR, ".pending_crash")
 MAX_LOG_BYTES = 24000
@@ -42,13 +35,14 @@ _SECRET_LINE = re.compile(
     r"sunxi_chipid|chip[-_ ]?id|machine[-_ ]?id)[^:=\n]*[:=]\s*)"
     r"[^\s,}\]]+"
 )
-_GITHUB_TOKEN = re.compile(r"\b(?:ghp|github_pat|gho|ghu|ghs|ghr)_[A-Za-z0-9_]+\b")
+_GITHUB_TOKEN = re.compile(
+    r"\b(?:ghp|github_pat|gho|ghu|ghs|ghr)_[^\s,}\]\[\"']+"
+)
 _PRIVATE_IP = re.compile(
     r"\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|"
     r"172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})\b"
 )
 _MAC_ADDRESS = re.compile(r"(?i)\b(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}\b")
-_REPO_NAME = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 _pending_lock = threading.Lock()
 _upload_lock = threading.Lock()
 
@@ -116,17 +110,12 @@ def _clear_uploaded_reasons(uploaded_reasons):
             pass
 
 
-def _configuration():
-    cfg = _read_json(SECRETS_FILE)
-    misnamed_file = os.path.join(os.path.dirname(SECRETS_FILE), "secrets..json")
-    if not os.path.isfile(SECRETS_FILE) and os.path.isfile(misnamed_file):
-        log.warning("found secrets..json but uploader requires secrets.json; file contents were not read")
-    token = os.environ.get("CHIAKI_GITHUB_TOKEN") or cfg.get("github_token", "")
-    repo = (cfg.get("github_issue_repo") or
-            getattr(state, "github_issue_repo", "") or
-            "nlkcodenew/trimui-chiaki-ng")
-    enabled = bool(getattr(state, "auto_upload_logs", True))
-    return token.strip(), repo.strip(), enabled
+def _report_configuration():
+    public_cfg = _read_json(REPORTING_FILE)
+    relay_url = (os.environ.get("CHIAKI_ISSUE_RELAY_URL") or
+                 public_cfg.get("issue_relay_url", ""))
+    enabled = bool(getattr(state, "auto_upload_logs", False))
+    return relay_url.strip(), enabled
 
 
 def _tail(path, max_bytes=MAX_LOG_BYTES):
@@ -224,17 +213,25 @@ def _issue_body(sections, reason, fingerprint):
     return "\n".join(lines)[:MAX_BODY_CHARS]
 
 
-def _post_issue(token, repo, title, body):
-    url = "https://api.github.com/repos/%s/issues" % repo
-    payload = json.dumps({"title": title, "body": body}).encode("utf-8")
+def _post_relay(relay_url, title, body, fingerprint):
+    parsed = urllib.parse.urlsplit(relay_url)
+    if (parsed.scheme != "https" or not parsed.netloc or parsed.username
+            or parsed.password or parsed.query or parsed.fragment):
+        raise ValueError("issue relay URL must be HTTPS without credentials or query")
+    payload = json.dumps({
+        "schema": 1,
+        "app": "trimui-chiaki-ng",
+        "version": APP_VERSION,
+        "fingerprint": fingerprint,
+        "title": title,
+        "body": body,
+    }).encode("utf-8")
     request = urllib.request.Request(
-        url,
+        relay_url,
         data=payload,
         method="POST",
         headers={
-            "Accept": "application/vnd.github+json",
-            "Authorization": "Bearer %s" % token,
-            "X-GitHub-Api-Version": "2022-11-28",
+            "Accept": "application/json",
             "User-Agent": "trimui-chiaki-ng/%s" % APP_VERSION,
             "Content-Type": "application/json",
         },
@@ -242,11 +239,14 @@ def _post_issue(token, repo, title, body):
     with urllib.request.urlopen(request, timeout=TIMEOUT,
                                 context=create_ssl_context()) as response:
         result = json.loads(response.read(128 * 1024).decode("utf-8"))
-    return result.get("html_url", "")
+    issue_url = result.get("issue_url", "") or result.get("html_url", "")
+    if result.get("accepted") is not True and not issue_url:
+        raise ValueError("issue relay did not accept report")
+    return issue_url
 
 
 def _upload_pending(reason="crash", force=False):
-    token, repo, enabled = _configuration()
+    relay_url, enabled = _report_configuration()
     if not enabled and not force:
         log.info("log upload disabled in settings")
         return False
@@ -263,11 +263,8 @@ def _upload_pending(reason="crash", force=False):
         reason = "+".join(report_reasons)
     else:
         reason = caller_reason
-    if not token:
-        log.warning("log upload pending: missing secrets.json github_token")
-        return False
-    if not _REPO_NAME.fullmatch(repo):
-        log.error("invalid github_issue_repo: %s", repo)
+    if not relay_url:
+        log.warning("log upload pending: no HTTPS issue relay configured")
         return False
 
     sections = _collect()
@@ -297,9 +294,9 @@ def _upload_pending(reason="crash", force=False):
     )
     body = _issue_body(sections, reason, fingerprint)
     try:
-        issue_url = _post_issue(token, repo, title, body)
+        issue_url = _post_relay(relay_url, title, body, fingerprint)
     except Exception as exc:
-        log.warning("GitHub log upload failed: %s", exc)
+        log.warning("diagnostic report upload failed: %s", exc)
         return False
 
     tmp = STATE_FILE + ".tmp"
@@ -318,7 +315,7 @@ def _upload_pending(reason="crash", force=False):
         _clear_uploaded_reasons(uploaded_reasons)
     except OSError:
         pass
-    log.info("GitHub log uploaded: %s", issue_url or "ok")
+    log.info("diagnostic report uploaded: %s", issue_url or "ok")
     return True
 
 

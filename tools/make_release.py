@@ -154,8 +154,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: buộc Brick dùng OpenSSL 1.1.1 tương thích; giữ nguyên Spruce." % version,
-            "en": "v%s: force the compatible OpenSSL 1.1.1 on Brick without changing Spruce." % version,
+            "vi": "v%s: khóa tối đa 720p và gửi log an toàn qua HTTPS relay." % version,
+            "en": "v%s: cap streaming at 720p and report diagnostics through an HTTPS relay." % version,
         },
         "files": files,
         "remove": [],

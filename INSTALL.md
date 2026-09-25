@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.3.16`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho `v0.3.17`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
@@ -16,7 +16,7 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 ## Cài GitHub Release
 
 1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.16.zip`. Không tải **Source code**.
+2. Tải `trimui-chiaki-ng-v0.3.17.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -39,7 +39,7 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 Nếu đang dùng bản rất cũ thiếu `vendor/sdl2`, nên xóa thư mục `Apps/Chiaki/` cũ
 trước khi giải nén. Không xóa `settings.json`, `paired_hosts.json` hoặc
 `secrets.json` của bản đang hoạt động nếu muốn giữ cấu hình, khóa ghép nối và
-token; hãy backup chúng trước khi cài sạch.
+cấu hình developer cũ; hãy backup chúng trước khi cài sạch.
 
 ## Trường hợp Brick Pro trước v0.3.11
 
@@ -105,21 +105,26 @@ Profile khuyến nghị:
 
 - Baseline: `720p`, `30 FPS`, `4000 kbps`.
 - Fallback: `540p`, `30 FPS`, `4000 kbps`.
-- Không ưu tiên `15000 kbps`, 60 FPS hoặc 1080p trên màn 720p.
+- Từ `v0.3.17` khóa tối đa 720p; cấu hình 1080p cũ tự chạy ở 720p.
+- Không ưu tiên `15000 kbps` hoặc 60 FPS trên các màn hình này.
 
 Nếu PS4 báo Remote Play đang được dùng sau một lần thoát/kết nối lỗi, chờ khoảng
 hai phút để console nhả lease rồi thử lại; không bấm kết nối liên tục.
 
 ## Tự gửi lỗi lên GitHub
 
-1. Tạo fine-grained GitHub token chỉ có quyền **Issues: Read and write** cho
-   `nlkcodenew/trimui-chiaki-ng`.
-2. Copy `Apps/Chiaki/secrets.example.json` thành
-   `Apps/Chiaki/secrets.json` — đúng một dấu chấm trước `json`.
-3. Điền token vào `github_token` và giữ file trên thẻ.
+Bản phát hành cho người thử không cần và không được chứa GitHub token. App gửi
+log đã lọc tới HTTPS relay trong `reporting.json`; token chỉ nằm trong server
+secret của relay và chỉ có quyền tạo Issue ở repo chẩn đoán private.
 
-Release/OTA không đóng gói hoặc ghi đè `secrets.json`. App lọc token, password,
-khóa ghép nối, PSN ID, IP nội bộ, MAC, serial và chip ID trước khi gửi.
+Người đóng gói app triển khai theo `deploy/issue-relay/README.md`, điền endpoint
+`/report` trước khi build và đặt rate-limit phía Cloudflare. Người thử chỉ cần
+bật **Tự động gửi lỗi lên GitHub** sau khi đồng ý chia sẻ log; cài mới mặc định
+tắt và không cần copy `secrets.json`. OTA giữ nguyên lựa chọn hiện tại.
+
+App và relay cùng lọc token, password, khóa ghép nối, PSN ID, IP nội bộ, MAC,
+serial và chip ID trước khi gửi. Endpoint công khai vẫn cần giám sát abuse;
+không dùng shared secret nhúng trong app vì người nhận có thể trích xuất nó.
 
 Từ `v0.3.13`, report có:
 

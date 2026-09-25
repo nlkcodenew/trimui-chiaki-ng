@@ -8,6 +8,7 @@ import json
 import os
 import re
 import sys
+import urllib.parse
 import zipfile
 
 from make_release import release_bytes
@@ -46,8 +47,8 @@ REQUIRED_ARCHIVE = {
     "App/Chiaki/config.json",
     "App/Chiaki/icon.png",
     "App/Chiaki/launch.sh",
+    "App/Chiaki/reporting.json",
     "App/Chiaki/settings.json",
-    "App/Chiaki/secrets.example.json",
     "App/Chiaki/assets/fallback.ttf",
     "App/Chiaki/bin/chiaki-stream",
     "App/Chiaki/certs/README.txt",
@@ -109,6 +110,15 @@ def main():
     if default_settings.get("device_id"):
         fail("default settings.json must not contain a generated device_id")
 
+    with open(os.path.join(FILES_DIR, "reporting.json"), encoding="utf-8") as handle:
+        reporting = json.load(handle)
+    relay_url = str(reporting.get("issue_relay_url", "")).strip()
+    parsed_relay = urllib.parse.urlsplit(relay_url)
+    if (parsed_relay.scheme != "https" or not parsed_relay.netloc
+            or parsed_relay.username or parsed_relay.password
+            or parsed_relay.query or parsed_relay.fragment):
+        fail("reporting.json must contain a credential-free HTTPS relay URL")
+
     ca_bundle_path = os.path.join(FILES_DIR, "certs", "cacert.pem")
     if sha256_file(ca_bundle_path) != CA_BUNDLE_SHA256:
         fail("bundled CA checksum does not match the reviewed Mozilla bundle")
@@ -140,10 +150,16 @@ def main():
             fail("manifest source is missing: %s" % rel)
         if hashlib.sha256(release_bytes(source)).hexdigest() != item.get("sha256"):
             fail("manifest hash mismatch: %s" % rel)
+        if os.path.splitext(rel)[1].lower() in (".json", ".md", ".py", ".sh", ".txt"):
+            text = release_bytes(source).decode("utf-8", errors="replace")
+            if re.search(r"\b(?:ghp|github_pat|gho|ghu|ghs|ghr)_[^\s,}\]\[\"']{8,}", text):
+                fail("GitHub token appears in release source: %s" % rel)
         listed.add(rel)
 
     if "certs/cacert.pem" not in listed:
         fail("bundled CA is missing from OTA manifest")
+    if "reporting.json" not in listed:
+        fail("reporting config is missing from OTA manifest")
     expected_runtime = {"libs/brick-stock/%s" % name for name in BRICK_RUNTIME}
     missing_runtime = expected_runtime - listed
     if missing_runtime:

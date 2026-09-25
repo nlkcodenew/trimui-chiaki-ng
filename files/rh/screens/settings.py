@@ -24,7 +24,7 @@ class SettingsScreen(BaseScreen):
     def __init__(self, engine=None):
         super().__init__(engine, "settings")
         self.rows = [
-            ("video_resolution", ["360p", "540p", "720p", "1080p"], self._set_resolution),
+            ("video_resolution", list(state.VIDEO_RESOLUTIONS), self._set_resolution),
             ("video_fps", [30, 60], self._set_fps),
             ("video_bitrate", [3000, 4000, 6000, 8000, 10000, 12000, 15000], self._set_bitrate),
             ("audio_volume", [0, 25, 50, 75, 100], None),

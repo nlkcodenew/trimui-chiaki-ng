@@ -47,14 +47,13 @@ class LogUploaderTests(unittest.TestCase):
 
     def setUp(self):
         self.work_dir = tempfile.mkdtemp(dir=self.temp_dir)
-        self.uploader.SECRETS_FILE = os.path.join(self.work_dir, "secrets.json")
+        self.uploader.REPORTING_FILE = os.path.join(self.work_dir, "reporting.json")
         self.uploader.STATE_FILE = os.path.join(self.work_dir, "upload-state.json")
         self.uploader.PENDING_FILE = os.path.join(self.work_dir, "pending")
         self.log_path = os.path.join(self.work_dir, "Chiaki-loi.txt")
         self.uploader.state.auto_upload_logs = True
-        self.uploader.state.github_issue_repo = "nlkcodenew/trimui-chiaki-ng"
-        with open(self.uploader.SECRETS_FILE, "w", encoding="utf-8") as handle:
-            json.dump({"github_token": "github_pat_TEST_TOKEN"}, handle)
+        with open(self.uploader.REPORTING_FILE, "w", encoding="utf-8") as handle:
+            json.dump({"issue_relay_url": "https://reports.example.test/"}, handle)
 
     def tearDown(self):
         shutil.rmtree(self.work_dir, ignore_errors=True)
@@ -80,9 +79,9 @@ class LogUploaderTests(unittest.TestCase):
                 text = handle.read()
             return [("Chiaki-loi.txt", self.uploader._sanitize(text))]
 
-        def fake_post(token, repo, title, body):
-            captured.append((token, repo, title, body))
-            return "https://github.com/example/issues/1"
+        def fake_post(relay_url, title, body, fingerprint):
+            captured.append((relay_url, title, body, fingerprint))
+            return ""
 
         identity = {
             "install_id": "CHI-ABCD",
@@ -90,14 +89,14 @@ class LogUploaderTests(unittest.TestCase):
             "model": "TrimUI Brick Pro",
         }
         with mock.patch.object(self.uploader, "_collect", side_effect=fake_collect), \
-                mock.patch.object(self.uploader, "_post_issue", side_effect=fake_post), \
+                mock.patch.object(self.uploader, "_post_relay", side_effect=fake_post), \
                 mock.patch.object(self.uploader, "diagnostic_identity",
                                   return_value=identity):
             self.assertTrue(self.uploader.upload_pending("exit_1"))
             self.assertFalse(os.path.exists(self.uploader.PENDING_FILE))
             self.assertEqual(len(captured), 1)
-            body = captured[0][3]
-            title = captured[0][2]
+            title = captured[0][1]
+            body = captured[0][2]
             self.assertIn("[TrimUI Brick Pro]", title)
             self.assertIn("[CHI-ABCD]", title)
             self.assertIn("[HW-0123456789AB]", title)
@@ -120,10 +119,20 @@ class LogUploaderTests(unittest.TestCase):
         self._pending_log()
         sections = [("Chiaki-loi.txt", "traceback")]
         with mock.patch.object(self.uploader, "_collect", return_value=sections), \
-                mock.patch.object(self.uploader, "_post_issue",
+                mock.patch.object(self.uploader, "_post_relay",
                                   side_effect=OSError("offline")):
             self.assertFalse(self.uploader.upload_pending("exit_1"))
         self.assertTrue(os.path.exists(self.uploader.PENDING_FILE))
+
+    def test_relay_is_the_only_upload_transport(self):
+        self._pending_log()
+        sections = [("Chiaki-loi.txt", "traceback")]
+        with mock.patch.object(self.uploader, "_collect", return_value=sections), \
+                mock.patch.object(self.uploader, "_post_relay",
+                                  return_value="") as relay:
+            self.assertTrue(self.uploader.upload_pending("exit_1"))
+        relay.assert_called_once()
+        self.assertEqual(relay.call_args.args[0], "https://reports.example.test/")
 
     def test_device_identity_hashes_hardware_without_exposing_raw_values(self):
         serial = "SERIAL-PRIVATE-123"
@@ -234,13 +243,13 @@ class LogUploaderTests(unittest.TestCase):
         sections = [("Chiaki-loi.txt", "same log tail")]
         posted = []
 
-        def fake_post(_token, _repo, title, _body):
+        def fake_post(_relay_url, title, _body, _fingerprint):
             posted.append(title)
-            return "https://github.com/example/issues/%d" % len(posted)
+            return ""
 
         self._pending_log()
         with mock.patch.object(self.uploader, "_collect", return_value=sections), \
-                mock.patch.object(self.uploader, "_post_issue", side_effect=fake_post):
+                mock.patch.object(self.uploader, "_post_relay", side_effect=fake_post):
             self.uploader._remember_pending_reason("ota_download_failed")
             self.assertTrue(self.uploader.upload_pending("ota_download_failed"))
             self.uploader._remember_pending_reason("settings_save_failed")
@@ -289,7 +298,7 @@ class LogUploaderTests(unittest.TestCase):
             self.assertEqual(self.updater._get("https://example.com/a", 10), b"")
         self.assertIs(urlopen.call_args.kwargs["context"], context)
 
-    def test_uploader_https_uses_shared_verified_context(self):
+    def test_relay_https_uses_verified_context_without_authorization(self):
         context = object()
 
         class FakeResponse:
@@ -300,16 +309,45 @@ class LogUploaderTests(unittest.TestCase):
                 return False
 
             def read(self, _size):
-                return b'{"html_url":"https://github.com/example/issues/1"}'
+                return b'{"accepted":true}'
 
         with mock.patch.object(self.uploader, "create_ssl_context",
                                return_value=context), \
                 mock.patch.object(self.uploader.urllib.request, "urlopen",
                                   return_value=FakeResponse()) as urlopen:
-            result = self.uploader._post_issue(
-                "github_pat_TEST_TOKEN", "owner/repo", "title", "body")
-        self.assertEqual(result, "https://github.com/example/issues/1")
+            result = self.uploader._post_relay(
+                "https://reports.example.test/", "title", "body", "a" * 64)
+        request = urlopen.call_args.args[0]
+        self.assertEqual(result, "")
         self.assertIs(urlopen.call_args.kwargs["context"], context)
+        self.assertNotIn("Authorization", request.headers)
+        payload = json.loads(request.data.decode("utf-8"))
+        self.assertEqual(payload["fingerprint"], "a" * 64)
+
+    def test_relay_rejects_insecure_or_credentialed_urls(self):
+        for url in (
+                "http://reports.example.test/",
+                "https://user:secret@reports.example.test/",
+                "https://reports.example.test/?token=secret"):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                self.uploader._post_relay(url, "title", "body", "a" * 64)
+
+    def test_relay_requires_explicit_acceptance(self):
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self, _size):
+                return b'{"ok":true}'
+
+        with mock.patch.object(self.uploader.urllib.request, "urlopen",
+                               return_value=FakeResponse()), \
+                self.assertRaisesRegex(ValueError, "did not accept"):
+            self.uploader._post_relay(
+                "https://reports.example.test/", "title", "body", "a" * 64)
 
     def test_manifest_tls_failures_have_distinct_status(self):
         reason = ssl.SSLCertVerificationError(
@@ -340,19 +378,6 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(result["version"], "99.0.0")
         report.assert_not_called()
         warning.assert_not_called()
-
-    def test_misnamed_secrets_file_is_not_read_or_logged(self):
-        os.remove(self.uploader.SECRETS_FILE)
-        misnamed = os.path.join(self.work_dir, "secrets..json")
-        with open(misnamed, "w", encoding="utf-8") as handle:
-            json.dump({"github_token": "github_pat_DO_NOT_LOG"}, handle)
-        with mock.patch.dict(os.environ, {}, clear=True), \
-                self.assertLogs(self.uploader.log, level="WARNING") as captured:
-            token, _repo, _enabled = self.uploader._configuration()
-        output = "\n".join(captured.output)
-        self.assertEqual(token, "")
-        self.assertIn("requires secrets.json", output)
-        self.assertNotIn("DO_NOT_LOG", output)
 
     def test_release_tools_exclude_misnamed_secrets_file(self):
         root = os.path.dirname(os.path.dirname(__file__))
@@ -1315,7 +1340,7 @@ class LogUploaderTests(unittest.TestCase):
         prepare.assert_called_once_with(host)
         engine.quit.assert_called_once_with("stream_launch")
 
-    def test_video_profiles_include_1080p(self):
+    def test_legacy_1080p_profile_is_capped_at_720p(self):
         chiaki = importlib.import_module("rh.chiaki")
         state = importlib.import_module("rh.state")
         old_resolution = state.video_resolution
@@ -1324,16 +1349,33 @@ class LogUploaderTests(unittest.TestCase):
             profile = chiaki._video_profile_from_state()
         finally:
             state.video_resolution = old_resolution
-        self.assertEqual(profile["width"], 1920)
-        self.assertEqual(profile["height"], 1080)
+        self.assertEqual(profile["width"], 1280)
+        self.assertEqual(profile["height"], 720)
 
-    def test_settings_offer_1080p_and_low_bitrate(self):
+    def test_settings_cap_resolution_at_720p_and_offer_low_bitrate(self):
         screen = self.settings_module.SettingsScreen.__new__(
             self.settings_module.SettingsScreen)
         screen.__init__()
         rows = {key: values for key, values, _ in screen.rows if values}
-        self.assertIn("1080p", rows["video_resolution"])
+        self.assertEqual(rows["video_resolution"], ["360p", "540p", "720p"])
         self.assertIn(3000, rows["video_bitrate"])
+
+    def test_settings_load_normalizes_legacy_1080p_to_720p(self):
+        state = importlib.import_module("rh.state")
+        original_path = state.SETTINGS_FILE
+        original_resolution = state.video_resolution
+        original_auto_upload = state.auto_upload_logs
+        legacy_path = os.path.join(self.work_dir, "legacy-settings.json")
+        with open(legacy_path, "w", encoding="utf-8") as handle:
+            json.dump({"video_resolution": "1080p"}, handle)
+        try:
+            state.SETTINGS_FILE = legacy_path
+            state._load()
+            self.assertEqual(state.video_resolution, "720p")
+        finally:
+            state.SETTINGS_FILE = original_path
+            state.video_resolution = original_resolution
+            state.auto_upload_logs = original_auto_upload
 
 
 if __name__ == "__main__":

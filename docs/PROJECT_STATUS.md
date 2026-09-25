@@ -1,26 +1,26 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.16
+# trimui-chiaki-ng — trạng thái dự án v0.3.17
 
-> Cập nhật: 2026-09-24. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
+> Cập nhật: 2026-09-25. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
 
 ## 1. Release hiện tại
 
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.16` |
-| Tag | `v0.3.16` |
+| Latest | `v0.3.17` |
+| Tag | `v0.3.17` |
 | OTA files | 125 |
 | ZIP entries | 128 |
-| ZIP SHA-256 | `1e065c9deb69431bf18f658094f6904952df9e868f4d12a0a24eace49b398a4e` |
-| Unittest | 72/72 đạt |
+| ZIP SHA-256 | `fb9a83178b44ffbfa8366f22f5c7f9392d30b4f841bfa9e608f296f8601c3a50` |
+| Unittest | 75/75 đạt |
 | Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 GitHub Release có ba asset:
 
 - `manifest.json`.
-- `trimui-chiaki-ng-v0.3.16.zip`.
-- `trimui-chiaki-ng-v0.3.16.zip.sha256`.
+- `trimui-chiaki-ng-v0.3.17.zip`.
+- `trimui-chiaki-ng-v0.3.17.zip.sha256`.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -104,8 +104,11 @@ tục dùng library hệ thống. Không cần tách release ở trạng thái h
 
 ## 5. GitHub Issue và quyền riêng tư
 
-Uploader chỉ dùng fine-grained token trong `secrets.json` hoặc env. Token không
-nằm trong Git, OTA manifest hoặc ZIP release.
+Từ `v0.3.17`, app chỉ dùng HTTPS relay trong `reporting.json`. Fine-grained
+token chỉ nằm trong Cloudflare Worker secret, giới hạn quyền tạo Issue ở repo
+chẩn đoán private; token không nằm trong app, URL, Git, OTA hoặc ZIP. Runtime
+không còn code đọc token, `secrets.json` hoặc tên repo nhận log.
+Cài mới mặc định tắt auto-report; người thử phải chủ động bật sau khi đồng ý.
 
 Sanitizer lọc:
 
@@ -172,7 +175,7 @@ Report:
   `40798 rendered / 1357 lost / 295 FEC`; không khuyến nghị.
 - Brick Stock OS `540p30/3000` — Issue `#39`: `8968 rendered / 0 lost / 0 FEC`,
   phần lớn 29,4–30,2 FPS, native exit `0`; hình, âm thanh và input hoạt động.
-- 1080p chỉ là bài test tải vì màn mục tiêu 1280×720.
+- `v0.3.17` bỏ 1080p khỏi UI và cap cấu hình cũ về 720p.
 - Measured bitrate trong log là MBit/s video nhận được, không phải throughput
   tối đa của Wi-Fi.
 
@@ -228,6 +231,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.14` | Không cảnh báo giả khi fallback OTA thành công |
 | `v0.3.15` | Runtime AArch64 biệt lập cho Brick Pro Stock OS |
 | `v0.3.16` | Preload OpenSSL 1.1.1 tương thích chỉ cho Brick stream |
+| `v0.3.17` | Khóa 720p; chuyển báo cáo lỗi sang HTTPS relay không token client |
 
 ## 10. Kiểm thử và build gate
 
@@ -241,11 +245,11 @@ python tools/verify_release.py
 git diff --check
 ```
 
-72 unittest bao phủ:
+75 unittest của source hiện tại bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.
-- Uploader sanitize/dedupe/pending concurrency/identity.
+- Uploader sanitize/dedupe/pending concurrency/identity và HTTPS relay.
 - Reproducible release bytes trên Windows/Linux.
 - Discovery packet/ports/parser.
 - Registration crypto và target validation.
@@ -261,6 +265,7 @@ Verifier kiểm:
 - ZIP/sidecar SHA-256.
 - File bắt buộc và file cấm.
 - `settings.json` mặc định không có generated device ID.
+- `reporting.json` dùng HTTPS không credential/query và source không chứa token.
 
 ## 11. Trạng thái chốt
 

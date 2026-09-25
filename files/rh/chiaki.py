@@ -669,8 +669,8 @@ def _video_profile_from_state():
         w, h = 640, 360
     elif res == "540p":
         w, h = 960, 540
-    elif res == "1080p":
-        w, h = 1920, 1080
+    elif res == "720p":
+        w, h = 1280, 720
     else:
         w, h = 1280, 720
     if fps not in (30, 60):

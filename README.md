@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release mới nhất: `v0.3.16`.**
+**Release mới nhất: `v0.3.17`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -22,10 +22,16 @@
   `#36`/`#37` cho thấy pair đã thành công nhưng loader thiếu `libjson-c.so.5`.
 - `v0.3.16` sửa Issue `#38`: Stock OS có OpenSSL 1.1 cũ nhưng thiếu symbol
   `OPENSSL_1_1_1`; launcher Brick preload đúng OpenSSL 1.1.1 đã đóng gói.
+- `v0.3.17` khóa profile tối đa 720p và chuyển báo cáo lỗi sang HTTPS relay;
+  GitHub token chỉ nằm trong Worker secret, không còn trong app hoặc thẻ nhớ.
 
 Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật có hình,
 âm thanh, input. Issue `#39` ghi nhận native exit `0`, tổng `8968` frame,
 `lost=0`, `FEC=0`, phần lớn giữ 29,4–30,2 FPS ở profile 540p30/3000.
+
+Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
+đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
+private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
 
 Native binary, pair/session pre-10 và mapping SDL của Smart Pro S/Spruce không
 thay đổi. Model `sun55iw3` tiếp tục dùng library hệ thống; chỉ `sun50iw10` có
@@ -58,7 +64,7 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.3.16.zip` tại
+1. Tải `trimui-chiaki-ng-v0.3.17.zip` tại
    [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
@@ -98,29 +104,37 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 5. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và trở lại app.
 
 Profile ưu tiên đã xác nhận là `720p`, `30 FPS`, `4000 kbps`. Fallback tải thấp
-là `540p`, `30 FPS`, `4000 kbps`. Không ưu tiên 1080p hoặc 15000 kbps trên màn
-720p; thử nghiệm máy thật cho thấy bitrate cao làm tăng FEC/lost/IDR.
+là `540p`, `30 FPS`, `4000 kbps`. Từ `v0.3.17` chỉ cho chọn tối đa 720p;
+cấu hình 1080p cũ cũng chạy ở 720p. Thử nghiệm máy thật cho thấy profile cao
+hơn độ phân giải màn hình và bitrate cao làm giảm FPS, tăng FEC/lost/IDR.
 
 Sau khi thoát stream, nên chờ khoảng hai phút trước khi kết nối lại. PS4 đôi khi
 giữ lease Remote Play tạm thời dù client đã shutdown sạch.
 
 ## GitHub Issue tự động
 
-GitHub yêu cầu token để tạo Issue:
+GitHub không cho client ẩn danh tạo Issue. Bản chia sẻ gửi log đã lọc tới một
+HTTPS relay; chỉ relay giữ fine-grained token trong server secret rồi tạo Issue
+trong **repo chẩn đoán private**. Không đặt token chung trong app, URL, ZIP hoặc
+thẻ nhớ của người thử vì mọi secret phía client đều có thể bị trích xuất.
 
-1. Tạo fine-grained token chỉ có quyền **Issues: Read and write** cho repo này.
-2. Copy `Apps/Chiaki/secrets.example.json` thành
-   `Apps/Chiaki/secrets.json`.
-3. Điền token vào `github_token`. Không đăng file này lên Issue hoặc chat.
+1. Triển khai Worker theo `deploy/issue-relay/README.md`.
+2. Cấp token chỉ có **Issues: Read and write** cho đúng repo private nhận log.
+3. Điền endpoint `/report` vào `files/reporting.json` trước khi build release.
+4. Đặt rate-limit cho endpoint và thông báo người thử về dữ liệu chẩn đoán.
+5. Cài mới mặc định tắt gửi log; người thử đồng ý bằng cách bật mục **Tự động
+   gửi lỗi lên GitHub**. OTA không đổi lựa chọn của máy đã cài.
 
-Token chỉ nằm trên thẻ nhớ, không nằm trong Git, OTA manifest hoặc ZIP Release.
-Uploader lọc token, password, khóa ghép nối, PSN ID, IP nội bộ, MAC, serial,
-chip ID và machine-id trước khi gửi.
+Verifier từ chối release nếu relay không phải HTTPS sạch, thiếu config OTA hoặc
+phát hiện token GitHub trong source đóng gói. App không còn đọc `secrets.json`,
+GitHub token hoặc tên repo nhận log; client chỉ biết URL relay. Client và relay
+đều lọc token, password, khóa ghép nối, PSN ID, IP nội bộ, MAC, serial, chip ID
+và machine-id trước khi gửi.
 
 Issue có dạng:
 
 ```text
-[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.16 reason fingerprint
+[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.17 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.

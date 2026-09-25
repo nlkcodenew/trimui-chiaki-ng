@@ -1,20 +1,19 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.16
+# Bàn giao session mới — trimui-chiaki-ng v0.3.17
 
-> Cập nhật: 2026-09-24. Đọc file này trước khi tiếp tục dự án.
+> Cập nhật: 2026-09-25. Đọc file này trước khi tiếp tục dự án.
 
 ## 1. Trạng thái ngắn gọn
 
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`.
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
-- Release mới nhất: `v0.3.16`.
-- Commit release: `dac81d6` — preload OpenSSL tương thích cho Brick.
-- Nội dung: preload OpenSSL 1.1.1 tương thích chỉ cho Brick, không đổi native.
+- Release mới nhất: `v0.3.17`.
+- Nội dung: khóa tối đa 720p và chuyển log sang HTTPS relay; không đổi native.
 - GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
-- SHA-256 ZIP `v0.3.16`:
-  `1e065c9deb69431bf18f658094f6904952df9e868f4d12a0a24eace49b398a4e`.
+- SHA-256 ZIP `v0.3.17`:
+  `fb9a83178b44ffbfa8366f22f5c7f9392d30b4f841bfa9e608f296f8601c3a50`.
 - Manifest có 125 file OTA; ZIP có 128 entry; không có settings/secrets/log.
-- 72/72 unittest đạt; `compileall`, build release và verifier đều đạt.
+- 75/75 unittest đạt; `compileall`, build release và verifier đều đạt.
 - Native SHA-256 vẫn là
   `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.
 
@@ -165,10 +164,18 @@ Quy tắc OTA:
 
 ## 5. GitHub Issue uploader
 
-`files/rh/log_uploader.py` đọc token từ:
+Từ `v0.3.17`, app chỉ dùng `issue_relay_url` từ:
 
-- `Apps/Chiaki/secrets.json`, hoặc
-- biến môi trường `CHIAKI_GITHUB_TOKEN`.
+- `Apps/Chiaki/reporting.json` trong release, hoặc
+- biến môi trường `CHIAKI_ISSUE_RELAY_URL` khi phát triển.
+
+Relay mẫu nằm ở `deploy/issue-relay/`. GitHub token chỉ là Cloudflare Worker
+secret và trỏ tới repo private `nlkcodenew/trimui-chiaki-ng-diagnostics`.
+Runtime không còn đường GitHub trực tiếp, không đọc token hoặc tên repo.
+Worker đã deploy tại
+`https://trimui-chiaki-issue-relay.issue-relay.workers.dev/report`. Worker
+secret `GITHUB_TOKEN`, repo private, KV dedupe/rate-limit và E2E đều đã xác nhận;
+Issue kiểm thử `#1` đã đóng, repo không còn Issue mở.
 
 Không đọc file sai tên `secrets..json`; chỉ cảnh báo tên sai mà không log nội dung.
 
@@ -226,7 +233,7 @@ Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SH
 ## 7. Trạng thái kết thúc session
 
 - Không còn lỗi phát hành hoặc kiểm thử máy thật đang chờ xử lý.
-- `v0.3.16` là latest và đã xác nhận trên Brick Pro Stock OS.
+- `v0.3.17` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
 - Tiếp tục dùng `720p30/4000` trên Smart Pro S và `540p30/3000` trên Brick.
 - Không thay native binary, pair/session hoặc SDL mapping nếu không có Issue mới.
 
@@ -262,7 +269,7 @@ Trước commit/release, xác nhận không stage:
 ## 9. Quy trình phát hành
 
 1. Tăng `APP_VERSION` và release note.
-2. Chạy compile, 72 unittest, build và verifier.
+2. Chạy compile, toàn bộ unittest, build và verifier.
 3. Kiểm manifest có CA/native, không có settings/secrets/log.
 4. Commit/push `main`.
 5. Tạo annotated tag đúng version và push tag.

@@ -14,3 +14,5 @@ files/.log_upload_state.json
 files/.pending_crash
 files/Chiaki-loi.txt*
 files/Chiaki-debug.log*
+deploy/issue-relay/wrangler.toml
+deploy/issue-relay/.wrangler/
