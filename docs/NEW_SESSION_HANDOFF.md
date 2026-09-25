@@ -8,12 +8,15 @@
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
 - Release mới nhất: `v0.3.18`.
+- Feature commit/tag: `1c08e4d` / `v0.3.18`.
 - Nội dung: thêm hướng dẫn 8 bước và mã `CHI-xxxx` cạnh version; không đổi native.
 - GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
 - SHA-256 ZIP `v0.3.18`:
   `2727f77866cf0d95386efbf2c2e7ee094b060d419be84fb7ce9fb6992aca2ada`.
 - Số file OTA/ZIP: 126/129; không có settings/secrets/log.
 - 80/80 unittest đạt; `compileall`, build release và verifier đều đạt.
+- GitHub Actions và ba asset tải lại qua `releases/latest` đều đã xác minh;
+  `main` đồng bộ `origin/main` trước commit tổng kết docs.
 - Native SHA-256 vẫn là
   `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.
 
@@ -236,6 +239,10 @@ Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SH
 - `v0.3.18` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
 - Tiếp tục dùng `720p30/4000` trên Smart Pro S và `540p30/3000` trên Brick.
 - Không thay native binary, pair/session hoặc SDL mapping nếu không có Issue mới.
+- Release public có đủ ba asset; checksum, 126 OTA files và 129 ZIP entries đã
+  đối chiếu từ asset tải lại, không chỉ từ build cục bộ.
+- HTTPS relay production hoạt động; app không chứa GitHub token hoặc tên repo
+  chẩn đoán private.
 
 ## 8. Lệnh kiểm tra
 
@@ -282,8 +289,10 @@ Trước commit/release, xác nhận không stage:
 ```text
 Tiếp tục repo E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước.
-Release v0.3.16 đã stream thật thành công trên Brick sun50iw10; Issue #39 đạt
-8968/0/0 rendered/lost/FEC và exit 0. Spruce sun55iw3 vẫn dùng runtime system.
-Không tắt TLS, không đọc/tiết lộ token và không sửa native/pair/input nếu không
-có Issue mới chứng minh regression.
+Latest/release hiện tại là v0.3.18. Bản này khóa tối đa 720p, dùng HTTPS relay
+không token client, có hướng dẫn 8 bước và hiện CHI-xxxx cạnh version. Brick
+sun50iw10 đã stream thật thành công; Issue #39 đạt 8968/0/0
+rendered/lost/FEC và exit 0. Spruce sun55iw3 vẫn dùng runtime system. Không tắt
+TLS, không đọc/tiết lộ token và không sửa native/pair/input nếu không có Issue
+mới chứng minh regression.
 ```

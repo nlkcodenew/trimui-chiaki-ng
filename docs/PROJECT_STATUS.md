@@ -9,6 +9,7 @@
 |---|---|
 | Latest | `v0.3.18` |
 | Tag | `v0.3.18` |
+| Feature commit | `1c08e4d` |
 | OTA files | 126 |
 | ZIP entries | 129 |
 | ZIP SHA-256 | `2727f77866cf0d95386efbf2c2e7ee094b060d419be84fb7ce9fb6992aca2ada` |
@@ -21,6 +22,11 @@ GitHub Release có ba asset:
 - `manifest.json`.
 - `trimui-chiaki-ng-v0.3.18.zip`.
 - `trimui-chiaki-ng-v0.3.18.zip.sha256`.
+
+GitHub Actions đã hoàn tất thành công. Ba asset công khai tải qua
+`releases/latest` đã được đối chiếu lại: version `0.3.18`, 126 file OTA, 129
+entry ZIP và SHA-256 trùng bản build cục bộ. Nhánh `main`, `origin/main` và tag
+`v0.3.18` cùng trỏ tới feature commit `1c08e4d` trước commit tổng kết docs.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -277,3 +283,5 @@ Verifier kiểm:
 4. Không sửa pair/native/input nếu không có Issue mới chứng minh regression.
 5. `setterm: not found`, H264 `no frame!` lúc khởi động và server shutdown khi
    kết thúc phiên hiện là cảnh báo vô hại, không phải lỗi stream.
+6. Release production `v0.3.18`, OTA latest, HTTPS relay và asset công khai đều
+   đã xác minh; không còn việc kỹ thuật đang chờ trong session này.
