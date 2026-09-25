@@ -154,8 +154,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: tự động gửi diagnostics lên GitHub; ghi nhận lỗi pair PS5 và migrate report cho bản cũ." % version,
-            "en": "v%s: always upload diagnostics to GitHub; report PS5 pairing attempts and migrate legacy settings." % version,
+            "vi": "v%s: sửa crash lúc khởi động và luôn tạo log trong Apps/Chiaki; PS5 hiện mới hỗ trợ quét." % version,
+            "en": "v%s: fix startup crashes and always create logs in Apps/Chiaki; PS5 currently supports discovery only." % version,
         },
         "files": files,
         "remove": [],

@@ -739,10 +739,30 @@ class LogUploaderTests(unittest.TestCase):
         launch_path = os.path.join(self.app_dir, "launch.sh")
         with open(launch_path, encoding="utf-8") as handle:
             script = handle.read()
+        self.assertIn('APP_ERRLOG="$APP/Chiaki-loi.txt"', script)
+        self.assertIn(': >> "$APP_ERRLOG"', script)
+        self.assertIn(': > "$ERRLOG"', script)
         self.assertIn('--reason "user_exit_retry"', script)
         self.assertIn('-m rh.logger --cap-runtime', script)
         self.assertIn('grep -q "native stream preflight"', script)
         self.assertIn('if [ $IS_STREAM -eq 0 ]', script)
+
+    def test_app_initializes_logger_before_loading_settings(self):
+        app_path = os.path.join(self.app_dir, "app.py")
+        with open(app_path, encoding="utf-8") as handle:
+            source = handle.read()
+        self.assertLess(source.index("init_logger()"),
+                        source.index("from rh import state"))
+
+    def test_app_bootstrap_error_is_written_after_logger_starts(self):
+        app_path = os.path.join(self.app_dir, "app.py")
+        with open(app_path, encoding="utf-8") as handle:
+            source = handle.read()
+        main_body = source[source.index("def main():"):]
+        self.assertLess(main_body.index("init_logger()"),
+                        main_body.index("from rh import state"))
+        self.assertIn('log_path = os.path.join(paths.APP_DIR, "Chiaki-loi.txt")',
+                      source)
 
     def test_native_source_supports_trimui_exit_button_fallback(self):
         root = os.path.dirname(os.path.dirname(__file__))

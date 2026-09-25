@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.3.19`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho `v0.3.20`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
@@ -16,7 +16,7 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 ## Cài GitHub Release
 
 1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.19.zip`. Không tải **Source code**.
+2. Tải `trimui-chiaki-ng-v0.3.20.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -195,8 +195,10 @@ dùng Source code và đảm bảo `Apps/Chiaki/vendor/sdl2/` tồn tại.
 **`ImportError: PySDL2 not loaded`:** firmware thiếu hoặc không tìm thấy
 `libSDL2.so`; cập nhật firmware hoặc kiểm tra library path của OS.
 
-**App không khởi động:** kiểm tra `Apps/Chiaki/Chiaki-loi.txt`, file log ở gốc
-thẻ nếu launcher dùng fallback, quyền thực thi `launch.sh` và Python 3.10+.
+**App không khởi động:** từ `v0.3.20`, trước tiên kiểm tra
+`Apps/Chiaki/Chiaki-loi.txt`. Launcher chỉ dùng thư mục log của OS, gốc thẻ hoặc
+`/tmp` nếu thư mục app không ghi được; đồng thời kiểm tra quyền thực thi
+`launch.sh` và Python 3.10+.
 
 **Hai thư mục Chiaki cùng tên:** đây có thể là hỏng directory entry exFAT do
 ngắt cáp khi I/O, không phải updater cố ý tạo thư mục thứ hai. Chạy `chkdsk` trước.

@@ -1,19 +1,19 @@
 {
-  "version": "0.3.19",
+  "version": "0.3.20",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-25T16:43:53+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.19/files",
-  "release_tag": "v0.3.19/files",
+  "built": "2026-09-25T21:17:41+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.20/files",
+  "release_tag": "v0.3.20/files",
   "note": {
-    "vi": "v0.3.19: tự động gửi diagnostics lên GitHub; ghi nhận lỗi pair PS5 và migrate report cho bản cũ.",
-    "en": "v0.3.19: always upload diagnostics to GitHub; report PS5 pairing attempts and migrate legacy settings."
+    "vi": "v0.3.20: sửa crash lúc khởi động và luôn tạo log trong Apps/Chiaki; PS5 hiện mới hỗ trợ quét.",
+    "en": "v0.3.20: fix startup crashes and always create logs in Apps/Chiaki; PS5 currently supports discovery only."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "670b3d23595850098f641d3806e42b94b375d14558ef276c9c453f24f8f9b80b",
-      "size": 4820
+      "sha256": "d0989033c6c9bda96a374da47ff8fa12988ffb299429f2d6d71bba94bc98054b",
+      "size": 4913
     },
     {
       "path": "config.json",
@@ -27,8 +27,8 @@
     },
     {
       "path": "launch.sh",
-      "sha256": "eeaf325a3ac5fe76b31375eee69aa617098200d1849aa70d9dfa2cbbe4dbabe0",
-      "size": 4018
+      "sha256": "b864d5ab19ca655fe98bd86ebb18236ac9ee162bb6241fdeec9b5be29ada29b1",
+      "size": 4400
     },
     {
       "path": "reporting.json",
@@ -197,7 +197,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "c7cb3fcb78c434e317f69a5ab8961f5fc8ae4d56f9188d865840f9969fd9d432",
+      "sha256": "74578ac8ced6f642b8874e8650767595879b58555dcd6ab7db4195ed071c1e07",
       "size": 1178
     },
     {
@@ -643,8 +643,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.19.zip",
-    "sha256": "7bcb2609b78cdb855d4b7ac3e7a6dc0d1dc6cd7ce4acf74deabcc102820e2357",
-    "size": 10760687
+    "name": "trimui-chiaki-ng-v0.3.20.zip",
+    "sha256": "b6e7d2c7e8e7c2fb0dcd30c3549a8bee37e0431dc8232734e393d401829aa2dc",
+    "size": 10760869
   }
 }

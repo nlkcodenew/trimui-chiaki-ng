@@ -47,16 +47,19 @@ os.environ["PYSDL2_DLL_PATH"] = ":".join([
     "/usr/lib",
 ])
 
-from rh import state, paths
+from rh import paths
 from rh.logger import init_logger, get_logger, set_debug_level
 from rh.version import APP_VERSION
-from rh.device_identity import diagnostic_identity
 
 
 def main():
-    # Logger khoi dong SOM nhat de bat moi loi import / sys.argv
+    # Khoi dong logger truoc state/settings va cac module SDL de bat ca loi
+    # bootstrap tren firmware la hoac settings cu bi hong.
     init_logger()
     log = get_logger()
+    from rh import state
+    from rh.device_identity import diagnostic_identity
+
     log.info("== trimui-chiaki-ng v%s khoi dong ==", APP_VERSION)
     log.info("SDCARD_PATH=%s", paths.SDCARD_PATH)
     log.info("APP_DIR=%s", paths.APP_DIR)

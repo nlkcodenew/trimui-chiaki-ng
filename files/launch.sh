@@ -21,10 +21,15 @@ export LD_LIBRARY_PATH="$APP/libs:$SDCARD_PATH/System/lib:/usr/trimui/lib:/usr/l
 # sau nay muon them thu vien rieng (libplacebo, libav*, ...) hay dat vao $APP/libs.
 export PYSDL2_DLL_PATH="$APP/libs:/usr/trimui/lib:/usr/lib64:/usr/lib"
 
-if [ -n "$LOGS_PATH" ] && [ -d "$LOGS_PATH" ]; then
+APP_ERRLOG="$APP/Chiaki-loi.txt"
+if (umask 077; : >> "$APP_ERRLOG") 2>/dev/null; then
+    ERRLOG="$APP_ERRLOG"
+elif [ -n "$LOGS_PATH" ] && [ -d "$LOGS_PATH" ] && \
+        (umask 077; : >> "$LOGS_PATH/Chiaki.txt") 2>/dev/null; then
     ERRLOG="$LOGS_PATH/Chiaki.txt"
 else
     ERRLOG="$SDCARD_PATH/Chiaki-loi.txt"
+    (umask 077; : >> "$ERRLOG") 2>/dev/null || ERRLOG="/tmp/Chiaki-loi.txt"
 fi
 export CHIAKI_STDERR_LOG="$ERRLOG"
 
@@ -73,8 +78,14 @@ PY="$(find_python)"
 # Neu crash truoc chua gui duoc, giu log cu cho uploader retry o lan khoi dong
 # tiep theo. Khi khong co crash pending, log launcher cu co the xoa an toan.
 if [ ! -f "$APP/.pending_crash" ]; then
-    rm -f "$ERRLOG" 2>/dev/null
+    : > "$ERRLOG" 2>/dev/null
 fi
+
+{
+    echo "[$(date 2>/dev/null)] launcher start"
+    echo "app=$APP"
+    echo "stderr_log=$ERRLOG"
+} >> "$ERRLOG" 2>/dev/null
 
 # TrimUI Smart Pro S hay bi Kernel Panic khi deep suspend giet app dang chay.
 touch /tmp/stay_alive 2>/dev/null

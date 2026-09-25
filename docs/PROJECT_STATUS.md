@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.19
+# trimui-chiaki-ng — trạng thái dự án v0.3.20
 
 > Cập nhật: 2026-09-25. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
@@ -10,24 +10,24 @@ dùng thử pair PS5 trong khi chức năng PS5 vẫn chưa được hỗ trợ.
 
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.19` |
-| Tag | `v0.3.19` |
+| Latest | `v0.3.20` |
+| Tag | `v0.3.20` |
 | Feature commit | release commit |
 | OTA files | 126 |
 | ZIP entries | 129 |
-| ZIP SHA-256 | `7bcb2609b78cdb855d4b7ac3e7a6dc0d1dc6cd7ce4acf74deabcc102820e2357` |
-| Unittest | 82/82 đạt |
+| ZIP SHA-256 | `b6e7d2c7e8e7c2fb0dcd30c3549a8bee37e0431dc8232734e393d401829aa2dc` |
+| Unittest | 84/84 đạt |
 | Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 GitHub Release có ba asset:
 
 - `manifest.json`.
-- `trimui-chiaki-ng-v0.3.19.zip`.
-- `trimui-chiaki-ng-v0.3.19.zip.sha256`.
+- `trimui-chiaki-ng-v0.3.20.zip`.
+- `trimui-chiaki-ng-v0.3.20.zip.sha256`.
 
 GitHub Actions đã hoàn tất thành công. Ba asset công khai tải qua
-Release `v0.3.19` có 126 file OTA, 129 entry ZIP và SHA-256 ở bảng trên.
+Release `v0.3.20` có 126 file OTA, 129 entry ZIP và SHA-256 ở bảng trên.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -243,6 +243,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.17` | Khóa 720p; chuyển báo cáo lỗi sang HTTPS relay không token client |
 | `v0.3.18` | Hướng dẫn trong app; hiện `CHI-xxxx` cạnh version để tra Issue |
 | `v0.3.19` | Luôn bật diagnostics; report cả lần thử pair PS5 chưa hỗ trợ |
+| `v0.3.20` | Giữ log launcher trong app và bắt lỗi bootstrap trước khi đọc settings |
 
 ## 10. Kiểm thử và build gate
 
