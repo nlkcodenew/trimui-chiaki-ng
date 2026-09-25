@@ -476,6 +476,34 @@ class LogUploaderTests(unittest.TestCase):
                 (manifest, expected),
             )
 
+    def test_stable_install_never_auto_offers_prerelease(self):
+        manifest = {
+            "version": "99.0.0-beta1",
+            "prerelease": True,
+            "files": [{"path": "app.py", "sha256": "0" * 64}],
+        }
+        with mock.patch.object(self.updater, "APP_VERSION", "1.0.0"), \
+                mock.patch.object(self.updater, "fetch_manifest",
+                                  return_value=manifest), \
+                mock.patch.object(self.updater, "pending_files") as pending:
+            self.assertIsNone(self.updater.check_for_update(force=False))
+            self.assertIsNone(self.updater.check_for_update(force=True))
+        pending.assert_not_called()
+
+    def test_beta_install_can_offer_newer_prerelease(self):
+        manifest = {
+            "version": "1.0.0-beta2",
+            "prerelease": True,
+            "files": [{"path": "app.py", "sha256": "0" * 64}],
+        }
+        with mock.patch.object(self.updater, "APP_VERSION", "1.0.0-beta1"), \
+                mock.patch.object(self.updater, "fetch_manifest",
+                                  return_value=manifest), \
+                mock.patch.object(self.updater, "pending_files",
+                                  return_value=manifest["files"]):
+            self.assertEqual(self.updater.check_for_update(force=True),
+                             (manifest, manifest["files"]))
+
     def test_payload_urls_include_repository_files_directory(self):
         urls = self.updater.payload_base_urls(
             {"release_tag": "v0.2.6/files"}, "app.py")
@@ -922,7 +950,7 @@ class LogUploaderTests(unittest.TestCase):
         screen._activate()
         engine.push_screen.assert_called_once_with("guide")
 
-    def test_guide_has_complete_ps4_flow_and_ps5_limit(self):
+    def test_guide_has_complete_ps4_flow_and_ps5_beta(self):
         i18n = importlib.import_module("rh.i18n")
         screen = self.guide_module.GuideScreen(mock.Mock())
         self.assertEqual(len(screen.STEPS), 8)
@@ -933,8 +961,9 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("đăng nhập tự động", vietnamese)
         self.assertIn("PIN 8 số", vietnamese)
         self.assertIn("START + SELECT", vietnamese)
-        self.assertIn("chưa hỗ trợ ghép nối/stream PS5", vietnamese)
-        self.assertIn("mã ID trên tiêu đề", vietnamese)
+        self.assertIn("PS5 đang ở mức thử nghiệm", vietnamese)
+        self.assertIn("Account-ID base64", vietnamese)
+        self.assertIn("ghi theo từng bước", vietnamese)
 
     def test_guide_navigation_stays_in_bounds_and_b_returns(self):
         engine = mock.Mock()
@@ -1245,26 +1274,60 @@ class LogUploaderTests(unittest.TestCase):
             "server_mac": "001122334455",
         }
         regist = importlib.import_module("rh.ps4_regist")
-        with mock.patch.object(regist, "register", return_value=real):
+        ps5 = importlib.import_module("rh.ps5_regist")
+        with mock.patch.object(regist, "register", return_value=real) as ps4_register, \
+                mock.patch.object(ps5, "register") as ps5_register:
             ok, result = chiaki.regist_with_pin(host, "12345678")
         self.assertTrue(ok)
         self.assertFalse(result["is_ps5"])
         self.assertNotIn("stub", result["rp_key"])
+        ps4_register.assert_called_once()
+        ps5_register.assert_not_called()
         with mock.patch.object(regist, "register", side_effect=regist.RegistError("HTTP 403")):
             ok, result = chiaki.regist_with_pin(host, "12345678")
         self.assertFalse(ok)
         self.assertEqual(result["error"], "HTTP 403")
 
-    def test_ps5_registration_limit_is_reported(self):
+    def test_ps5_registration_uses_isolated_helper_and_reports_stage(self):
         chiaki = importlib.import_module("rh.chiaki")
         host = chiaki.DiscoveredHost(
             name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100,
         )
+        ps5 = importlib.import_module("rh.ps5_regist")
+        expected = {
+            "name": "PS5",
+            "regist_key": "a49d08ed",
+            "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            "rp_key_type": 2,
+            "server_mac": "001122334455",
+        }
+        original_account = chiaki.state.psn_account_id
+        chiaki.state.psn_account_id = base64.b64encode(b"12345678").decode("ascii")
+        try:
+            with mock.patch.object(ps5, "register", return_value=expected) as register:
+                ok, result = chiaki.regist_with_pin(host, "12345678")
+        finally:
+            chiaki.state.psn_account_id = original_account
+        self.assertTrue(ok)
+        self.assertTrue(result["is_ps5"])
+        self.assertEqual(result["target"], 1000100)
+        register.assert_called_once_with("192.168.1.60", "12345678",
+                                         base64.b64encode(b"12345678").decode("ascii"), 10.0)
+
         with mock.patch.object(chiaki, "_report_error") as report:
-            ok, result = chiaki.regist_with_pin(host, "12345678")
+            with mock.patch.object(ps5, "register",
+                                   side_effect=ps5.PS5RegistError("network", "timeout")):
+                ok, result = chiaki.regist_with_pin(host, "12345678")
         self.assertFalse(ok)
-        self.assertIn("da xep hang gui chan doan len GitHub", result["error"])
-        report.assert_called_once_with("pair_ps5_registration_unavailable")
+        self.assertIn("network", result["error"])
+        report.assert_called_once_with("pair_ps5_network")
+
+    def test_ps5_account_id_is_validated_without_leaking_value(self):
+        ps5 = importlib.import_module("rh.ps5_regist")
+        with self.assertRaises(ps5.PS5RegistError) as error:
+            ps5._decode_account_id("not-base64")
+        self.assertEqual(error.exception.stage, "account_id")
+        self.assertNotIn("not-base64", str(error.exception))
 
     def test_native_stream_launcher_keeps_keys_out_of_script(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1372,6 +1435,53 @@ class LogUploaderTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("ghép lại", message)
         os.remove(paired_path)
+
+    def test_ps5_credentials_never_cross_into_ps4_path(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.60",
+                "name": "PS5",
+                "is_ps5": True,
+                "target": 1000100,
+                "regist_key": "a49d08ed",
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        try:
+            self.assertIsNone(chiaki._paired_credentials("192.168.1.60", False))
+            self.assertIsNotNone(chiaki._paired_credentials("192.168.1.60", True))
+        finally:
+            os.remove(paired_path)
+
+    def test_ps5_stream_rejects_stale_target_before_native_launch(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.60",
+                "name": "PS5",
+                "is_ps5": True,
+                "target": 1000000,
+                "regist_key": "a49d08ed",
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        host = chiaki.DiscoveredHost(
+            name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100)
+        try:
+            ok, message = chiaki.prepare_stream_launch(host)
+        finally:
+            os.remove(paired_path)
+        self.assertFalse(ok)
+        self.assertIn("ghép lại PS5", message)
+
+    def test_native_source_guards_ps5_target_pairing(self):
+        root = os.path.dirname(os.path.dirname(__file__))
+        with open(os.path.join(root, "native", "chiaki-stream.c"),
+                  encoding="utf-8") as handle:
+            source = handle.read()
+        self.assertIn("config.ps5 && config.target != 1000100", source)
+        self.assertIn("!config.ps5 && config.target >= 1000000", source)
 
     def test_saved_paired_host_remains_visible_when_discovery_is_empty(self):
         chiaki = importlib.import_module("rh.chiaki")

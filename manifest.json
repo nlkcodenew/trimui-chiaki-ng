@@ -1,13 +1,14 @@
 {
-  "version": "0.3.20",
+  "version": "0.4.0-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-25T21:17:41+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.20/files",
-  "release_tag": "v0.3.20/files",
+  "built": "2026-09-25T22:32:10+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.4.0-beta1/files",
+  "release_tag": "v0.4.0-beta1/files",
+  "prerelease": true,
   "note": {
-    "vi": "v0.3.20: sửa crash lúc khởi động và luôn tạo log trong Apps/Chiaki; PS5 hiện mới hỗ trợ quét.",
-    "en": "v0.3.20: fix startup crashes and always create logs in Apps/Chiaki; PS5 currently supports discovery only."
+    "vi": "v0.4.0-beta1: beta PS5 pair/stream tách biệt; PS4 giữ nguyên đường đã xác nhận; lỗi PS5 ghi theo từng stage.",
+    "en": "v0.4.0-beta1: experimental isolated PS5 pairing/streaming; PS4 path unchanged; PS5 failures report stages."
   },
   "files": [
     {
@@ -41,9 +42,14 @@
       "size": 757076
     },
     {
+      "path": "bin/chiaki-regist",
+      "sha256": "0cb684bb58e4731cafc88742889c66400661c862b4f55beee8899fe1e3a9ca08",
+      "size": 1229368
+    },
+    {
       "path": "bin/chiaki-stream",
-      "sha256": "a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d",
-      "size": 1253944
+      "sha256": "98e6888de05e4354dbf8c2fede805850dc8ad1a8dce5e9dbf05414394450b611",
+      "size": 1245752
     },
     {
       "path": "certs/README.txt",
@@ -132,8 +138,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "ee029b7ce282c91e883e63b67f1fdbe5b4212b18e5940642891ab3749b08cf92",
-      "size": 26519
+      "sha256": "4fd02bf1a49c101bd684a3a2f1c7456bb1c99d1c94b2d5f8bc79b45d20316a19",
+      "size": 28091
     },
     {
       "path": "rh/device_identity.py",
@@ -152,8 +158,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "f2b4d13e4c6bbc4f7447834a471d20e90f6ef1a0ce81d664b65c315582aeef64",
-      "size": 12545
+      "sha256": "0a713924a48077c189e764df5be47eb363bfbace3888e2cc2d504446c0f9533c",
+      "size": 12985
     },
     {
       "path": "rh/inputs.py",
@@ -181,6 +187,11 @@
       "size": 13660
     },
     {
+      "path": "rh/ps5_regist.py",
+      "sha256": "816727d03de470b2da7ff6257efd7f3ccb4e7a4dc74de893f3a23323aa868d08",
+      "size": 6089
+    },
+    {
       "path": "rh/ssl_context.py",
       "sha256": "a7dd3364b361284a2493248d2508295e99f70e825885542079f878deadd0970d",
       "size": 433
@@ -192,13 +203,13 @@
     },
     {
       "path": "rh/updater.py",
-      "sha256": "25fb6d67f6395b74670f3047b6a6fc6e336e972fc3f0b10fceaed8a33517faff",
-      "size": 16414
+      "sha256": "2791bbb78a6b7f810751d1e5c72c0f5751c9c6942dc4aee55a18436389a23d1f",
+      "size": 16597
     },
     {
       "path": "rh/version.py",
-      "sha256": "74578ac8ced6f642b8874e8650767595879b58555dcd6ab7db4195ed071c1e07",
-      "size": 1178
+      "sha256": "381f09ad7fcceca4045784990c205d141a412609130ac89cbe232d25b09bc98a",
+      "size": 1183
     },
     {
       "path": "rh/modals/__init__.py",
@@ -237,13 +248,13 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "263362b040c41aa4ea912395693fd9e2e75f5ba108b8415ad6b9494647b37d97",
-      "size": 10589
+      "sha256": "05925f4eedfd1b71f64fc717b3b6a92eb9d8961483eb0e868b432aa565bfff6d",
+      "size": 10853
     },
     {
       "path": "rh/screens/pair.py",
-      "sha256": "6fbba94e248197084b3fc89572e1d77b1cb39003b17e9927f05a9a69cee54a97",
-      "size": 6446
+      "sha256": "853df084c0e6ae18c6687aab618ada95b619d312c64dc36be58d653b41d9b1b1",
+      "size": 6870
     },
     {
       "path": "rh/screens/settings.py",
@@ -643,8 +654,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.20.zip",
-    "sha256": "b6e7d2c7e8e7c2fb0dcd30c3549a8bee37e0431dc8232734e393d401829aa2dc",
-    "size": 10760869
+    "name": "trimui-chiaki-ng-v0.4.0-beta1.zip",
+    "sha256": "5a0bfe0a39699d58a73c10cc1ac38011ea61f5479c63f254f2baf956609cbecb",
+    "size": 11345051
   }
 }

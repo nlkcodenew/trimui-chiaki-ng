@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.3.20`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho `v0.4.0-beta1`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
@@ -15,8 +15,8 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.20.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.4.0-beta1`.
+2. Tải `trimui-chiaki-ng-v0.4.0-beta1.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 

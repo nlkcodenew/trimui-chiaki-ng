@@ -105,7 +105,10 @@ class HomeScreen(BaseScreen):
     def _is_paired(self, host):
         if not host:
             return False
+        host_is_ps5 = bool(getattr(host, "is_ps5", False))
+        state_is_ps5 = int(getattr(state, "host_target", 0) or 0) >= 1000000
         if (getattr(state, "host_addr", "") == host.addr
+                and state_is_ps5 == host_is_ps5
                 and self._real_keys(getattr(state, "regist_key", ""),
                                     getattr(state, "rp_key", ""))):
             return True
@@ -118,6 +121,7 @@ class HomeScreen(BaseScreen):
                     data = json.load(f) or []
                 for entry in data:
                     if (entry.get("addr") == host.addr
+                            and bool(entry.get("is_ps5", False)) == host_is_ps5
                             and self._real_keys(entry.get("regist_key"), entry.get("rp_key"))):
                         return True
         except Exception:

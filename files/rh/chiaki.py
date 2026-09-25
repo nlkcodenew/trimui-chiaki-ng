@@ -98,7 +98,7 @@ def _native_preload_prefix(runtime_dir):
         '${LD_PRELOAD:+:$LD_PRELOAD}}" '
     )
 
-def _paired_credentials(addr):
+def _paired_credentials(addr, is_ps5=None):
     from .paths import APP_DIR
 
     entries = []
@@ -111,16 +111,20 @@ def _paired_credentials(addr):
     except (OSError, ValueError, TypeError):
         pass
     if getattr(state, "host_addr", "") == addr:
+        state_target = int(getattr(state, "host_target", 0) or 0)
         entries.append({
             "addr": state.host_addr,
             "name": state.host_name,
-            "is_ps5": False,
+            "is_ps5": state_target >= 1000000,
             "regist_key": state.regist_key,
             "rp_key": state.rp_key,
-            "target": int(getattr(state, "host_target", 0) or 0),
+            "target": state_target,
         })
     for entry in entries:
         if not isinstance(entry, dict) or entry.get("addr") != addr:
+            continue
+        entry_is_ps5 = bool(entry.get("is_ps5", False))
+        if is_ps5 is not None and entry_is_ps5 != bool(is_ps5):
             continue
         regist_key = str(entry.get("regist_key") or "")
         rp_key = str(entry.get("rp_key") or "")
@@ -128,6 +132,12 @@ def _paired_credentials(addr):
             decoded = base64.b64decode(rp_key, validate=True)
         except Exception:
             decoded = b""
+        try:
+            target = int(entry.get("target", 0) or 0)
+        except (TypeError, ValueError):
+            continue
+        if (entry_is_ps5 != (target >= 1000000)):
+            continue
         if (1 <= len(regist_key) <= 8
                 and all(char in "0123456789abcdefABCDEF" for char in regist_key)
                 and len(decoded) == 16
@@ -135,10 +145,10 @@ def _paired_credentials(addr):
             return {
                 "addr": addr,
                 "name": entry.get("name") or addr,
-                "is_ps5": bool(entry.get("is_ps5", False)),
+                "is_ps5": entry_is_ps5,
                 "regist_key": regist_key,
                 "rp_key": rp_key,
-                "target": int(entry.get("target", 0) or 0),
+                "target": target,
             }
     return None
 
@@ -159,23 +169,26 @@ def paired_hosts_for_discovery(discovered=None):
     except (OSError, ValueError, TypeError):
         pass
     if getattr(state, "host_addr", ""):
+        state_target = int(getattr(state, "host_target", 0) or 0)
         entries.append({
             "addr": state.host_addr,
             "name": state.host_name,
-            "is_ps5": False,
-            "target": int(getattr(state, "host_target", 0) or 0),
+            "is_ps5": state_target >= 1000000,
+            "target": state_target,
         })
     for entry in entries:
         if not isinstance(entry, dict):
             continue
         addr = str(entry.get("addr") or "")
-        if not addr or addr in seen or not _paired_credentials(addr):
+        entry_is_ps5 = bool(entry.get("is_ps5", False))
+        if (not addr or addr in seen
+                or not _paired_credentials(addr, entry_is_ps5)):
             continue
         hosts.append(DiscoveredHost(
             name=str(entry.get("name") or addr),
             addr=addr,
             state="offline",
-            is_ps5=bool(entry.get("is_ps5", False)),
+            is_ps5=entry_is_ps5,
             target=int(entry.get("target", 0) or 0),
         ))
         seen.add(addr)
@@ -184,7 +197,8 @@ def paired_hosts_for_discovery(discovered=None):
 
 def wake_paired_host(host):
     """Wake a saved host using its private registration credential."""
-    credentials = _paired_credentials(getattr(host, "addr", ""))
+    credentials = _paired_credentials(
+        getattr(host, "addr", ""), bool(getattr(host, "is_ps5", False)))
     if not credentials:
         return False
     return send_wakeup(
@@ -209,13 +223,20 @@ def prepare_stream_launch(host):
     binary = find_chiaki_binary(APP_DIR)
     if not binary:
         return False, "Thiếu bin/chiaki-stream"
-    credentials = _paired_credentials(getattr(host, "addr", ""))
+    credentials = _paired_credentials(
+        getattr(host, "addr", ""), bool(getattr(host, "is_ps5", False)))
     if not credentials:
         log.error("stream preparation rejected: paired credentials unavailable")
         _report_error("stream_credentials_missing")
         return False, "Khóa ghép nối không hợp lệ; hãy ghép lại PS4"
     discovered_target = int(getattr(host, "target", 0) or 0)
     stored_target = int(credentials.get("target", 0) or 0)
+    if bool(getattr(host, "is_ps5", False)) and (
+            discovered_target != 1000100 or stored_target != 1000100):
+        log.warning("PS5 target mismatch: discovered=%d stored=%d; re-pair required",
+                    discovered_target, stored_target)
+        _report_error("stream_ps5_target_mismatch")
+        return False, "Khóa PS5 không khớp máy; hãy ghép lại PS5"
     if (discovered_target in (800, 900, 1000)
             and stored_target in (800, 900, 1000)
             and discovered_target != stored_target):
@@ -564,7 +585,7 @@ def discovery_broadcast(timeout=3.0):
 
 
 def regist_with_pin(host, pin, timeout=10.0):
-    """Đăng ký PS4 qua LAN bằng PIN 8 số, không kết nối dịch vụ PSN."""
+    """Register a host through its protocol-specific registration path."""
     pin = "".join(c for c in str(pin) if c.isdigit())[:8]
     if len(pin) != 8:
         log.warning("registration rejected: PIN must contain 8 digits")
@@ -575,10 +596,21 @@ def regist_with_pin(host, pin, timeout=10.0):
     target = int(getattr(host, "target", 0) or 0)
     log.info("registration start: host=%s ps5=%s target=%d", addr, is_ps5, target)
     if is_ps5:
-        message = "PS5 chua ho tro ghep noi; da xep hang gui chan doan len GitHub"
-        log.warning("registration rejected: %s", message)
-        _report_error("pair_ps5_registration_unavailable")
-        return False, {"error": message}
+        try:
+            from .ps5_regist import PS5RegistError, register
+            result = register(addr, pin, getattr(state, "psn_account_id", ""), timeout)
+        except PS5RegistError as exc:
+            reason = "pair_ps5_%s" % exc.stage
+            log.error("PS5 registration failed: stage=%s error=%s", exc.stage, exc)
+            _report_error(reason)
+            return False, {"error": "PS5 lỗi ở bước %s: %s" % (exc.stage, exc)}
+        except Exception:
+            log.exception("PS5 registration failed: stage=unexpected")
+            _report_error("pair_ps5_unexpected")
+            return False, {"error": "PS5 lỗi ngoài dự kiến; xem Chiaki-loi.txt"}
+        result.update({"addr": addr, "is_ps5": True, "target": 1000100})
+        log.info("PS5 registration success: target=%d", result["target"])
+        return True, result
     if target not in (0, 800, 900, 1000):
         message = "this beta supports PS4 firmware 8.0 or newer"
         log.warning("registration rejected: target=%d", target)

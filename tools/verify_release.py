@@ -52,6 +52,7 @@ REQUIRED_ARCHIVE = {
     "App/Chiaki/rh/screens/guide.py",
     "App/Chiaki/assets/fallback.ttf",
     "App/Chiaki/bin/chiaki-stream",
+    "App/Chiaki/bin/chiaki-regist",
     "App/Chiaki/certs/README.txt",
     "App/Chiaki/certs/cacert.pem",
     "App/Chiaki/vendor/sdl2/__init__.py",
@@ -102,6 +103,8 @@ def main():
         fail("manifest version does not match APP_VERSION")
     if manifest.get("release_tag") not in ("v%s" % version, "v%s/files" % version):
         fail("release_tag does not match APP_VERSION")
+    if manifest.get("prerelease") is not ("-" in version):
+        fail("manifest prerelease flag does not match APP_VERSION")
     expected_base = "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v%s/files" % version
     if manifest.get("base_url") != expected_base:
         fail("base_url does not point to immutable tag files directory")
@@ -127,6 +130,9 @@ def main():
     native_path = os.path.join(FILES_DIR, "bin", "chiaki-stream")
     verify_aarch64_elf(native_path, "chiaki-stream")
     verify_symbol_version(native_path, "OPENSSL_1_1_1", "chiaki-stream")
+    regist_path = os.path.join(FILES_DIR, "bin", "chiaki-regist")
+    verify_aarch64_elf(regist_path, "chiaki-regist")
+    verify_symbol_version(regist_path, "OPENSSL_1_1_1", "chiaki-regist")
 
     runtime_dir = os.path.join(FILES_DIR, "libs", "brick-stock")
     for name, expected_hash in sorted(BRICK_RUNTIME.items()):

@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release mới nhất: `v0.3.20`.**
+**Release thử nghiệm mới nhất: `v0.4.0-beta1`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -35,6 +35,10 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
   người dùng nhớ bật tùy chọn. Lỗi pair PS5 chưa được hỗ trợ cũng được ghi nhận riêng.
 - `v0.3.20` luôn tạo `Apps/Chiaki/Chiaki-loi.txt` từ launcher và khởi tạo logger
   trước khi đọc settings, nên lỗi bootstrap trên Stock OS vẫn để lại log chẩn đoán.
+- `v0.4.0-beta1` thêm đường pair/stream PS5 riêng bằng helper native upstream,
+  giữ nguyên đường đăng ký Python pre-10 và H264 đã xác nhận trên PS4. Lỗi PS5
+  được ghi theo stage `account_id`, `helper`, `input`, `start`, `network`,
+  `protocol` hoặc `result` để đối chiếu Issue mà không ghi PIN hay khóa bí mật.
 - Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
@@ -57,7 +61,7 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 - ID Issue gồm model, mã cài đặt `CHI-xxxx` và mã phần cứng băm
   `HW-xxxxxxxxxxxx` để phân biệt nhiều máy mà không gửi serial/MAC thô.
 - Menu **Hướng dẫn sử dụng** trình bày bật máy, auto-login, pair PIN, stream và
-  thoát phiên; PS5 được ghi rõ mới chỉ quét, chưa hỗ trợ pair/stream.
+  thoát phiên; PS5 có hướng dẫn beta riêng và không đi qua mã pair PS4.
 
 ## Tương thích đã xác nhận
 
@@ -67,17 +71,37 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 | Spruce OS | Stream tốt trên `sun55iw3`; tiếp tục dùng library hệ thống |
 | Brick Pro Stock OS | `v0.3.16` stream PS4 thật có hình, âm thanh và input |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
-| PS5/H265 | Có mã hỗ trợ trong helper nhưng chưa được kiểm thử máy thật |
+| PS5/H265 | Beta pair/stream LAN riêng; chưa được xác nhận trên máy thật |
 | WAKEUP PS4 Rest Mode | Đã thử thất bại trên môi trường hiện tại và tắt từ `v0.3.10` |
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.3.20.zip` tại
-   [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
+1. Tải `trimui-chiaki-ng-v0.4.0-beta1.zip` tại
+   [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.4.0-beta1).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
 3. Kiểm tra tồn tại `Apps/Chiaki/launch.sh` và
    `Apps/Chiaki/bin/chiaki-stream`.
+4. Bản PS5 beta còn cần `Apps/Chiaki/bin/chiaki-regist`.
+
+## Thử nghiệm PS5
+
+PS4 hack pair/stream được vì dự án có đường giao thức PS4 pre-10 hoàn chỉnh;
+điều này không phụ thuộc trạng thái jailbreak. PS5 dùng endpoint, crypto, target
+và H265 riêng nên `v0.4.0-beta1` cô lập đường PS5 thay vì thay thế mã PS4. Không
+cần tách release “PS5 jailbreak/no-jailbreak”; khả năng kết nối phụ thuộc firmware,
+cấu hình Remote Play, tài khoản và mạng của PS5, không phải tên release.
+
+1. Giữ PS5 và TrimUI trong cùng LAN; bật Remote Play và để PS5 ở trạng thái ready.
+2. Điền Account-ID PSN dạng Base64 của đúng tài khoản vào khóa
+   `psn_account_id` trong `Apps/Chiaki/settings.json`. Giá trị giải mã phải đúng
+   8 byte. Không đăng Account-ID, PIN hoặc khóa pair lên Issue.
+3. Trong vòng test đầu, tắt mã đăng nhập console 4 số; đây không phải PIN Remote
+   Play 8 số. Chọn profile 720p/30, SDR và không bật HDR.
+4. Quét PS5, chọn pair, mở màn hình thêm thiết bị Remote Play trên PS5, nhập PIN
+   8 số rồi bấm A. Helper đăng ký trực tiếp theo IP, không broadcast registration.
+5. Nếu lỗi, ghi lại ID `CHI-xxxx`. App tự gửi log đã lọc với stage cụ thể; file
+   cục bộ là `Apps/Chiaki/Chiaki-loi.txt` và `Apps/Chiaki/Chiaki-debug.log`.
 4. Lắp thẻ vào máy và mở **Apps → Chiaki-ng**.
 5. Chọn **Hướng dẫn sử dụng** trong menu nếu cần xem từng bước ngay trên máy.
 

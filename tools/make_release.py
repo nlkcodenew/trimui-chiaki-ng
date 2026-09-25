@@ -153,9 +153,10 @@ def main():
         # release_tag truc tiep voi path app.py thay vi biet source nam trong
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
+        "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: sửa crash lúc khởi động và luôn tạo log trong Apps/Chiaki; PS5 hiện mới hỗ trợ quét." % version,
-            "en": "v%s: fix startup crashes and always create logs in Apps/Chiaki; PS5 currently supports discovery only." % version,
+            "vi": "v%s: beta PS5 pair/stream tách biệt; PS4 giữ nguyên đường đã xác nhận; lỗi PS5 ghi theo từng stage." % version,
+            "en": "v%s: experimental isolated PS5 pairing/streaming; PS4 path unchanged; PS5 failures report stages." % version,
         },
         "files": files,
         "remove": [],

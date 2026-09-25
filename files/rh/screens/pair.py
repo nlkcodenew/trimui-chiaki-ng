@@ -17,7 +17,10 @@ class PairScreen(BaseScreen):
     def on_enter(self, params=None):
         self.host = (params or {}).get("host")
         self.pin = ""
-        self.status = tr("pair_enter_pin") if self.host else tr("pair_no_host")
+        if self.host and getattr(self.host, "is_ps5", False):
+            self.status = tr("pair_enter_pin_ps5")
+        else:
+            self.status = tr("pair_enter_pin") if self.host else tr("pair_no_host")
         self.pairing = False
         self.cursor = 0
     def get_header_title(self):
@@ -83,7 +86,7 @@ class PairScreen(BaseScreen):
                 paired.append({
                     "addr": self.host.addr,
                     "name": state.host_name,
-                    "is_ps5": False,
+                    "is_ps5": bool(getattr(self.host, "is_ps5", False)),
                     "target": int(info.get("target", state.host_target or 0)),
                     "regist_key": state.regist_key,
                     "rp_key": state.rp_key,
@@ -133,4 +136,9 @@ class PairScreen(BaseScreen):
             engine.fill_rect(x, y0, bw, bh, col[0], col[1], col[2], 240)
             engine.draw_text(ch, engine.font_title, x+bw//2, y0+bh//2, 255, 255, 255, center_x=True, center_y=True)
         engine.draw_text(self.status, engine.font_sub, engine.screen_w//2, y0+120, 0, 230, 150, center_x=True)
-        engine.draw_text(tr("pair_hint_input"), engine.font_sub, engine.screen_w//2, y0+160, 180, 195, 215, center_x=True)
+        if getattr(self.host, "is_ps5", False):
+            engine.draw_text(tr("pair_ps5_account_hint"), engine.font_sub,
+                             engine.screen_w//2, y0+155, 220, 225, 235, center_x=True)
+        else:
+            engine.draw_text(tr("pair_hint_input"), engine.font_sub,
+                             engine.screen_w//2, y0+160, 180, 195, 215, center_x=True)

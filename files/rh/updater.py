@@ -309,6 +309,10 @@ def check_for_update(force=False):
         return None
     if not m:
         return None
+    if m.get("prerelease") and "-" not in APP_VERSION:
+        log.info("OTA prerelease ignored by stable install: version=%s",
+                 m.get("version"))
+        return None
     is_new_version = is_newer(m["version"], APP_VERSION)
     if not is_new_version:
         return None

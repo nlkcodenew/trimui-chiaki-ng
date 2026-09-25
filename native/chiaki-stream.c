@@ -165,7 +165,7 @@ static bool load_config(const char *path, StreamConfig *config)
         else if(!strcmp(line, "rp_key")) snprintf(rp_key, sizeof(rp_key), "%s", value);
         else if(!strcmp(line, "ps5")) config->ps5 = !strcmp(value, "1") || !strcasecmp(value, "true");
         else if(!strcmp(line, "verbose")) config->verbose = !strcmp(value, "1") || !strcasecmp(value, "true");
-        else if(!strcmp(line, "target")) parse_uint(value, 0, 1000000, &config->target);
+        else if(!strcmp(line, "target")) parse_uint(value, 0, 1000100, &config->target);
         else if(!strcmp(line, "width")) parse_uint(value, 320, 3840, &config->width);
         else if(!strcmp(line, "height")) parse_uint(value, 180, 2160, &config->height);
         else if(!strcmp(line, "fps")) parse_uint(value, 1, 120, &config->fps);
@@ -552,6 +552,12 @@ int main(int argc, char **argv)
     }
     StreamConfig config;
     if(!load_config(argv[1], &config)) return 3;
+    if((config.ps5 && config.target != 1000100) ||
+       (!config.ps5 && config.target >= 1000000)) {
+        fprintf(stderr, "[native] protocol/target mismatch ps5=%d target=%u\n",
+                config.ps5, config.target);
+        return 3;
+    }
 
     StreamApp app;
     memset(&app, 0, sizeof(app));

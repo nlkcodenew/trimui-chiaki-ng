@@ -55,8 +55,11 @@ cmake -S /tmp/chiaki-src -B "$BUILD_DIR" -G Ninja \
   -DCHIAKI_ENABLE_PI_DECODER=OFF -DCHIAKI_LIB_ENABLE_OPUS=ON \
   -DCHIAKI_USE_SYSTEM_JERASURE=OFF -DCHIAKI_USE_SYSTEM_NANOPB=OFF \
   -DCHIAKI_USE_SYSTEM_CURL=OFF -DCHIAKI_LIB_MINIUPNPC_EXTERNAL_PROJECT=ON
-cmake --build "$BUILD_DIR" --target chiaki-stream -j "${JOBS:-8}"
+cmake --build "$BUILD_DIR" --target chiaki-stream chiaki-regist -j "${JOBS:-8}"
 "/tmp/tg5050-sdk/host/bin/aarch64-none-linux-gnu-strip" --strip-unneeded \
-  "$BUILD_DIR/trimui-native/chiaki-stream"
+  "$BUILD_DIR/trimui-native/chiaki-stream" \
+  "$BUILD_DIR/trimui-native/chiaki-regist"
 cp "$BUILD_DIR/trimui-native/chiaki-stream" "$REPO_ROOT/files/bin/chiaki-stream"
+cp "$BUILD_DIR/trimui-native/chiaki-regist" "$REPO_ROOT/files/bin/chiaki-regist"
 chmod +x "$REPO_ROOT/files/bin/chiaki-stream"
+chmod +x "$REPO_ROOT/files/bin/chiaki-regist"
