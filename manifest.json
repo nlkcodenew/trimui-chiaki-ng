@@ -1,19 +1,19 @@
 {
-  "version": "0.3.17",
+  "version": "0.3.18",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-25T09:28:22+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.17/files",
-  "release_tag": "v0.3.17/files",
+  "built": "2026-09-25T10:00:12+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.18/files",
+  "release_tag": "v0.3.18/files",
   "note": {
-    "vi": "v0.3.17: khóa tối đa 720p và gửi log an toàn qua HTTPS relay.",
-    "en": "v0.3.17: cap streaming at 720p and report diagnostics through an HTTPS relay."
+    "vi": "v0.3.18: thêm hướng dẫn trong app và hiện mã máy cạnh version.",
+    "en": "v0.3.18: add an in-app guide and show the device ID beside the version."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "2902e551086f4ae3944e8d4033f8763139dcc8d94891c7c02e793d8cbb6614a9",
-      "size": 4718
+      "sha256": "670b3d23595850098f641d3806e42b94b375d14558ef276c9c453f24f8f9b80b",
+      "size": 4820
     },
     {
       "path": "config.json",
@@ -152,8 +152,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "050de0465a4205132be44d84af06e097548926776f0e9b51f16f656a850f6b73",
-      "size": 8462
+      "sha256": "56622a5093a361455662b8ea37a442261a1edc6ed7f7cf87cf2b22672f80ccfe",
+      "size": 12512
     },
     {
       "path": "rh/inputs.py",
@@ -197,7 +197,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "1df1a00994f2b745c9d124a0cd7522262eea88e12939778a0059c220f022bd59",
+      "sha256": "cf741b1d25d80aab34b99d67ff3cc3fedbb246d6beef220fa29b552bb4d26ceb",
       "size": 1178
     },
     {
@@ -222,8 +222,8 @@
     },
     {
       "path": "rh/screens/__init__.py",
-      "sha256": "66dbbd3f922ba923d1c71494f6efd69095774b076b4990c5eb12d4240dc79169",
-      "size": 118
+      "sha256": "90846a717e53132c10c217d0a65ad1e9be0037658e4511debdfa54bd22769f18",
+      "size": 150
     },
     {
       "path": "rh/screens/base.py",
@@ -231,9 +231,14 @@
       "size": 475
     },
     {
+      "path": "rh/screens/guide.py",
+      "sha256": "aea529280b3a178ea6cd8b13e1ab5a1b253c865684b95b393a7f5ffbee6094d1",
+      "size": 2605
+    },
+    {
       "path": "rh/screens/home.py",
-      "sha256": "753b0887168e73920efd16dd54f69253dba2e41275748c45f2b58c5810dc23e2",
-      "size": 10295
+      "sha256": "263362b040c41aa4ea912395693fd9e2e75f5ba108b8415ad6b9494647b37d97",
+      "size": 10589
     },
     {
       "path": "rh/screens/pair.py",
@@ -638,8 +643,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.17.zip",
-    "sha256": "fb9a83178b44ffbfa8366f22f5c7f9392d30b4f841bfa9e608f296f8601c3a50",
-    "size": 10758108
+    "name": "trimui-chiaki-ng-v0.3.18.zip",
+    "sha256": "2727f77866cf0d95386efbf2c2e7ee094b060d419be84fb7ce9fb6992aca2ada",
+    "size": 10760611
   }
 }

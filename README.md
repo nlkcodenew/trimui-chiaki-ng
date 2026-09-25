@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release mới nhất: `v0.3.17`.**
+**Release mới nhất: `v0.3.18`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -24,6 +24,8 @@
   `OPENSSL_1_1_1`; launcher Brick preload đúng OpenSSL 1.1.1 đã đóng gói.
 - `v0.3.17` khóa profile tối đa 720p và chuyển báo cáo lỗi sang HTTPS relay;
   GitHub token chỉ nằm trong Worker secret, không còn trong app hoặc thẻ nhớ.
+- `v0.3.18` thêm hướng dẫn sử dụng 8 bước ngay trong menu và hiển thị mã cài
+  đặt `CHI-xxxx` cạnh version để đối chiếu đúng Issue khi hỗ trợ người dùng.
 
 Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật có hình,
 âm thanh, input. Issue `#39` ghi nhận native exit `0`, tổng `8968` frame,
@@ -50,6 +52,8 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 - Tự tạo GitHub Issue cho lỗi kết thúc thật sự và báo cáo chất lượng stream.
 - ID Issue gồm model, mã cài đặt `CHI-xxxx` và mã phần cứng băm
   `HW-xxxxxxxxxxxx` để phân biệt nhiều máy mà không gửi serial/MAC thô.
+- Menu **Hướng dẫn sử dụng** trình bày bật máy, auto-login, pair PIN, stream và
+  thoát phiên; PS5 được ghi rõ mới chỉ quét, chưa hỗ trợ pair/stream.
 
 ## Tương thích đã xác nhận
 
@@ -64,13 +68,14 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.3.17.zip` tại
+1. Tải `trimui-chiaki-ng-v0.3.18.zip` tại
    [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
 3. Kiểm tra tồn tại `Apps/Chiaki/launch.sh` và
    `Apps/Chiaki/bin/chiaki-stream`.
 4. Lắp thẻ vào máy và mở **Apps → Chiaki-ng**.
+5. Chọn **Hướng dẫn sử dụng** trong menu nếu cần xem từng bước ngay trên máy.
 
 Nếu Brick Pro Stock OS đang chạy bản trước `v0.3.11` và log có
 `CERTIFICATE_VERIFY_FAILED`, phải cài ZIP `v0.3.11` hoặc mới hơn bằng tay một
@@ -134,13 +139,16 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.17 reason fingerprint
+[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.18 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.
 - `HW-...`: pseudonym SHA-256 từ chip serial, permanent MAC hoặc machine-id;
   raw value không rời thiết bị.
 - `RH-...` của RetroHub là ID riêng của RetroHub, không phải serial phần cứng.
+
+Tiêu đề màn hình chính hiển thị `CHIAKI-NG vX.Y.Z | ID: CHI-xxxx`. Khi báo lỗi,
+người dùng chỉ cần gửi mã `CHI-xxxx`; mã này trùng với mã trong title/body Issue.
 
 Không gửi Issue cho trạng thái bình thường như quét `0 host`, người dùng hủy,
 thoát bình thường hoặc một URL OTA lỗi nhưng fallback thành công. Khi mất mạng,

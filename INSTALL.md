@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.3.17`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho `v0.3.18`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
@@ -16,7 +16,7 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 ## Cài GitHub Release
 
 1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.17.zip`. Không tải **Source code**.
+2. Tải `trimui-chiaki-ng-v0.3.18.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -87,6 +87,9 @@ File tải về được ghi vào staging, kiểm hash, `fsync` và thay atomica
 `rh/version.py` được thay cuối. Không rút cáp hoặc tháo thẻ trong quá trình này.
 
 ## Ghép nối và stream PS4
+
+Có thể chọn **Hướng dẫn sử dụng** trong menu chính để xem 8 bước ngay trên máy.
+Tiêu đề chính hiển thị `ID: CHI-xxxx`; hãy gửi mã này khi cần tìm đúng Issue/log.
 
 Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro S:
 

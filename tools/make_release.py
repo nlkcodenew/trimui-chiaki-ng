@@ -154,8 +154,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: khóa tối đa 720p và gửi log an toàn qua HTTPS relay." % version,
-            "en": "v%s: cap streaming at 720p and report diagnostics through an HTTPS relay." % version,
+            "vi": "v%s: thêm hướng dẫn trong app và hiện mã máy cạnh version." % version,
+            "en": "v%s: add an in-app guide and show the device ID beside the version." % version,
         },
         "files": files,
         "remove": [],

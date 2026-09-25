@@ -7,6 +7,7 @@ import time
 from .. import state, chiaki
 from ..i18n import tr
 from ..version import APP_VERSION
+from ..device_identity import install_id
 from ..logger import get_logger
 from .base import BaseScreen
 
@@ -17,13 +18,15 @@ class HomeScreen(BaseScreen):
     """Man hinh chinh cua app. Cac muc menu:
 
         1. QUET MAY PS4/PS5  (scan)
-        2. CAI DAT          (settings)
-        3. CAP NHAT         (update)
-        4. THOAT            (exit)
+        2. HUONG DAN         (guide)
+        3. CAI DAT           (settings)
+        4. CAP NHAT          (update)
+        5. THOAT             (exit)
     """
 
     ITEMS = [
         ("scan", "discover"),
+        ("guide", "guide"),
         ("settings", "settings"),
         ("update", "update"),
         ("exit", "exit"),
@@ -61,7 +64,7 @@ class HomeScreen(BaseScreen):
         threading.Thread(target=worker, daemon=True).start()
 
     def get_header_title(self):
-        return "%s v%s" % (tr("app_title"), APP_VERSION)
+        return "%s v%s | ID: %s" % (tr("app_title"), APP_VERSION, install_id())
 
     def get_footer_actions(self):
         if self.hosts:
@@ -190,6 +193,8 @@ class HomeScreen(BaseScreen):
         key = self.ITEMS[self.selected][0]
         if key == "scan":
             self._start_scan()
+        elif key == "guide":
+            self.engine.push_screen("guide")
         elif key == "settings":
             self.engine.push_screen("settings")
         elif key == "update":
@@ -248,15 +253,18 @@ class HomeScreen(BaseScreen):
                              engine.screen_h - 100, 180, 195, 215)
 
     def _render_menu(self, engine):
-        y = 160
+        y = 155
         for i, (key, label) in enumerate(self.ITEMS):
             col = (0, 230, 150) if i == self.selected else (40, 60, 90)
-            engine.fill_rect(40, y, engine.screen_w - 80, 100, col[0], col[1], col[2], 240)
-            engine.draw_text(tr(label), engine.font_title, 70, y + 20, 255, 255, 255)
+            engine.fill_rect(40, y, engine.screen_w - 80, 82,
+                             col[0], col[1], col[2], 240)
+            engine.draw_text(tr(label), engine.font_title, 70, y + 8,
+                             255, 255, 255)
             sub = tr(label + "_hint")
             if sub != label + "_hint":
-                engine.draw_text(sub, engine.font_sub, 70, y + 60, 220, 225, 235)
-            y += 110
+                engine.draw_text(sub, engine.font_sub, 70, y + 48,
+                                 220, 225, 235)
+            y += 90
 
     def _render_hosts(self, engine):
         engine.draw_text(tr("host"), engine.font_title, 40, 160, 255, 255, 255)

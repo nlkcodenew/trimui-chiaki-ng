@@ -82,6 +82,7 @@ def main():
     # thieu, traceback se duoc launch.sh thu gom va gui len GitHub Issue.
     from rh.engine import ChiakiEngine
     from rh.screens.home import HomeScreen
+    from rh.screens.guide import GuideScreen
     from rh.screens.settings import SettingsScreen
     from rh.screens.pair import PairScreen
     from rh.modals.update import UpdateModal
@@ -99,6 +100,7 @@ def main():
     log.info("SDL + fonts ok, screen=%dx%d", engine.screen_w, engine.screen_h)
 
     engine.register_screen("home", HomeScreen(engine))
+    engine.register_screen("guide", GuideScreen(engine))
     engine.register_screen("settings", SettingsScreen(engine))
     engine.register_screen("pair", PairScreen(engine))
     engine.register_modal("update", UpdateModal(engine))

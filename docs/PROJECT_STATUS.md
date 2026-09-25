@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.17
+# trimui-chiaki-ng — trạng thái dự án v0.3.18
 
 > Cập nhật: 2026-09-25. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
@@ -7,20 +7,20 @@
 
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.17` |
-| Tag | `v0.3.17` |
-| OTA files | 125 |
-| ZIP entries | 128 |
-| ZIP SHA-256 | `fb9a83178b44ffbfa8366f22f5c7f9392d30b4f841bfa9e608f296f8601c3a50` |
-| Unittest | 75/75 đạt |
+| Latest | `v0.3.18` |
+| Tag | `v0.3.18` |
+| OTA files | 126 |
+| ZIP entries | 129 |
+| ZIP SHA-256 | `2727f77866cf0d95386efbf2c2e7ee094b060d419be84fb7ce9fb6992aca2ada` |
+| Unittest | 80/80 đạt |
 | Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 GitHub Release có ba asset:
 
 - `manifest.json`.
-- `trimui-chiaki-ng-v0.3.17.zip`.
-- `trimui-chiaki-ng-v0.3.17.zip.sha256`.
+- `trimui-chiaki-ng-v0.3.18.zip`.
+- `trimui-chiaki-ng-v0.3.18.zip.sha256`.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -47,6 +47,7 @@ tục dùng library hệ thống. Không cần tách release ở trạng thái h
 - `files/app.py`: bootstrap, logger, identity, uploader pending và engine.
 - `files/rh/engine.py`: SDL window/render loop, screen/modal stack.
 - `files/rh/screens/home.py`: scan, chọn host, update và start stream.
+- `files/rh/screens/guide.py`: hướng dẫn 8 bước, điều hướng D-pad/A/B.
 - `files/rh/screens/pair.py`: nhập PIN, registration và lưu khóa.
 - `files/rh/screens/settings.py`: cấu hình, xóa log và lưu settings.
 - `files/rh/state.py`: state runtime và lưu `settings.json` atomically.
@@ -232,6 +233,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.15` | Runtime AArch64 biệt lập cho Brick Pro Stock OS |
 | `v0.3.16` | Preload OpenSSL 1.1.1 tương thích chỉ cho Brick stream |
 | `v0.3.17` | Khóa 720p; chuyển báo cáo lỗi sang HTTPS relay không token client |
+| `v0.3.18` | Hướng dẫn trong app; hiện `CHI-xxxx` cạnh version để tra Issue |
 
 ## 10. Kiểm thử và build gate
 
@@ -245,7 +247,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-75 unittest của source hiện tại bao phủ:
+80 unittest của source hiện tại bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.

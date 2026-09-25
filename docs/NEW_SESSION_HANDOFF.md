@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.17
+# Bàn giao session mới — trimui-chiaki-ng v0.3.18
 
 > Cập nhật: 2026-09-25. Đọc file này trước khi tiếp tục dự án.
 
@@ -7,13 +7,13 @@
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`.
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
-- Release mới nhất: `v0.3.17`.
-- Nội dung: khóa tối đa 720p và chuyển log sang HTTPS relay; không đổi native.
+- Release mới nhất: `v0.3.18`.
+- Nội dung: thêm hướng dẫn 8 bước và mã `CHI-xxxx` cạnh version; không đổi native.
 - GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
-- SHA-256 ZIP `v0.3.17`:
-  `fb9a83178b44ffbfa8366f22f5c7f9392d30b4f841bfa9e608f296f8601c3a50`.
-- Manifest có 125 file OTA; ZIP có 128 entry; không có settings/secrets/log.
-- 75/75 unittest đạt; `compileall`, build release và verifier đều đạt.
+- SHA-256 ZIP `v0.3.18`:
+  `2727f77866cf0d95386efbf2c2e7ee094b060d419be84fb7ce9fb6992aca2ada`.
+- Số file OTA/ZIP: 126/129; không có settings/secrets/log.
+- 80/80 unittest đạt; `compileall`, build release và verifier đều đạt.
 - Native SHA-256 vẫn là
   `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.
 
@@ -233,7 +233,7 @@ Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SH
 ## 7. Trạng thái kết thúc session
 
 - Không còn lỗi phát hành hoặc kiểm thử máy thật đang chờ xử lý.
-- `v0.3.17` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
+- `v0.3.18` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
 - Tiếp tục dùng `720p30/4000` trên Smart Pro S và `540p30/3000` trên Brick.
 - Không thay native binary, pair/session hoặc SDL mapping nếu không có Issue mới.
 

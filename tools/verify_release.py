@@ -49,6 +49,7 @@ REQUIRED_ARCHIVE = {
     "App/Chiaki/launch.sh",
     "App/Chiaki/reporting.json",
     "App/Chiaki/settings.json",
+    "App/Chiaki/rh/screens/guide.py",
     "App/Chiaki/assets/fallback.ttf",
     "App/Chiaki/bin/chiaki-stream",
     "App/Chiaki/certs/README.txt",

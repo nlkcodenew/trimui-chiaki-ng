@@ -33,6 +33,7 @@ class LogUploaderTests(unittest.TestCase):
         cls.logger_module = importlib.import_module("rh.logger")
         cls.common_modals = importlib.import_module("rh.modals.common")
         cls.home_module = importlib.import_module("rh.screens.home")
+        cls.guide_module = importlib.import_module("rh.screens.guide")
         cls.settings_module = importlib.import_module("rh.screens.settings")
         cls.update_modal_module = importlib.import_module("rh.modals.update")
 
@@ -867,9 +868,92 @@ class LogUploaderTests(unittest.TestCase):
     def test_home_title_includes_app_version(self):
         home_module = importlib.import_module("rh.screens.home")
         version = importlib.import_module("rh.version").APP_VERSION
+        state = importlib.import_module("rh.state")
+        original_id = state.device_id
+        state.device_id = "CHI-ABCD"
         screen = home_module.HomeScreen()
-        self.assertIn(version, screen.get_header_title())
-        self.assertTrue(screen.get_header_title().startswith("CHIAKI-NG"))
+        try:
+            title = screen.get_header_title()
+        finally:
+            state.device_id = original_id
+        self.assertIn(version, title)
+        self.assertIn("ID: CHI-ABCD", title)
+        self.assertTrue(title.startswith("CHIAKI-NG"))
+
+    def test_header_install_id_matches_issue_identity(self):
+        state = importlib.import_module("rh.state")
+        original_id = state.device_id
+        state.device_id = "CHI-E2E1"
+        try:
+            title = self.home_module.HomeScreen().get_header_title()
+            identity = self.device_identity.diagnostic_identity()
+        finally:
+            state.device_id = original_id
+        self.assertIn(identity["install_id"], title)
+        self.assertEqual(identity["install_id"], "CHI-E2E1")
+
+    def test_home_menu_opens_user_guide(self):
+        engine = mock.Mock()
+        screen = self.home_module.HomeScreen(engine)
+        screen.selected = next(
+            index for index, row in enumerate(screen.ITEMS)
+            if row[0] == "guide"
+        )
+        screen._activate()
+        engine.push_screen.assert_called_once_with("guide")
+
+    def test_guide_has_complete_ps4_flow_and_ps5_limit(self):
+        i18n = importlib.import_module("rh.i18n")
+        screen = self.guide_module.GuideScreen(mock.Mock())
+        self.assertEqual(len(screen.STEPS), 8)
+        vietnamese = " ".join(
+            i18n.TEXTS["VI"][key]
+            for step in screen.STEPS for key in step
+        )
+        self.assertIn("đăng nhập tự động", vietnamese)
+        self.assertIn("PIN 8 số", vietnamese)
+        self.assertIn("START + SELECT", vietnamese)
+        self.assertIn("chưa hỗ trợ ghép nối/stream PS5", vietnamese)
+        self.assertIn("mã ID trên tiêu đề", vietnamese)
+
+    def test_guide_navigation_stays_in_bounds_and_b_returns(self):
+        engine = mock.Mock()
+        screen = self.guide_module.GuideScreen(engine)
+        screen.on_enter()
+        self.assertTrue(screen.handle_input({"edges": ["btn_up"]}))
+        self.assertEqual(screen.selected, 0)
+        for _ in range(20):
+            screen.handle_input({"edges": ["btn_a"]})
+        self.assertEqual(screen.selected, len(screen.STEPS) - 1)
+        self.assertTrue(screen.handle_input({"edges": ["btn_b"]}))
+        engine.pop_screen.assert_called_once_with()
+
+    def test_guide_renders_every_step_on_target_heights(self):
+        class FakeEngine:
+            screen_w = 1280
+            font_title = object()
+            font_sub = object()
+
+            def __init__(self, screen_h):
+                self.screen_h = screen_h
+                self.drawn = []
+
+            def fill_rect(self, *args, **kwargs):
+                return None
+
+            def measure_text(self, text, _font):
+                return len(str(text)) * 13
+
+            def draw_text(self, text, *args, **kwargs):
+                self.drawn.append(str(text))
+
+        screen = self.guide_module.GuideScreen()
+        for height in (720, 768):
+            engine = FakeEngine(height)
+            for index in range(len(screen.STEPS)):
+                screen.selected = index
+                screen.render(engine)
+            self.assertTrue(any("8 / 8" in text for text in engine.drawn))
 
     def test_home_shows_stream_exit_guide(self):
         i18n = importlib.import_module("rh.i18n")
