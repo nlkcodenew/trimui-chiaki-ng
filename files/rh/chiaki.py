@@ -211,6 +211,8 @@ def prepare_stream_launch(host):
         return False, "Thiếu bin/chiaki-stream"
     credentials = _paired_credentials(getattr(host, "addr", ""))
     if not credentials:
+        log.error("stream preparation rejected: paired credentials unavailable")
+        _report_error("stream_credentials_missing")
         return False, "Khóa ghép nối không hợp lệ; hãy ghép lại PS4"
     discovered_target = int(getattr(host, "target", 0) or 0)
     stored_target = int(credentials.get("target", 0) or 0)
@@ -219,6 +221,7 @@ def prepare_stream_launch(host):
             and discovered_target != stored_target):
         log.warning("pair target mismatch: host=%d stored=%d; re-pair required",
                     discovered_target, stored_target)
+        _report_error("stream_pair_target_mismatch")
         return False, "Khóa pair cũ; hãy ghép lại PS4 một lần"
     profile = _video_profile_from_state()
     requested_temp = os.environ.get("CHIAKI_SESSION_DIR", "")
@@ -564,18 +567,22 @@ def regist_with_pin(host, pin, timeout=10.0):
     """Đăng ký PS4 qua LAN bằng PIN 8 số, không kết nối dịch vụ PSN."""
     pin = "".join(c for c in str(pin) if c.isdigit())[:8]
     if len(pin) != 8:
+        log.warning("registration rejected: PIN must contain 8 digits")
+        _report_error("pair_pin_invalid")
         return False, {"error": "PIN phai 8 so"}
     addr = getattr(host, "addr", "") or "unknown"
     is_ps5 = bool(getattr(host, "is_ps5", False))
     target = int(getattr(host, "target", 0) or 0)
     log.info("registration start: host=%s ps5=%s target=%d", addr, is_ps5, target)
     if is_ps5:
-        message = "PS5 registration is not available in this beta"
+        message = "PS5 chua ho tro ghep noi; da xep hang gui chan doan len GitHub"
         log.warning("registration rejected: %s", message)
+        _report_error("pair_ps5_registration_unavailable")
         return False, {"error": message}
     if target not in (0, 800, 900, 1000):
         message = "this beta supports PS4 firmware 8.0 or newer"
         log.warning("registration rejected: target=%d", target)
+        _report_error("pair_ps4_target_unsupported")
         return False, {"error": message}
     try:
         from .ps4_regist import register

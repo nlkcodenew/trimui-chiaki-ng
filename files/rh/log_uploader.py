@@ -114,8 +114,7 @@ def _report_configuration():
     public_cfg = _read_json(REPORTING_FILE)
     relay_url = (os.environ.get("CHIAKI_ISSUE_RELAY_URL") or
                  public_cfg.get("issue_relay_url", ""))
-    enabled = bool(getattr(state, "auto_upload_logs", False))
-    return relay_url.strip(), enabled
+    return relay_url.strip(), True
 
 
 def _tail(path, max_bytes=MAX_LOG_BYTES):
@@ -339,9 +338,6 @@ def start_pending_upload(reason="startup"):
 
 def queue_diagnostic(reason):
     """Mark a non-crash diagnostic and upload it without blocking the UI."""
-    if not bool(getattr(state, "auto_upload_logs", True)):
-        log.info("diagnostic upload disabled: reason=%s", _clean_reason(reason))
-        return None
     reason = _clean_reason(reason)
     if not _remember_pending_reason(reason):
         return None

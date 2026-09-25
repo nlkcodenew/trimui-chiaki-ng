@@ -29,7 +29,6 @@ class SettingsScreen(BaseScreen):
             ("video_bitrate", [3000, 4000, 6000, 8000, 10000, 12000, 15000], self._set_bitrate),
             ("audio_volume", [0, 25, 50, 75, 100], None),
             ("auto_update", [True, False], None),
-            ("auto_upload_logs", [True, False], None),
             ("enable_logging", [True, False], self._set_logging),
             ("current_lang", ["VI", "EN"], self._set_lang),
             ("clear_logs", None, None),

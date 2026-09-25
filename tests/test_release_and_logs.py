@@ -1132,6 +1132,17 @@ class LogUploaderTests(unittest.TestCase):
         self.assertTrue(os.path.exists(self.uploader.PENDING_FILE))
         start.assert_called_once_with("wakeup_timeout")
 
+    def test_diagnostic_cannot_be_disabled_by_legacy_setting(self):
+        original = self.uploader.state.auto_upload_logs
+        try:
+            self.uploader.state.auto_upload_logs = False
+            with mock.patch.object(self.uploader, "start_pending_upload", return_value="thread") as start:
+                self.assertEqual(self.uploader.queue_diagnostic("pair_ps5_failed"), "thread")
+            self.assertTrue(os.path.exists(self.uploader.PENDING_FILE))
+            start.assert_called_once_with("pair_ps5_failed")
+        finally:
+            self.uploader.state.auto_upload_logs = original
+
     def test_wakeup_report_is_described_as_diagnostic(self):
         body = self.uploader._issue_body(
             [("Chiaki-debug.log", "wakeup timeout: attempts=6")],
@@ -1223,6 +1234,17 @@ class LogUploaderTests(unittest.TestCase):
             ok, result = chiaki.regist_with_pin(host, "12345678")
         self.assertFalse(ok)
         self.assertEqual(result["error"], "HTTP 403")
+
+    def test_ps5_registration_limit_is_reported(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        host = chiaki.DiscoveredHost(
+            name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100,
+        )
+        with mock.patch.object(chiaki, "_report_error") as report:
+            ok, result = chiaki.regist_with_pin(host, "12345678")
+        self.assertFalse(ok)
+        self.assertIn("da xep hang gui chan doan len GitHub", result["error"])
+        report.assert_called_once_with("pair_ps5_registration_unavailable")
 
     def test_native_stream_launcher_keeps_keys_out_of_script(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1451,11 +1473,12 @@ class LogUploaderTests(unittest.TestCase):
         original_auto_upload = state.auto_upload_logs
         legacy_path = os.path.join(self.work_dir, "legacy-settings.json")
         with open(legacy_path, "w", encoding="utf-8") as handle:
-            json.dump({"video_resolution": "1080p"}, handle)
+            json.dump({"video_resolution": "1080p", "auto_upload_logs": False}, handle)
         try:
             state.SETTINGS_FILE = legacy_path
             state._load()
             self.assertEqual(state.video_resolution, "720p")
+            self.assertTrue(state.auto_upload_logs)
         finally:
             state.SETTINGS_FILE = original_path
             state.video_resolution = original_resolution

@@ -33,7 +33,7 @@ regist_key = ""
 rp_key = ""
 rp_key_type = 0
 server_mac = ""
-auto_upload_logs = False
+auto_upload_logs = True
 settings_load_error = ""
 settings_save_error = ""
 
@@ -83,7 +83,7 @@ def _load():
     if str(psn_account_id).startswith("stub-rp-key-"):
         psn_account_id = ""
         regist_key = ""
-    auto_upload_logs = bool(cfg.get("auto_upload_logs", auto_upload_logs))
+    auto_upload_logs = True
 
 
 def save_settings():

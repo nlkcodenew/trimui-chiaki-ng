@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release mới nhất: `v0.3.18`.**
+**Release mới nhất: `v0.3.19`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -31,7 +31,9 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
 âm thanh, input. Issue `#39` ghi nhận native exit `0`, tổng `8968` frame,
 `lost=0`, `FEC=0`, phần lớn giữ 29,4–30,2 FPS ở profile 540p30/3000.
 
-Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
+- `v0.3.19` luôn bật diagnostics và tự gửi Issue qua HTTPS relay; không còn phụ thuộc
+  người dùng nhớ bật tùy chọn. Lỗi pair PS5 chưa được hỗ trợ cũng được ghi nhận riêng.
+- Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
 
@@ -68,7 +70,7 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.3.18.zip` tại
+1. Tải `trimui-chiaki-ng-v0.3.19.zip` tại
    [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
@@ -127,8 +129,8 @@ thẻ nhớ của người thử vì mọi secret phía client đều có thể 
 2. Cấp token chỉ có **Issues: Read and write** cho đúng repo private nhận log.
 3. Điền endpoint `/report` vào `files/reporting.json` trước khi build release.
 4. Đặt rate-limit cho endpoint và thông báo người thử về dữ liệu chẩn đoán.
-5. Cài mới mặc định tắt gửi log; người thử đồng ý bằng cách bật mục **Tự động
-   gửi lỗi lên GitHub**. OTA không đổi lựa chọn của máy đã cài.
+5. Diagnostics được bật mặc định và không có công tắc tắt trong bản beta; app tự gửi
+   log đã lọc qua relay để phát hiện lỗi thực tế. OTA cũng migrate bản cũ sang chế độ này.
 
 Verifier từ chối release nếu relay không phải HTTPS sạch, thiếu config OTA hoặc
 phát hiện token GitHub trong source đóng gói. App không còn đọc `secrets.json`,
@@ -139,7 +141,7 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.18 reason fingerprint
+[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.19 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.

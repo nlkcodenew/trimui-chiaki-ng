@@ -46,7 +46,10 @@ class PairScreen(BaseScreen):
     def _start_pair(self):
         if not self.host: self.status = tr("pair_no_host"); return
         pin = "".join(c for c in self.pin if c.isdigit())[:8]
-        if len(pin) != 8: self.status = tr("pair_pin_invalid"); return
+        if len(pin) != 8:
+            self.status = tr("pair_pin_invalid")
+            self._report_error("pair_pin_invalid")
+            return
         if self.pairing: return
         self.pairing = True
         self.status = tr("pair_running") % getattr(self.host, "addr", "")

@@ -1,32 +1,33 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.18
+# trimui-chiaki-ng — trạng thái dự án v0.3.19
 
 > Cập nhật: 2026-09-25. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
 
 ## 1. Release hiện tại
 
+`v0.3.19` luôn bật diagnostics, bỏ công tắc tắt và report riêng mọi lần người
+dùng thử pair PS5 trong khi chức năng PS5 vẫn chưa được hỗ trợ.
+
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.18` |
-| Tag | `v0.3.18` |
-| Feature commit | `1c08e4d` |
+| Latest | `v0.3.19` |
+| Tag | `v0.3.19` |
+| Feature commit | release commit |
 | OTA files | 126 |
 | ZIP entries | 129 |
-| ZIP SHA-256 | `2727f77866cf0d95386efbf2c2e7ee094b060d419be84fb7ce9fb6992aca2ada` |
-| Unittest | 80/80 đạt |
+| ZIP SHA-256 | `7bcb2609b78cdb855d4b7ac3e7a6dc0d1dc6cd7ce4acf74deabcc102820e2357` |
+| Unittest | 82/82 đạt |
 | Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 GitHub Release có ba asset:
 
 - `manifest.json`.
-- `trimui-chiaki-ng-v0.3.18.zip`.
-- `trimui-chiaki-ng-v0.3.18.zip.sha256`.
+- `trimui-chiaki-ng-v0.3.19.zip`.
+- `trimui-chiaki-ng-v0.3.19.zip.sha256`.
 
 GitHub Actions đã hoàn tất thành công. Ba asset công khai tải qua
-`releases/latest` đã được đối chiếu lại: version `0.3.18`, 126 file OTA, 129
-entry ZIP và SHA-256 trùng bản build cục bộ. Nhánh `main`, `origin/main` và tag
-`v0.3.18` cùng trỏ tới feature commit `1c08e4d` trước commit tổng kết docs.
+Release `v0.3.19` có 126 file OTA, 129 entry ZIP và SHA-256 ở bảng trên.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -115,7 +116,8 @@ Từ `v0.3.17`, app chỉ dùng HTTPS relay trong `reporting.json`. Fine-grained
 token chỉ nằm trong Cloudflare Worker secret, giới hạn quyền tạo Issue ở repo
 chẩn đoán private; token không nằm trong app, URL, Git, OTA hoặc ZIP. Runtime
 không còn code đọc token, `secrets.json` hoặc tên repo nhận log.
-Cài mới mặc định tắt auto-report; người thử phải chủ động bật sau khi đồng ý.
+Từ `v0.3.19`, diagnostics luôn bật cho cài mới và tự migrate cấu hình cũ;
+Settings không còn công tắc tắt để tránh người thử quên bật trong giai đoạn beta.
 
 Sanitizer lọc:
 
@@ -240,6 +242,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.16` | Preload OpenSSL 1.1.1 tương thích chỉ cho Brick stream |
 | `v0.3.17` | Khóa 720p; chuyển báo cáo lỗi sang HTTPS relay không token client |
 | `v0.3.18` | Hướng dẫn trong app; hiện `CHI-xxxx` cạnh version để tra Issue |
+| `v0.3.19` | Luôn bật diagnostics; report cả lần thử pair PS5 chưa hỗ trợ |
 
 ## 10. Kiểm thử và build gate
 
@@ -253,7 +256,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-80 unittest của source hiện tại bao phủ:
+82 unittest của source hiện tại bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.
@@ -283,5 +286,5 @@ Verifier kiểm:
 4. Không sửa pair/native/input nếu không có Issue mới chứng minh regression.
 5. `setterm: not found`, H264 `no frame!` lúc khởi động và server shutdown khi
    kết thúc phiên hiện là cảnh báo vô hại, không phải lỗi stream.
-6. Release production `v0.3.18`, OTA latest, HTTPS relay và asset công khai đều
-   đã xác minh; không còn việc kỹ thuật đang chờ trong session này.
+6. Release `v0.3.19` dùng người thử PS5 để thu Issue thực tế; PS4/native giữ
+   nguyên từ binary đã được xác nhận hoạt động.

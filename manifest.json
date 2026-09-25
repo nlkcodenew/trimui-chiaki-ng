@@ -1,13 +1,13 @@
 {
-  "version": "0.3.18",
+  "version": "0.3.19",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-25T10:00:12+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.18/files",
-  "release_tag": "v0.3.18/files",
+  "built": "2026-09-25T16:43:53+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.19/files",
+  "release_tag": "v0.3.19/files",
   "note": {
-    "vi": "v0.3.18: thêm hướng dẫn trong app và hiện mã máy cạnh version.",
-    "en": "v0.3.18: add an in-app guide and show the device ID beside the version."
+    "vi": "v0.3.19: tự động gửi diagnostics lên GitHub; ghi nhận lỗi pair PS5 và migrate report cho bản cũ.",
+    "en": "v0.3.19: always upload diagnostics to GitHub; report PS5 pairing attempts and migrate legacy settings."
   },
   "files": [
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "5d08036c6085126c4904e635a863b852915d70b13e8e590266f905af091fed88",
-      "size": 26091
+      "sha256": "ee029b7ce282c91e883e63b67f1fdbe5b4212b18e5940642891ab3749b08cf92",
+      "size": 26519
     },
     {
       "path": "rh/device_identity.py",
@@ -152,8 +152,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "56622a5093a361455662b8ea37a442261a1edc6ed7f7cf87cf2b22672f80ccfe",
-      "size": 12512
+      "sha256": "f2b4d13e4c6bbc4f7447834a471d20e90f6ef1a0ce81d664b65c315582aeef64",
+      "size": 12545
     },
     {
       "path": "rh/inputs.py",
@@ -162,8 +162,8 @@
     },
     {
       "path": "rh/log_uploader.py",
-      "sha256": "b77153456d4962e857161b0a23f8bbee862b585f04d8ce0bf13fe5a67f09b520",
-      "size": 12382
+      "sha256": "69a4479100bbdd801935fa5f0ca1dd6ea04af5feaa35ab344f62ef976cabe5c6",
+      "size": 12157
     },
     {
       "path": "rh/logger.py",
@@ -187,8 +187,8 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "7ab016326823dc0bff46543a24add641b648f95abcb587cf133558f24bc95cd5",
-      "size": 5384
+      "sha256": "944a38cb25f61822c52ae2aa431d968aef5ad57085e504e627a44ba6cbd21ec5",
+      "size": 5336
     },
     {
       "path": "rh/updater.py",
@@ -197,7 +197,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "cf741b1d25d80aab34b99d67ff3cc3fedbb246d6beef220fa29b552bb4d26ceb",
+      "sha256": "c7cb3fcb78c434e317f69a5ab8961f5fc8ae4d56f9188d865840f9969fd9d432",
       "size": 1178
     },
     {
@@ -242,13 +242,13 @@
     },
     {
       "path": "rh/screens/pair.py",
-      "sha256": "88c7a92bcb4f984fd23ac430df1e885117f68dbc1b3d35b8f626a13af30f6789",
-      "size": 6372
+      "sha256": "6fbba94e248197084b3fc89572e1d77b1cb39003b17e9927f05a9a69cee54a97",
+      "size": 6446
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "eff6e83cb3399a754bfae440e3c23a4adaaaf443ee34036d4122f7108b5b0dce",
-      "size": 7578
+      "sha256": "4c4d3346415932cef1c8d2887fb3b96f6411e483883ef8623108219e60ef2383",
+      "size": 7523
     },
     {
       "path": "rh/ui/__init__.py",
@@ -643,8 +643,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.18.zip",
-    "sha256": "2727f77866cf0d95386efbf2c2e7ee094b060d419be84fb7ce9fb6992aca2ada",
-    "size": 10760611
+    "name": "trimui-chiaki-ng-v0.3.19.zip",
+    "sha256": "7bcb2609b78cdb855d4b7ac3e7a6dc0d1dc6cd7ce4acf74deabcc102820e2357",
+    "size": 10760687
   }
 }

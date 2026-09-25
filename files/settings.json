@@ -20,5 +20,5 @@
   "rp_key": "",
   "rp_key_type": 0,
   "server_mac": "",
-  "auto_upload_logs": false
+  "auto_upload_logs": true
 }

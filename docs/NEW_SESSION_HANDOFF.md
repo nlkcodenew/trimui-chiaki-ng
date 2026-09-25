@@ -1,20 +1,23 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.18
+# Bàn giao session mới — trimui-chiaki-ng v0.3.19
 
 > Cập nhật: 2026-09-25. Đọc file này trước khi tiếp tục dự án.
 
 ## 1. Trạng thái ngắn gọn
 
+- `v0.3.19` luôn bật diagnostics, migrate cấu hình cũ và report lần thử pair PS5 chưa hỗ trợ.
+- Relay production đã nhận self-test `v0.3.19` với phản hồi `accepted: true`.
+- 82/82 unittest, compileall và release verifier đều đạt trước lần rebuild cuối.
+
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`.
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
-- Release mới nhất: `v0.3.18`.
-- Feature commit/tag: `1c08e4d` / `v0.3.18`.
-- Nội dung: thêm hướng dẫn 8 bước và mã `CHI-xxxx` cạnh version; không đổi native.
+- Release mới nhất: `v0.3.19`.
+- Nội dung: luôn bật diagnostics và ghi nhận riêng lần thử pair PS5; không đổi native.
 - GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
-- SHA-256 ZIP `v0.3.18`:
-  `2727f77866cf0d95386efbf2c2e7ee094b060d419be84fb7ce9fb6992aca2ada`.
+- SHA-256 ZIP `v0.3.19`:
+  `7bcb2609b78cdb855d4b7ac3e7a6dc0d1dc6cd7ce4acf74deabcc102820e2357`.
 - Số file OTA/ZIP: 126/129; không có settings/secrets/log.
-- 80/80 unittest đạt; `compileall`, build release và verifier đều đạt.
+- 82/82 unittest đạt; `compileall`, build release và verifier đều đạt.
 - GitHub Actions và ba asset tải lại qua `releases/latest` đều đã xác minh;
   `main` đồng bộ `origin/main` trước commit tổng kết docs.
 - Native SHA-256 vẫn là
@@ -195,6 +198,7 @@ Các lỗi có ý nghĩa được report:
 - Exception của update modal.
 - Socket discovery lỗi; không report kết quả bình thường `0 host`.
 - Pair registration/screen/save lỗi.
+- Pair PS5 bị chặn vì chưa hỗ trợ, với reason `pair_ps5_registration_unavailable`.
 - Native helper thiếu hoặc chuẩn bị stream thất bại.
 - Settings load/save/callback lỗi.
 - Crash/exit code bất thường và chất lượng native stream.
@@ -236,7 +240,7 @@ Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SH
 ## 7. Trạng thái kết thúc session
 
 - Không còn lỗi phát hành hoặc kiểm thử máy thật đang chờ xử lý.
-- `v0.3.18` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
+- `v0.3.19` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
 - Tiếp tục dùng `720p30/4000` trên Smart Pro S và `540p30/3000` trên Brick.
 - Không thay native binary, pair/session hoặc SDL mapping nếu không có Issue mới.
 - Release public có đủ ba asset; checksum, 126 OTA files và 129 ZIP entries đã
@@ -289,7 +293,7 @@ Trước commit/release, xác nhận không stage:
 ```text
 Tiếp tục repo E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước.
-Latest/release hiện tại là v0.3.18. Bản này khóa tối đa 720p, dùng HTTPS relay
+Latest/release hiện tại là v0.3.19. Bản này khóa tối đa 720p, dùng HTTPS relay
 không token client, có hướng dẫn 8 bước và hiện CHI-xxxx cạnh version. Brick
 sun50iw10 đã stream thật thành công; Issue #39 đạt 8968/0/0
 rendered/lost/FEC và exit 0. Spruce sun55iw3 vẫn dùng runtime system. Không tắt

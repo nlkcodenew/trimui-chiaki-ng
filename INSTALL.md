@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.3.18`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho `v0.3.19`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
@@ -16,7 +16,7 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 ## Cài GitHub Release
 
 1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.18.zip`. Không tải **Source code**.
+2. Tải `trimui-chiaki-ng-v0.3.19.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -122,8 +122,9 @@ secret của relay và chỉ có quyền tạo Issue ở repo chẩn đoán priv
 
 Người đóng gói app triển khai theo `deploy/issue-relay/README.md`, điền endpoint
 `/report` trước khi build và đặt rate-limit phía Cloudflare. Người thử chỉ cần
-bật **Tự động gửi lỗi lên GitHub** sau khi đồng ý chia sẻ log; cài mới mặc định
-tắt và không cần copy `secrets.json`. OTA giữ nguyên lựa chọn hiện tại.
+Diagnostics tự động bật trong bản beta, không cần người dùng nhớ bật và không cần copy
+`secrets.json`. App chỉ gửi log đã lọc tới relay HTTPS; OTA cũng bật chế độ này cho
+các bản cài cũ để các lỗi thực tế được tạo thành GitHub Issue.
 
 App và relay cùng lọc token, password, khóa ghép nối, PSN ID, IP nội bộ, MAC,
 serial và chip ID trước khi gửi. Endpoint công khai vẫn cần giám sát abuse;

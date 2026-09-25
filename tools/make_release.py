@@ -154,8 +154,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: thêm hướng dẫn trong app và hiện mã máy cạnh version." % version,
-            "en": "v%s: add an in-app guide and show the device ID beside the version." % version,
+            "vi": "v%s: tự động gửi diagnostics lên GitHub; ghi nhận lỗi pair PS5 và migrate report cho bản cũ." % version,
+            "en": "v%s: always upload diagnostics to GitHub; report PS5 pairing attempts and migrate legacy settings." % version,
         },
         "files": files,
         "remove": [],
