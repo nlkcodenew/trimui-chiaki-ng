@@ -108,7 +108,11 @@ def _parse_result(path):
         regist_raw = bytes.fromhex(values.get("regist_key", ""))
         rp_key = bytes.fromhex(values.get("rp_key", ""))
         server_mac = bytes.fromhex(values.get("server_mac", ""))
-        regist_key = regist_raw.rstrip(b"\0").decode("ascii")
+        regist_raw = regist_raw.rstrip(b"\0")
+        if regist_raw and all(byte in b"0123456789abcdefABCDEF" for byte in regist_raw):
+            regist_key = regist_raw.decode("ascii")
+        else:
+            regist_key = regist_raw.hex()
     except (ValueError, UnicodeError) as exc:
         raise PS5RegistError("result", "helper PS5 trả khóa không hợp lệ") from exc
     if (target != PS5_TARGET or not 1 <= len(regist_key) <= 8
