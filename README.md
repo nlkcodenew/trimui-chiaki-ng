@@ -7,13 +7,14 @@
 - PS4 Pro firmware 9.00/GoldHEN qua LAN, không cần đăng nhập PSN.
 
 > **Thông báo phạm vi dự án:** PS4 là nền tảng duy trì chính thức. Phần PS5 đã
-> **dừng phát triển và không được hỗ trợ**. `v0.4.0-beta2` là bản thử nghiệm PS5
-> cuối cùng được lưu trữ, không phải cam kết tương thích hoặc roadmap tiếp theo.
+> **dừng phát triển và không được hỗ trợ**. Hai GitHub Release PS5 thử nghiệm
+> `v0.4.0-beta1` và `v0.4.0-beta2` đã bị xóa để tránh người dùng cài nhầm. Source,
+> commit và tag vẫn được giữ trong lịch sử Git chỉ để tham khảo kỹ thuật.
 
 ## Trạng thái hiện tại
 
-**Bản khuyến nghị cho PS4: `v0.3.20`.** `v0.4.0-beta2` chỉ được lưu như bản
-thử nghiệm PS5 cuối cùng.
+**Bản phát hành mới nhất và duy nhất được khuyến nghị: `v0.3.21`.** Không cài
+Source code archive của các tag PS5 beta; đó không phải gói ứng dụng hỗ trợ.
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -40,9 +41,13 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
   người dùng nhớ bật tùy chọn. Lỗi pair PS5 chưa được hỗ trợ cũng được ghi nhận riêng.
 - `v0.3.20` luôn tạo `Apps/Chiaki/Chiaki-loi.txt` từ launcher và khởi tạo logger
   trước khi đọc settings, nên lỗi bootstrap trên Stock OS vẫn để lại log chẩn đoán.
+- `v0.3.21` chỉ giữ `/tmp/stay_alive` trong lúc native stream đang chạy và tự
+  đóng menu sau 15 phút không thao tác, tránh app bị bỏ quên làm hao pin. Chiaki
+  không đọc hoặc sửa `wowlan_triggers`/`wpa_supplicant.conf` của hệ điều hành.
 - `v0.4.0-beta1` và `v0.4.0-beta2` là các bản thử nghiệm PS5 cuối cùng. Upstream
   yêu cầu PSN login/Account-ID cho luồng PS5; do trải nghiệm và độ phức tạp không
-  phù hợp người dùng TrimUI, dự án **không phát triển thêm PS5**.
+  phù hợp người dùng TrimUI, dự án **không phát triển thêm PS5**. Release asset
+  của cả hai beta đã bị xóa; tag/source chỉ còn để lưu lịch sử kỹ thuật.
 - Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
@@ -75,13 +80,13 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 | Spruce OS | Stream tốt trên `sun55iw3`; tiếp tục dùng library hệ thống |
 | Brick Pro Stock OS | `v0.3.16` stream PS4 thật có hình, âm thanh và input |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
-| PS5/H265 | Đã đóng; beta2 là bản cuối, không hỗ trợ/không phát triển thêm |
+| PS5/H265 | Không hỗ trợ; các Release beta đã bị xóa, source/tag chỉ giữ làm lịch sử |
 | WAKEUP PS4 Rest Mode | Đã thử thất bại trên môi trường hiện tại và tắt từ `v0.3.10` |
 
 ## Cài đặt
 
-1. Với PS4, tải `trimui-chiaki-ng-v0.3.20.zip` tại
-   [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.20).
+1. Với PS4, tải `trimui-chiaki-ng-v0.3.21.zip` tại
+   [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.21).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
 3. Kiểm tra tồn tại `Apps/Chiaki/launch.sh` và
@@ -96,11 +101,12 @@ upstream Chiaki-ng, PS5 cần đăng nhập PSN để lấy `user_id`, sau đó 
 PSN Account-ID 8 byte và Base64 trước khi pair. Đây là yêu cầu tài khoản của
 giao thức PS5, không thể thay thế bằng PIN Remote Play 8 số hoặc PSN Online-ID.
 
-`v0.4.0-beta2` có UI thử nghiệm để nhập Account-ID, nhưng đây là **bản cuối cùng
-cho PS5**. Dự án không tiếp tục phát triển pair, stream H265, đăng nhập PSN,
-debug giao thức hoặc phát hành bản sửa riêng cho PS5. Issue PS5 mới chỉ được lưu
-làm phản hồi, không có cam kết xử lý. Mọi phát triển và hỗ trợ tiếp theo tập
-trung vào PS4; không để việc thử PS5 ảnh hưởng đường pair/stream PS4 đã xác nhận.
+Source của `v0.4.0-beta1` và `v0.4.0-beta2` vẫn tồn tại trong tag/commit để phục
+vụ tham khảo kỹ thuật, nhưng **hai GitHub Release và toàn bộ asset cài đặt đã bị
+xóa**. Không tải hoặc cài các gói **Source code** do GitHub tự sinh từ các tag
+beta; chúng không phải bản phát hành được hỗ trợ. Dự án không tiếp tục phát triển
+pair, stream H265, đăng nhập PSN, debug giao thức hoặc phát hành bản sửa riêng
+cho PS5. Mọi phát triển và hỗ trợ tiếp theo tập trung vào PS4.
 
 Chi tiết quyết định và phạm vi hỗ trợ: [`docs/PS5_STATUS.md`](docs/PS5_STATUS.md).
 
@@ -154,7 +160,7 @@ thẻ nhớ của người thử vì mọi secret phía client đều có thể 
 2. Cấp token chỉ có **Issues: Read and write** cho đúng repo private nhận log.
 3. Điền endpoint `/report` vào `files/reporting.json` trước khi build release.
 4. Đặt rate-limit cho endpoint và thông báo người thử về dữ liệu chẩn đoán.
-5. Diagnostics được bật mặc định và không có công tắc tắt trong bản beta; app tự gửi
+5. Diagnostics được bật mặc định và không có công tắc tắt; app tự gửi
    log đã lọc qua relay để phát hiện lỗi thực tế. OTA cũng migrate bản cũ sang chế độ này.
 
 Verifier từ chối release nếu relay không phải HTTPS sạch, thiếu config OTA hoặc
