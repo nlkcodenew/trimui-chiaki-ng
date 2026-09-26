@@ -2,6 +2,10 @@
 
 > Cập nhật: 2026-09-25. Đọc file này trước khi tiếp tục dự án.
 
+> **Ghi chú thay thế 2026-09-26:** phần PS5 đã dừng phát triển sau
+> `v0.4.0-beta2`. Nội dung PS5 cũ trong handoff này chỉ là lịch sử. PS4 là nền
+> tảng duy trì chính thức; xem `docs/PS5_STATUS.md` và `docs/PROJECT_STATUS.md`.
+
 ## 1. Trạng thái ngắn gọn
 
 - `v0.3.20` sửa đường log launcher và khởi tạo logger trước khi đọc settings để

@@ -1,33 +1,38 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.20
+# trimui-chiaki-ng — trạng thái dự án v0.4.0-beta2
 
-> Cập nhật: 2026-09-25. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
+> Cập nhật: 2026-09-26. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
+
+> **Quyết định phạm vi:** PS4 là nền tảng duy trì chính thức. PS5 đã đóng sau
+> `v0.4.0-beta2`; không phát triển thêm pair, stream, PSN login/Account-ID,
+> H265 hoặc giao thức PS5. Beta PS5 chỉ được giữ làm lịch sử thử nghiệm.
 
 ## 1. Release hiện tại
 
-`v0.3.19` luôn bật diagnostics, bỏ công tắc tắt và report riêng mọi lần người
-dùng thử pair PS5 trong khi chức năng PS5 vẫn chưa được hỗ trợ.
+`v0.4.0-beta2` là bản PS5 thử nghiệm cuối cùng và được lưu trữ. Bản khuyến nghị
+cho người dùng PS4 là `v0.3.20`; nhánh duy trì chính thức tập trung vào PS4.
 
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.20` |
-| Tag | `v0.3.20` |
-| Feature commit | release commit |
-| OTA files | 126 |
-| ZIP entries | 129 |
-| ZIP SHA-256 | `b6e7d2c7e8e7c2fb0dcd30c3549a8bee37e0431dc8232734e393d401829aa2dc` |
-| Unittest | 84/84 đạt |
+| PS4 recommended | `v0.3.20` |
+| Archived PS5 beta | `v0.4.0-beta2` |
+| Feature commit | `21b696d` |
+| OTA files | 128 |
+| ZIP entries | 131 |
+| ZIP SHA-256 | `2e47e752944bdd7dfff26f9cb6dd6ba731ff309fa90a53ad3813b6ac5bde3ad3` |
+| Unittest | 92/92 đạt |
 | Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 GitHub Release có ba asset:
 
 - `manifest.json`.
-- `trimui-chiaki-ng-v0.3.20.zip`.
-- `trimui-chiaki-ng-v0.3.20.zip.sha256`.
+- `trimui-chiaki-ng-v0.4.0-beta2.zip`.
+- `trimui-chiaki-ng-v0.4.0-beta2.zip.sha256`.
 
 GitHub Actions đã hoàn tất thành công. Ba asset công khai tải qua
-Release `v0.3.20` có 126 file OTA, 129 entry ZIP và SHA-256 ở bảng trên.
+Release lưu trữ `v0.4.0-beta2` có 128 file OTA, 131 entry ZIP và SHA-256 ở bảng
+trên. Người dùng chỉ cần PS4 nên ưu tiên release ổn định `v0.3.20`.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -41,7 +46,7 @@ mới có `settings.json` mặc định với `device_id` rỗng nhưng không c
 | Spruce OS | Đã xác nhận | Không thay đổi | Stream tốt ở `v0.3.14` | Issue `#35`, model `sun55iw3` |
 | Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.16` | Đã stream PS4 thật | Issue `#39`, video/audio/input đạt |
 | PS4 Pro 9.00/GoldHEN | — | — | Pair/session pre-10 đạt | Không cần PSN |
-| PS5/H265 | — | — | Chưa kiểm thử | Không tuyên bố hỗ trợ máy thật |
+| PS5/H265 | — | — | Đã đóng sau beta | Không hỗ trợ và không phát triển thêm |
 
 Một release chung đã được xác nhận trên máy thật. `sun50iw10` dùng dependency
 closure riêng trong `libs/brick-stock`; `sun55iw3` không nhận path này và tiếp
@@ -257,7 +262,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-82 unittest của source hiện tại bao phủ:
+92 unittest của source hiện tại bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.
@@ -287,5 +292,5 @@ Verifier kiểm:
 4. Không sửa pair/native/input nếu không có Issue mới chứng minh regression.
 5. `setterm: not found`, H264 `no frame!` lúc khởi động và server shutdown khi
    kết thúc phiên hiện là cảnh báo vô hại, không phải lỗi stream.
-6. Release `v0.3.19` dùng người thử PS5 để thu Issue thực tế; PS4/native giữ
-   nguyên từ binary đã được xác nhận hoạt động.
+6. `v0.4.0-beta2` là bản PS5 cuối để lưu lịch sử thử nghiệm. PS4/native giữ
+   nguyên từ binary đã được xác nhận hoạt động; không mở thêm roadmap PS5.

@@ -1,22 +1,26 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.4.0-beta2`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho bản PS4 khuyến nghị `v0.3.20`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
+
+**Phạm vi hỗ trợ:** dự án hiện chỉ duy trì PS4. PS5 đã dừng phát triển;
+`v0.4.0-beta2` chỉ là bản thử nghiệm PS5 cuối cùng được lưu trữ và không có cam
+kết pair/stream.
 
 ## Yêu cầu
 
 - Máy TrimUI Linux có Python 3.10+.
 - SDL2/SDL2_ttf, Opus và các thư viện hệ thống cần bởi native helper.
 - Thẻ microSD FAT32 hoặc exFAT có quyền ghi vào `Apps/`.
-- PS4/PS5 và máy TrimUI ở cùng LAN khi quét/ghép nối.
+- PS4 và máy TrimUI ở cùng LAN khi quét/ghép nối.
 
 Native helper đi kèm là ELF64 AArch64. Smart Pro S/TG5050 với Spruce OS và Brick
 Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm thanh và input.
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.4.0-beta2`.
-2. Tải `trimui-chiaki-ng-v0.4.0-beta2.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.20`.
+2. Tải `trimui-chiaki-ng-v0.3.20.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -104,17 +108,16 @@ Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro 
 Không cần PSN cho PS4 firmware 9.00 trong luồng này. Không đăng PIN, Account ID,
 `regist_key` hoặc `rp_key` lên chat/Issue.
 
-## Ghép nối thử nghiệm PS5
+## PS5 đã dừng phát triển
 
-App chỉ hiện bước PSN Account-ID sau khi discovery nhận diện host là PS5; PS4
-không đi qua bước này. Nhập chuỗi Base64 12 ký tự lấy từ **PSN Login** của
-Chiaki-ng desktop chính chủ. Đây là `user_id` PSN được đổi thành 8 byte
-little-endian rồi Base64, không phải PSN Online-ID hoặc PIN Remote Play. App tự
-kiểm tra và lưu vào `settings.json`, không cần sửa file bằng tay.
+Không cài bản này với kỳ vọng dùng PS5. PS5 cần đăng nhập PSN để lấy `user_id`,
+chuyển thành PSN Account-ID 8 byte/Base64 rồi mới pair được; PIN Remote Play
+8 số hoặc PSN Online-ID không thay thế được bước này. Trải nghiệm này quá phức
+tạp cho phạm vi sản phẩm nên `v0.4.0-beta2` là bản thử nghiệm PS5 cuối cùng.
 
-Sau khi lưu Account-ID, app mới hiện bước nhập PIN Remote Play 8 số. Nếu pair
-thất bại, chụp mã `PS5-*` và `CHI-*` ở màn PIN để gửi hỗ trợ; không chụp màn
-Account-ID và không đăng Account-ID/PIN/khóa pair lên Issue.
+Dự án không tiếp tục phát triển pair/stream PS5, đăng nhập PSN, H265 hoặc debug
+giao thức PS5. Các Issue PS5 sau này chỉ được lưu làm tham khảo, không có cam
+kết sửa lỗi. Mọi bản sửa và hỗ trợ tiếp theo tập trung vào PS4.
 
 Profile khuyến nghị:
 
