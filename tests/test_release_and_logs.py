@@ -747,6 +747,34 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn('grep -q "native stream preflight"', script)
         self.assertIn('if [ $IS_STREAM -eq 0 ]', script)
 
+    def test_stay_alive_only_wraps_native_stream(self):
+        launch_path = os.path.join(self.app_dir, "launch.sh")
+        with open(launch_path, encoding="utf-8") as handle:
+            script = handle.read()
+        stream_guard = script.index("if [ $IS_STREAM -eq 1 ]; then")
+        stream_start = script.index("sh /tmp/launch_game.sh")
+        marker_create = script.index("acquire_stay_alive", stream_guard)
+        marker_remove = script.index("release_stay_alive", stream_start)
+        self.assertLess(marker_create, stream_start)
+        self.assertGreater(marker_remove, stream_start)
+        self.assertIn("trap cleanup_launcher EXIT", script)
+        self.assertIn('if [ "$STAY_ALIVE_OWNED" -eq 1 ]', script)
+        engine_path = os.path.join(self.app_dir, "rh", "engine.py")
+        with open(engine_path, encoding="utf-8") as handle:
+            engine_source = handle.read()
+        self.assertNotIn('with open("/tmp/stay_alive"', engine_source)
+
+    def test_menu_has_idle_battery_guard(self):
+        engine_path = os.path.join(self.app_dir, "rh", "engine.py")
+        with open(engine_path, encoding="utf-8") as handle:
+            source = handle.read()
+        self.assertIn("MENU_IDLE_TIMEOUT_SECONDS = 15 * 60", source)
+        self.assertIn('self.exit_reason = "idle_timeout"', source)
+        app_path = os.path.join(self.app_dir, "app.py")
+        with open(app_path, encoding="utf-8") as handle:
+            app_source = handle.read()
+        self.assertIn('"idle_timeout"', app_source)
+
     def test_app_initializes_logger_before_loading_settings(self):
         app_path = os.path.join(self.app_dir, "app.py")
         with open(app_path, encoding="utf-8") as handle:

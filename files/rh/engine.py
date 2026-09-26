@@ -26,6 +26,17 @@ from .logger import get_logger
 
 log = get_logger()
 
+MENU_IDLE_TIMEOUT_SECONDS = 15 * 60
+
+
+def _input_active(inputs):
+    if inputs.get("edges") or inputs.get("any"):
+        return True
+    return any(
+        abs(int(inputs.get(key, 0) or 0)) > 8000
+        for key in ("axis_left_x", "axis_left_y", "axis_right_x", "axis_right_y")
+    )
+
 
 class ChiakiEngine:
     """Engine chinh cua app trimui-chiaki-ng."""
@@ -52,11 +63,6 @@ class ChiakiEngine:
     # ----- SDL init --------------------------------------------------------
 
     def init_sdl(self):
-        try:
-            with open("/tmp/stay_alive", "w") as f:
-                pass
-        except Exception:
-            pass
         sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO | sdl2.SDL_INIT_JOYSTICK
                       | sdl2.SDL_INIT_GAMECONTROLLER)
         sdlttf.TTF_Init()
@@ -222,6 +228,7 @@ class ChiakiEngine:
         footer_h = 56
         header_h = 64
         last = time.time()
+        last_input_at = time.monotonic()
         evt = sdl2.SDL_Event()
         while self.running:
             now = time.time()
@@ -235,6 +242,14 @@ class ChiakiEngine:
             if not self.running:
                 break
             inputs = self.input_mgr.poll()
+            if _input_active(inputs):
+                last_input_at = time.monotonic()
+            elif time.monotonic() - last_input_at >= MENU_IDLE_TIMEOUT_SECONDS:
+                self.exit_reason = "idle_timeout"
+                log.info("menu idle timeout: closing app after %d seconds",
+                         MENU_IDLE_TIMEOUT_SECONDS)
+                self.running = False
+                break
 
             if self.active_modal:
                 modal = self.active_modal

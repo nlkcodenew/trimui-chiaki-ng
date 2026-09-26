@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release mới nhất: `v0.3.20`.**
+**Release mới nhất: `v0.3.21`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -35,6 +35,9 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
   người dùng nhớ bật tùy chọn. Lỗi pair PS5 chưa được hỗ trợ cũng được ghi nhận riêng.
 - `v0.3.20` luôn tạo `Apps/Chiaki/Chiaki-loi.txt` từ launcher và khởi tạo logger
   trước khi đọc settings, nên lỗi bootstrap trên Stock OS vẫn để lại log chẩn đoán.
+- `v0.3.21` không giữ `/tmp/stay_alive` khi chỉ đứng ở menu, chỉ giữ marker trong
+  phiên stream và tự đóng menu sau 15 phút không thao tác để tránh hao pin nếu
+  người dùng bấm Power mà chưa chọn **THOÁT**. App không sửa cấu hình WoWLAN.
 - Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
@@ -72,7 +75,7 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.3.20.zip` tại
+1. Tải `trimui-chiaki-ng-v0.3.21.zip` tại
    [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.

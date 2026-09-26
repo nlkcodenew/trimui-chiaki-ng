@@ -154,8 +154,8 @@ def main():
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
         "note": {
-            "vi": "v%s: sửa crash lúc khởi động và luôn tạo log trong Apps/Chiaki; PS5 hiện mới hỗ trợ quét." % version,
-            "en": "v%s: fix startup crashes and always create logs in Apps/Chiaki; PS5 currently supports discovery only." % version,
+            "vi": "v%s: chỉ giữ máy thức khi đang stream và tự đóng menu sau 15 phút không thao tác để tránh hao pin khi bị bỏ quên." % version,
+            "en": "v%s: only keep the device awake while streaming and close the idle menu after 15 minutes to prevent unattended battery drain." % version,
         },
         "files": files,
         "remove": [],

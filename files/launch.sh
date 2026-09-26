@@ -3,7 +3,7 @@
 # TrimUI Smart Pro S launcher for trimui-chiaki-ng.
 #
 # Tao khung copy-the-la-chay: giong kieu RetroHub - tim python3, dat LD_LIBRARY_PATH,
-# ghi log ra goc the, bao ve may khoi deep-suspend bang /tmp/stay_alive.
+# ghi log ra goc the va chi chan deep-suspend trong luc native stream dang chay.
 #
 # Phien ban nay khong can download runtime vi khong dung J2ME; python3 he thong cua
 # TrimUI Linux 1.1.1 da co san. Neu mot ban firmware nao do khong co, ta se fallback
@@ -87,8 +87,30 @@ fi
     echo "stderr_log=$ERRLOG"
 } >> "$ERRLOG" 2>/dev/null
 
-# TrimUI Smart Pro S hay bi Kernel Panic khi deep suspend giet app dang chay.
-touch /tmp/stay_alive 2>/dev/null
+STAY_ALIVE_OWNED=0
+
+acquire_stay_alive() {
+    if [ -e /tmp/stay_alive ]; then
+        STAY_ALIVE_OWNED=0
+    elif touch /tmp/stay_alive 2>/dev/null; then
+        STAY_ALIVE_OWNED=1
+    fi
+}
+
+release_stay_alive() {
+    if [ "$STAY_ALIVE_OWNED" -eq 1 ]; then
+        rm -f /tmp/stay_alive 2>/dev/null
+    fi
+    STAY_ALIVE_OWNED=0
+}
+
+cleanup_launcher() {
+    release_stay_alive
+}
+
+trap cleanup_launcher EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 while true; do
     rm -f /tmp/launch_game.sh
@@ -103,8 +125,14 @@ while true; do
         if grep -q "native stream preflight" /tmp/launch_game.sh 2>/dev/null; then
             IS_STREAM=1
         fi
+        if [ $IS_STREAM -eq 1 ]; then
+            acquire_stay_alive
+        fi
         sh /tmp/launch_game.sh
         STREAM_EXIT_CODE=$?
+        if [ $IS_STREAM -eq 1 ]; then
+            release_stay_alive
+        fi
         rm -f /tmp/launch_game.sh
         if [ $IS_STREAM -eq 0 ]; then
             :
@@ -117,7 +145,6 @@ while true; do
             "$PY" -m rh.log_uploader --reason "native_stream_quality" >> "$ERRLOG" 2>&1 || true
         fi
         "$PY" -m rh.logger --cap-runtime >/dev/null 2>&1 || true
-        touch /tmp/stay_alive 2>/dev/null
     else
         if [ -f "$APP/.pending_crash" ]; then
             "$PY" -m rh.log_uploader --reason "user_exit_retry" >> "$ERRLOG" 2>&1 || true
@@ -126,5 +153,3 @@ while true; do
         break
     fi
 done
-
-rm -f /tmp/stay_alive 2>/dev/null

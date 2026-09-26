@@ -1,33 +1,33 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.20
+# trimui-chiaki-ng — trạng thái dự án v0.3.21
 
 > Cập nhật: 2026-09-25. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
 
 ## 1. Release hiện tại
 
-`v0.3.19` luôn bật diagnostics, bỏ công tắc tắt và report riêng mọi lần người
-dùng thử pair PS5 trong khi chức năng PS5 vẫn chưa được hỗ trợ.
+`v0.3.21` là hotfix quản lý nguồn: menu không còn giữ `/tmp/stay_alive`, marker
+chỉ tồn tại khi native stream chạy và menu tự đóng sau 15 phút không thao tác.
 
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.20` |
-| Tag | `v0.3.20` |
+| Latest | `v0.3.21` |
+| Tag | `v0.3.21` |
 | Feature commit | release commit |
 | OTA files | 126 |
 | ZIP entries | 129 |
-| ZIP SHA-256 | `b6e7d2c7e8e7c2fb0dcd30c3549a8bee37e0431dc8232734e393d401829aa2dc` |
-| Unittest | 84/84 đạt |
+| ZIP SHA-256 | `dd24c2ea2a61ea06020d75babe9c5d66705a4288f0067499be818f25b90fac22` |
+| Unittest | 86/86 đạt |
 | Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 GitHub Release có ba asset:
 
 - `manifest.json`.
-- `trimui-chiaki-ng-v0.3.20.zip`.
-- `trimui-chiaki-ng-v0.3.20.zip.sha256`.
+- `trimui-chiaki-ng-v0.3.21.zip`.
+- `trimui-chiaki-ng-v0.3.21.zip.sha256`.
 
 GitHub Actions đã hoàn tất thành công. Ba asset công khai tải qua
-Release `v0.3.20` có 126 file OTA, 129 entry ZIP và SHA-256 ở bảng trên.
+Release `v0.3.21` có 126 file OTA, 129 entry ZIP và SHA-256 ở bảng trên.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -244,6 +244,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.18` | Hướng dẫn trong app; hiện `CHI-xxxx` cạnh version để tra Issue |
 | `v0.3.19` | Luôn bật diagnostics; report cả lần thử pair PS5 chưa hỗ trợ |
 | `v0.3.20` | Giữ log launcher trong app và bắt lỗi bootstrap trước khi đọc settings |
+| `v0.3.21` | Chỉ giữ `stay_alive` khi stream; menu idle 15 phút tự đóng để tránh hao pin |
 
 ## 10. Kiểm thử và build gate
 
@@ -257,7 +258,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-82 unittest của source hiện tại bao phủ:
+86 unittest của source hiện tại bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.

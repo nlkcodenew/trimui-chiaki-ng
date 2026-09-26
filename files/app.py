@@ -122,7 +122,7 @@ def main():
     finally:
         engine.cleanup()
         log.info("== app thoat ==")
-    if exit_reason not in ("user_exit", "update_restart", "stream_launch"):
+    if exit_reason not in ("user_exit", "idle_timeout", "update_restart", "stream_launch"):
         log.error("unexpected app exit: %s", exit_reason)
         return 2
     return 0
