@@ -600,14 +600,25 @@ def regist_with_pin(host, pin, timeout=10.0):
             from .ps5_regist import PS5RegistError, register
             result = register(addr, pin, getattr(state, "psn_account_id", ""), timeout)
         except PS5RegistError as exc:
+            from .ps5_regist import diagnostic_code
             reason = "pair_ps5_%s" % exc.stage
+            code = diagnostic_code(exc.stage)
             log.error("PS5 registration failed: stage=%s error=%s", exc.stage, exc)
             _report_error(reason)
-            return False, {"error": "PS5 lỗi ở bước %s: %s" % (exc.stage, exc)}
+            return False, {
+                "error": "PS5 lỗi ở bước %s: %s" % (exc.stage, exc),
+                "stage": exc.stage,
+                "code": code,
+            }
         except Exception:
+            from .ps5_regist import diagnostic_code
             log.exception("PS5 registration failed: stage=unexpected")
             _report_error("pair_ps5_unexpected")
-            return False, {"error": "PS5 lỗi ngoài dự kiến; xem Chiaki-loi.txt"}
+            return False, {
+                "error": "PS5 lỗi ngoài dự kiến; xem Chiaki-loi.txt",
+                "stage": "unexpected",
+                "code": diagnostic_code("unexpected"),
+            }
         result.update({"addr": addr, "is_ps5": True, "target": 1000100})
         log.info("PS5 registration success: target=%d", result["target"])
         return True, result

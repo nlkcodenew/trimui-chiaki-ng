@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.4.0-beta1`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho `v0.4.0-beta2`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 ## Yêu cầu
@@ -15,8 +15,8 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.4.0-beta1`.
-2. Tải `trimui-chiaki-ng-v0.4.0-beta1.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.4.0-beta2`.
+2. Tải `trimui-chiaki-ng-v0.4.0-beta2.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -103,6 +103,18 @@ Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro 
 
 Không cần PSN cho PS4 firmware 9.00 trong luồng này. Không đăng PIN, Account ID,
 `regist_key` hoặc `rp_key` lên chat/Issue.
+
+## Ghép nối thử nghiệm PS5
+
+App chỉ hiện bước PSN Account-ID sau khi discovery nhận diện host là PS5; PS4
+không đi qua bước này. Nhập chuỗi Base64 12 ký tự lấy từ **PSN Login** của
+Chiaki-ng desktop chính chủ. Đây là `user_id` PSN được đổi thành 8 byte
+little-endian rồi Base64, không phải PSN Online-ID hoặc PIN Remote Play. App tự
+kiểm tra và lưu vào `settings.json`, không cần sửa file bằng tay.
+
+Sau khi lưu Account-ID, app mới hiện bước nhập PIN Remote Play 8 số. Nếu pair
+thất bại, chụp mã `PS5-*` và `CHI-*` ở màn PIN để gửi hỗ trợ; không chụp màn
+Account-ID và không đăng Account-ID/PIN/khóa pair lên Issue.
 
 Profile khuyến nghị:
 

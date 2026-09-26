@@ -13,6 +13,17 @@ log = get_logger()
 
 PS5_TARGET = 1000100
 
+PS5_ERROR_CODES = {
+    "account_id": "PS5-AID-01",
+    "helper": "PS5-HELPER-01",
+    "input": "PS5-INPUT-01",
+    "start": "PS5-START-01",
+    "network": "PS5-NET-01",
+    "protocol": "PS5-PROTO-01",
+    "result": "PS5-RESULT-01",
+    "unexpected": "PS5-UNEXPECTED-01",
+}
+
 
 class PS5RegistError(Exception):
     def __init__(self, stage, message):
@@ -20,14 +31,32 @@ class PS5RegistError(Exception):
         self.stage = stage
 
 
-def _decode_account_id(value):
+def diagnostic_code(stage):
+    return PS5_ERROR_CODES.get(str(stage or ""), "PS5-UNKNOWN-01")
+
+def normalize_account_id(value):
+    encoded = str(value or "").strip()
+    if not encoded:
+        raise PS5RegistError(
+            "account_id",
+            "thiếu PSN Account-ID Base64 12 ký tự (8 byte / 64 bit)",
+        )
     try:
-        decoded = base64.b64decode(str(value or "").strip(), validate=True)
+        decoded = base64.b64decode(encoded, validate=True)
     except Exception as exc:
-        raise PS5RegistError("account_id", "PSN Account-ID Base64 không hợp lệ") from exc
+        raise PS5RegistError(
+            "account_id",
+            "PSN Account-ID không đúng Base64; cần 12 ký tự và thường kết thúc bằng =",
+        ) from exc
     if len(decoded) != 8:
-        raise PS5RegistError("account_id", "PSN Account-ID phải mã hóa đúng 8 byte")
+        raise PS5RegistError(
+            "account_id",
+            "PSN Account-ID phải là Base64 của đúng 8 byte (64 bit), không phải PIN 8 số",
+        )
     return base64.b64encode(decoded).decode("ascii")
+
+def _decode_account_id(value):
+    return normalize_account_id(value)
 
 
 def _helper_path():

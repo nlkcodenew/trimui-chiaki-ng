@@ -35,6 +35,7 @@ class LogUploaderTests(unittest.TestCase):
         cls.home_module = importlib.import_module("rh.screens.home")
         cls.guide_module = importlib.import_module("rh.screens.guide")
         cls.settings_module = importlib.import_module("rh.screens.settings")
+        cls.pair_module = importlib.import_module("rh.screens.pair")
         cls.update_modal_module = importlib.import_module("rh.modals.update")
 
     @classmethod
@@ -962,7 +963,8 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("PIN 8 số", vietnamese)
         self.assertIn("START + SELECT", vietnamese)
         self.assertIn("PS5 đang ở mức thử nghiệm", vietnamese)
-        self.assertIn("Account-ID base64", vietnamese)
+        self.assertIn("Account-ID", vietnamese)
+        self.assertIn("PS5-*", vietnamese)
         self.assertIn("ghi theo từng bước", vietnamese)
 
     def test_guide_navigation_stays_in_bounds_and_b_returns(self):
@@ -1328,6 +1330,64 @@ class LogUploaderTests(unittest.TestCase):
             ps5._decode_account_id("not-base64")
         self.assertEqual(error.exception.stage, "account_id")
         self.assertNotIn("not-base64", str(error.exception))
+
+        expected = base64.b64encode((123456789).to_bytes(8, "little")).decode("ascii")
+        self.assertEqual(ps5.normalize_account_id("  %s  " % expected), expected)
+        self.assertEqual(len(expected), 12)
+        with self.assertRaises(ps5.PS5RegistError) as short_error:
+            ps5.normalize_account_id("12345678")
+        self.assertIn("8 byte", str(short_error.exception))
+        self.assertEqual(ps5.diagnostic_code("account_id"), "PS5-AID-01")
+
+    def test_pair_screen_requests_account_id_only_for_ps5(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        state = importlib.import_module("rh.state")
+        original_account = state.psn_account_id
+        state.psn_account_id = ""
+        try:
+            ps4 = chiaki.DiscoveredHost(
+                name="PS4", addr="192.168.1.45", is_ps5=False, target=1000)
+            ps4_screen = self.pair_module.PairScreen(mock.Mock())
+            ps4_screen.on_enter({"host": ps4})
+            self.assertEqual(ps4_screen.mode, "pin")
+            self.assertEqual(ps4_screen.account_id, "")
+
+            ps5 = chiaki.DiscoveredHost(
+                name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100)
+            ps5_screen = self.pair_module.PairScreen(mock.Mock())
+            ps5_screen.on_enter({"host": ps5})
+            self.assertEqual(ps5_screen.mode, "account_id")
+            self.assertEqual(len(ps5_screen.account_id), 12)
+        finally:
+            state.psn_account_id = original_account
+
+    def test_pair_screen_saves_valid_ps5_account_and_hides_invalid_value(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        state = importlib.import_module("rh.state")
+        original_account = state.psn_account_id
+        host = chiaki.DiscoveredHost(
+            name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100)
+        screen = self.pair_module.PairScreen(mock.Mock())
+        state.psn_account_id = ""
+        try:
+            screen.on_enter({"host": host})
+            account_id = base64.b64encode(bytes(range(8))).decode("ascii")
+            screen.account_id = account_id
+            with mock.patch.object(state, "save_settings", return_value=True):
+                screen._save_account_id()
+            self.assertEqual(state.psn_account_id, account_id)
+            self.assertEqual(screen.mode, "pin")
+
+            screen.mode = "account_id"
+            screen.account_id = "PRIVATE-BAD!"
+            with mock.patch.object(screen, "_report_error") as report:
+                screen._save_account_id()
+            self.assertEqual(screen.mode, "account_error")
+            self.assertEqual(screen.diagnostic_code, "PS5-AID-01")
+            self.assertNotIn("PRIVATE-BAD", screen.status)
+            report.assert_called_once_with("pair_ps5_account_id")
+        finally:
+            state.psn_account_id = original_account
 
     def test_native_stream_launcher_keeps_keys_out_of_script(self):
         chiaki = importlib.import_module("rh.chiaki")

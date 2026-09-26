@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release thử nghiệm mới nhất: `v0.4.0-beta1`.**
+**Release thử nghiệm mới nhất: `v0.4.0-beta2`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -39,6 +39,9 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
   giữ nguyên đường đăng ký Python pre-10 và H264 đã xác nhận trên PS4. Lỗi PS5
   được ghi theo stage `account_id`, `helper`, `input`, `start`, `network`,
   `protocol` hoặc `result` để đối chiếu Issue mà không ghi PIN hay khóa bí mật.
+- `v0.4.0-beta2` thêm bước nhập PSN Account-ID trực tiếp bằng tay cầm chỉ khi
+  app nhận diện PS5. Lỗi hiện mã `PS5-*` và `CHI-*` để người test chụp ảnh mà
+  không phải chụp Account-ID, PIN hoặc khóa pair.
 - Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
@@ -76,8 +79,8 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.4.0-beta1.zip` tại
-   [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.4.0-beta1).
+1. Tải `trimui-chiaki-ng-v0.4.0-beta2.zip` tại
+   [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.4.0-beta2).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
 3. Kiểm tra tồn tại `Apps/Chiaki/launch.sh` và
@@ -88,20 +91,24 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 
 PS4 hack pair/stream được vì dự án có đường giao thức PS4 pre-10 hoàn chỉnh;
 điều này không phụ thuộc trạng thái jailbreak. PS5 dùng endpoint, crypto, target
-và H265 riêng nên `v0.4.0-beta1` cô lập đường PS5 thay vì thay thế mã PS4. Không
+và H265 riêng nên dòng `v0.4.0-beta` cô lập đường PS5 thay vì thay thế mã PS4. Không
 cần tách release “PS5 jailbreak/no-jailbreak”; khả năng kết nối phụ thuộc firmware,
 cấu hình Remote Play, tài khoản và mạng của PS5, không phải tên release.
 
 1. Giữ PS5 và TrimUI trong cùng LAN; bật Remote Play và để PS5 ở trạng thái ready.
-2. Điền Account-ID PSN dạng Base64 của đúng tài khoản vào khóa
-   `psn_account_id` trong `Apps/Chiaki/settings.json`. Giá trị giải mã phải đúng
-   8 byte. Không đăng Account-ID, PIN hoặc khóa pair lên Issue.
+2. Khi chọn pair một host được nhận diện là PS5, app hiện **Bước 1/2** để nhập
+   PSN Account-ID Base64 12 ký tự bằng tay cầm. Giá trị này là `user_id` PSN
+   được upstream Chiaki-ng đổi thành 8 byte little-endian rồi Base64; nó không
+   phải PSN Online-ID, PIN hay mã 8 số. Có thể lấy bằng nút **PSN Login** trên
+   Chiaki-ng desktop chính chủ rồi nhập chuỗi kết quả vào TrimUI. App tự lưu vào
+   `settings.json`; PS4 không hiện và không dùng bước này.
 3. Trong vòng test đầu, tắt mã đăng nhập console 4 số; đây không phải PIN Remote
    Play 8 số. Chọn profile 720p/30, SDR và không bật HDR.
 4. Quét PS5, chọn pair, mở màn hình thêm thiết bị Remote Play trên PS5, nhập PIN
    8 số rồi bấm A. Helper đăng ký trực tiếp theo IP, không broadcast registration.
-5. Nếu lỗi, ghi lại ID `CHI-xxxx`. App tự gửi log đã lọc với stage cụ thể; file
-   cục bộ là `Apps/Chiaki/Chiaki-loi.txt` và `Apps/Chiaki/Chiaki-debug.log`.
+5. Nếu lỗi, chụp màn hình chứa mã `PS5-*` và ID `CHI-xxxx`, nhưng không chụp
+   màn nhập Account-ID. App tự gửi log đã lọc với stage cụ thể; file cục bộ là
+   `Apps/Chiaki/Chiaki-loi.txt` và `Apps/Chiaki/Chiaki-debug.log`.
 4. Lắp thẻ vào máy và mở **Apps → Chiaki-ng**.
 5. Chọn **Hướng dẫn sử dụng** trong menu nếu cần xem từng bước ngay trên máy.
 

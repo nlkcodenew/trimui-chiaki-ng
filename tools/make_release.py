@@ -155,8 +155,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: beta PS5 pair/stream tách biệt; PS4 giữ nguyên đường đã xác nhận; lỗi PS5 ghi theo từng stage." % version,
-            "en": "v%s: experimental isolated PS5 pairing/streaming; PS4 path unchanged; PS5 failures report stages." % version,
+            "vi": "v%s: nhập PSN Account-ID trực tiếp khi nhận diện PS5, hiện mã lỗi an toàn để chụp; đường PS4 giữ nguyên." % version,
+            "en": "v%s: enter PSN Account-ID in-app only for detected PS5 hosts, with safe photographable error codes; PS4 path unchanged." % version,
         },
         "files": files,
         "remove": [],
