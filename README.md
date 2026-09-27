@@ -109,8 +109,9 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
-Beta `v0.3.22-beta3` sửa gói cài về đúng `Apps/Chiaki/` và thử lại PS4 Wake mà
-không thay bản ổn định: chỉ hiện nút
+Beta `v0.3.22-beta4` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
+PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên để
+đọc log từ thiết bị `CHI-E545`. Beta không thay bản ổn định và chỉ hiện nút
 **ĐÁNH THỨC** khi discovery thật nhận PS4 đã ghép ở trạng thái `standby`. Khi
 người dùng bấm **A**, app dùng cùng một UDP socket để xác nhận `standby`, gửi
 WAKEUP unicast và chờ `ready` tối đa 25 giây. Beta không thêm host `offline`,

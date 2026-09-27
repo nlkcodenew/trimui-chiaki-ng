@@ -40,6 +40,7 @@ class HomeScreen(BaseScreen):
         self.host_selected = 0
         self.toast = ""
         self.toast_until = 0
+        self.discovery_miss_reported = False
 
     def on_enter(self, params=None):
         log.info("home: on_enter, auto_update=%s", state.auto_update)
@@ -87,8 +88,9 @@ class HomeScreen(BaseScreen):
         threading.Thread(target=self._do_scan, daemon=True).start()
 
     def _do_scan(self):
+        paired_ps4 = chiaki.paired_ps4_addresses()
         try:
-            hosts = chiaki.discovery_broadcast(timeout=3.0)
+            hosts = chiaki.discovery_broadcast(timeout=3.0, ps4_hosts=paired_ps4)
         except Exception as exc:
             log.error("scan exception: %s", exc)
             self._report_error("discovery_exception")
@@ -102,6 +104,12 @@ class HomeScreen(BaseScreen):
         else:
             self.toast = tr("scan_none")
             log.info("scan: khong thay host")
+            if paired_ps4 and not self.discovery_miss_reported:
+                self.discovery_miss_reported = True
+                log.warning(
+                    "scan: paired PS4 did not answer broadcast or unicast SRCH",
+                )
+                self._report_error("discovery_ps4_standby_not_found")
         self.toast_until = time.time() + 4
 
     def _is_paired(self, host):

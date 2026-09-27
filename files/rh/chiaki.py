@@ -182,6 +182,12 @@ def paired_hosts_for_discovery(discovered=None):
     return hosts
 
 
+def paired_ps4_addresses():
+    """Return saved PS4 addresses for manual unicast discovery."""
+    return [host.addr for host in paired_hosts_for_discovery([])
+            if not host.is_ps5]
+
+
 def wake_paired_host(host):
     """Wake a saved host using its private registration credential."""
     credentials = _paired_credentials(getattr(host, "addr", ""))
@@ -524,11 +530,12 @@ def _target_from_version(version, ps5):
     return 0
 
 
-def discovery_broadcast(timeout=3.0):
+def discovery_broadcast(timeout=3.0, ps4_hosts=None):
     """SRCH broadcast theo PSN protocol. Tra danh sach DiscoveredHost.
 
     Dung protocol upstream chiaki:
-        - Gui SRCH toi cong dich 987 (PS4) va 9302 (PS5).
+        - Gui SRCH broadcast toi cong dich 987 (PS4) va 9302 (PS5).
+        - Gui them SRCH unicast toi cac PS4 da pair, giong manual host upstream.
         - Socket nguon bind trong khoang 9303-9319; PS4/PS5 tra loi ve dung
           dia chi + cong nguon cua goi SRCH.
     """
@@ -536,7 +543,13 @@ def discovery_broadcast(timeout=3.0):
     seen = set()
     lock = threading.Lock()
 
-    def worker(protocol_version, ps5_mode, dest_port):
+    manual_ps4_hosts = []
+    for addr in ps4_hosts or []:
+        addr = str(addr or "").strip()
+        if addr and addr not in manual_ps4_hosts:
+            manual_ps4_hosts.append(addr)
+
+    def worker(protocol_version, ps5_mode, dest_port, destinations):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -559,11 +572,16 @@ def discovery_broadcast(timeout=3.0):
                 src_port = 0
             # Gui 2 lan cach nhau mot chut: mot so firmware bo qua goi dau tien.
             for attempt in range(2):
-                s.sendto(pkt, ("255.255.255.255", dest_port))
+                for destination in destinations:
+                    s.sendto(pkt, (destination, dest_port))
                 if attempt == 0:
                     time.sleep(0.15)
-            log.info("discovery: SRCH -> 255.255.255.255:%d (%s) src_port=%d",
-                     dest_port, "PS5" if ps5_mode else "PS4", src_port)
+            log.info(
+                "discovery: SRCH %s -> port=%d (%s) src_port=%d manual_hosts=%d",
+                "broadcast+unicast" if len(destinations) > 1 else "broadcast",
+                dest_port, "PS5" if ps5_mode else "PS4", src_port,
+                len(destinations) - 1,
+            )
             end = time.time() + timeout
             while time.time() < end:
                 try:
@@ -590,9 +608,11 @@ def discovery_broadcast(timeout=3.0):
 
     threads = [
         threading.Thread(target=worker, daemon=True,
-                         args=(PS4_PROTOCOL_VERSION, False, PS4_DISCOVERY_PORT)),
+                         args=(PS4_PROTOCOL_VERSION, False, PS4_DISCOVERY_PORT,
+                               ["255.255.255.255"] + manual_ps4_hosts)),
         threading.Thread(target=worker, daemon=True,
-                         args=(PS5_PROTOCOL_VERSION, True, PS5_DISCOVERY_PORT)),
+                         args=(PS5_PROTOCOL_VERSION, True, PS5_DISCOVERY_PORT,
+                               ["255.255.255.255"])),
     ]
     for t in threads:
         t.start()

@@ -203,8 +203,9 @@ Lịch sử:
 - Issue `#26–#30`: console vẫn không phản hồi trong môi trường thật.
 - `v0.3.10`: tắt WAKEUP/offline host trong UI, trở lại bật PS4 bằng tay.
 
-Beta `v0.3.22-beta3` sửa ZIP từ đường dẫn sai `App/Chiaki/` về đúng
-`Apps/Chiaki/`, rồi thử lại riêng cho PS4 được discovery xác nhận `standby`:
+Beta `v0.3.22-beta4` giữ ZIP đúng `Apps/Chiaki/`, gửi SRCH broadcast và unicast
+tới IP PS4 đã pair, đồng thời report `discovery_ps4_standby_not_found` một lần
+mỗi phiên nếu Rest Mode vẫn không phản hồi. Khi discovery xác nhận `standby`:
 SRCH unicast, WAKEUP và polling `ready` dùng cùng một UDP socket trong tối đa
 25 giây. Beta không chèn host `offline`, không tự wake khi scan và không thay
 đổi WoWLAN của TrimUI. Nhánh ổn định `v0.3.21` giữ nguyên.

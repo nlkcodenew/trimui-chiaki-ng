@@ -1,14 +1,14 @@
 {
-  "version": "0.3.22-beta3",
+  "version": "0.3.22-beta4",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-27T09:42:28+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta3/files",
-  "release_tag": "v0.3.22-beta3/files",
+  "built": "2026-09-27T09:59:18+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta4/files",
+  "release_tag": "v0.3.22-beta4/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.22-beta3: sửa ZIP cài đúng Apps/Chiaki và thử PS4 Wake trên cùng socket khi console standby.",
-    "en": "v0.3.22-beta3: fix the ZIP root to Apps/Chiaki and test same-socket PS4 Wake for standby consoles."
+    "vi": "v0.3.22-beta4: thêm SRCH unicast tới PS4 đã pair và tự gửi chẩn đoán khi Rest Mode không phản hồi.",
+    "en": "v0.3.22-beta4: add unicast SRCH for paired PS4 hosts and diagnostics when Rest Mode does not respond."
   },
   "files": [
     {
@@ -133,8 +133,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "fc611178f1174b3792c68cbd07e7c067f48f4dff5f28f89a133891e460a7d0f3",
-      "size": 29641
+      "sha256": "de0198560c0eebe9faafb89dba5aca64266af0a8d8ea7480e83c17c535ae71cd",
+      "size": 30469
     },
     {
       "path": "rh/device_identity.py",
@@ -198,7 +198,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "1d800fd3dac23e4a086dbc4026d599b7cbc0e379ace2b5cd9f4ad938819c5e49",
+      "sha256": "4a9a3163a9638ae16dc33d05fd726821be0d183bf286656ad62a2cca00a4cb1b",
       "size": 1184
     },
     {
@@ -238,8 +238,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "da2139b9a42e9fe20f157e7b4d4a22b11298b5fa5aab994305fe624d91d77352",
-      "size": 12176
+      "sha256": "7d26cf398302e1f391f0b2f2f5aaf9c45087b0f3cda22133c8572fc7a2da5ffe",
+      "size": 12608
     },
     {
       "path": "rh/screens/pair.py",
@@ -644,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.22-beta3.zip",
-    "sha256": "9836a3bc73927c258f5efab344ee23aecff1b0e83821d34114fb881ccea7ee33",
-    "size": 10762607
+    "name": "trimui-chiaki-ng-v0.3.22-beta4.zip",
+    "sha256": "b27b3f789a4a586dc48d75d53f42a2c5ad3de61d49d5882f9d81d69b1a1a9d29",
+    "size": 10762940
   }
 }

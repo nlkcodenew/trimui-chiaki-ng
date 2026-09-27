@@ -155,8 +155,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: sửa ZIP cài đúng Apps/Chiaki và thử PS4 Wake trên cùng socket khi console standby." % version,
-            "en": "v%s: fix the ZIP root to Apps/Chiaki and test same-socket PS4 Wake for standby consoles." % version,
+            "vi": "v%s: thêm SRCH unicast tới PS4 đã pair và tự gửi chẩn đoán khi Rest Mode không phản hồi." % version,
+            "en": "v%s: add unicast SRCH for paired PS4 hosts and diagnostics when Rest Mode does not respond." % version,
         },
         "files": files,
         "remove": [],

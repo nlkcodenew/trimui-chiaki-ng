@@ -1086,7 +1086,7 @@ class LogUploaderTests(unittest.TestCase):
                 return ("0.0.0.0", 9303)
 
             def sendto(self, data, dest):
-                sent_dests.append(dest[1])
+                sent_dests.append(dest)
 
             def recvfrom(self, size):
                 raise OSError("timeout")
@@ -1097,10 +1097,13 @@ class LogUploaderTests(unittest.TestCase):
         with mock.patch.object(chiaki.socket, "socket", FakeSocket), \
                 mock.patch.object(chiaki.time, "sleep", lambda *_: None), \
                 mock.patch.object(chiaki, "_report_error"):
-            chiaki.discovery_broadcast(timeout=0.1)
-        self.assertIn(987, sent_dests)
-        self.assertIn(9302, sent_dests)
-        self.assertNotIn(9303, sent_dests)
+            chiaki.discovery_broadcast(
+                timeout=0.1, ps4_hosts=["192.168.1.45"],
+            )
+        self.assertIn(("255.255.255.255", 987), sent_dests)
+        self.assertIn(("192.168.1.45", 987), sent_dests)
+        self.assertIn(("255.255.255.255", 9302), sent_dests)
+        self.assertNotIn(("192.168.1.45", 9302), sent_dests)
 
     def test_parse_srch_response_ready_and_standby(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1539,12 +1542,31 @@ class LogUploaderTests(unittest.TestCase):
         home = importlib.import_module("rh.screens.home")
         i18n = importlib.import_module("rh.i18n")
         screen = home.HomeScreen(mock.Mock())
-        with mock.patch.object(chiaki, "discovery_broadcast", return_value=[]), \
+        with mock.patch.object(chiaki, "paired_ps4_addresses", return_value=[]), \
+                mock.patch.object(chiaki, "discovery_broadcast", return_value=[]), \
                 mock.patch.object(chiaki, "paired_hosts_for_discovery") as merge:
             screen._do_scan()
         self.assertEqual(screen.hosts, [])
         self.assertEqual(screen.toast, i18n.TEXTS["VI"]["scan_none"])
         merge.assert_not_called()
+
+    def test_home_reports_paired_ps4_discovery_miss_once_per_session(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        home = importlib.import_module("rh.screens.home")
+        screen = home.HomeScreen(mock.Mock())
+        with mock.patch.object(
+                chiaki, "paired_ps4_addresses",
+                return_value=["192.168.1.45"]), \
+                mock.patch.object(
+                    chiaki, "discovery_broadcast", return_value=[]) as discover, \
+                mock.patch.object(screen, "_report_error") as report:
+            screen._do_scan()
+            screen._do_scan()
+        self.assertEqual(discover.call_count, 2)
+        discover.assert_called_with(
+            timeout=3.0, ps4_hosts=["192.168.1.45"],
+        )
+        report.assert_called_once_with("discovery_ps4_standby_not_found")
 
     def test_home_ready_host_starts_stream_without_wakeup(self):
         chiaki = importlib.import_module("rh.chiaki")
