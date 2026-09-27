@@ -160,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: tắt PS5 và dùng một socket discovery PS4 để tránh tranh phản hồi UDP trên cổng nguồn." % version,
-            "en": "v%s: disable PS5 and use one PS4 discovery socket to avoid competing UDP listeners on the source port." % version,
+            "vi": "v%s: chỉ hỗ trợ PS4, bỏ luồng PS5 và dùng mã thiết bị băm HW ổn định trong giao diện và báo cáo." % version,
+            "en": "v%s: support PS4 only, remove PS5 flows, and use the stable HW device hash in the UI and reports." % version,
         },
         "files": files,
         "remove": [],

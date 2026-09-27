@@ -83,7 +83,6 @@ class PairScreen(BaseScreen):
                 paired.append({
                     "addr": self.host.addr,
                     "name": state.host_name,
-                    "is_ps5": False,
                     "target": int(info.get("target", state.host_target or 0)),
                     "regist_key": state.regist_key,
                     "rp_key": state.rp_key,

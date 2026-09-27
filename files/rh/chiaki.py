@@ -3,7 +3,6 @@
 
 Bao gom:
     - Discovery SRCH broadcast va response parse cho PS4 (port 987)
-    - Wakeup WAKEUP voi regist-key plaintext
     - Connect RPCrypt den controller port 9295
     - Doc chiaki.conf theo mau Switch (host_addr, psn_account_id, rp_key, rp_regist_key,
       rp_key_type, video_resolution, video_fps, target)
@@ -50,7 +49,6 @@ class DiscoveredHost:
     name: str = ""
     addr: str = ""
     state: str = "unknown"
-    is_ps5: bool = False
     system_version: str = ""
     running_app: str = ""
     target: int = 0
@@ -113,13 +111,14 @@ def _paired_credentials(addr):
         entries.append({
             "addr": state.host_addr,
             "name": state.host_name,
-            "is_ps5": False,
             "regist_key": state.regist_key,
             "rp_key": state.rp_key,
             "target": int(getattr(state, "host_target", 0) or 0),
         })
     for entry in entries:
         if not isinstance(entry, dict) or entry.get("addr") != addr:
+            continue
+        if bool(entry.get("is_ps5", False)):
             continue
         regist_key = str(entry.get("regist_key") or "")
         rp_key = str(entry.get("rp_key") or "")
@@ -134,81 +133,12 @@ def _paired_credentials(addr):
             return {
                 "addr": addr,
                 "name": entry.get("name") or addr,
-                "is_ps5": bool(entry.get("is_ps5", False)),
                 "regist_key": regist_key,
                 "rp_key": rp_key,
                 "target": int(entry.get("target", 0) or 0),
             }
     return None
 
-
-def paired_hosts_for_discovery(discovered=None):
-    """Merge saved paired PS4 hosts without exposing credentials."""
-    from .paths import APP_DIR
-
-    hosts = [host for host in (discovered or [])
-             if not bool(getattr(host, "is_ps5", False))]
-    seen = {getattr(host, "addr", "") for host in hosts}
-    entries = []
-    paired_path = os.path.join(APP_DIR, "paired_hosts.json")
-    try:
-        with open(paired_path, "r", encoding="utf-8") as handle:
-            value = json.load(handle)
-        if isinstance(value, list):
-            entries.extend(value)
-    except (OSError, ValueError, TypeError):
-        pass
-    if getattr(state, "host_addr", ""):
-        entries.append({
-            "addr": state.host_addr,
-            "name": state.host_name,
-            "is_ps5": False,
-            "target": int(getattr(state, "host_target", 0) or 0),
-        })
-    for entry in entries:
-        if not isinstance(entry, dict) or bool(entry.get("is_ps5", False)):
-            continue
-        addr = str(entry.get("addr") or "")
-        if not addr or addr in seen or not _paired_credentials(addr):
-            continue
-        hosts.append(DiscoveredHost(
-            name=str(entry.get("name") or addr),
-            addr=addr,
-            state="offline",
-            is_ps5=bool(entry.get("is_ps5", False)),
-            target=int(entry.get("target", 0) or 0),
-        ))
-        seen.add(addr)
-    return hosts
-
-
-def paired_ps4_addresses():
-    """Return saved PS4 addresses for manual unicast discovery."""
-    return [host.addr for host in paired_hosts_for_discovery([])
-            if not host.is_ps5]
-
-
-def wake_paired_host(host):
-    """Wake a saved PS4 using its private registration credential."""
-    if bool(getattr(host, "is_ps5", False)):
-        log.warning("wakeup rejected: PS5 support is disabled")
-        return False
-    credentials = _paired_credentials(getattr(host, "addr", ""))
-    if not credentials or credentials["is_ps5"]:
-        return False
-    return send_wakeup(credentials["addr"], credentials["regist_key"])
-
-
-def wake_paired_ps4_until_ready(host, timeout=25.0):
-    """Wake a paired PS4 and wait for READY on the same socket."""
-    addr = str(getattr(host, "addr", "") or "")
-    if not addr or bool(getattr(host, "is_ps5", False)):
-        return None
-    credentials = _paired_credentials(addr)
-    if not credentials or credentials["is_ps5"]:
-        log.error("wakeup transaction missing PS4 credentials: host=%s", addr)
-        return None
-    return _wake_ps4_until_ready(addr, credentials["regist_key"], timeout)
 
 def _rp_version_string(target):
     t = int(target or 0)
@@ -225,9 +155,6 @@ def prepare_stream_launch(host):
     """Chuẩn bị native stream rồi trả về (ok, thông báo)."""
     from .paths import APP_DIR
 
-    if bool(getattr(host, "is_ps5", False)):
-        log.warning("stream preparation rejected: PS5 support is disabled")
-        return False, "Bản này chỉ hỗ trợ PS4"
     binary = find_chiaki_binary(APP_DIR)
     if not binary:
         return False, "Thiếu bin/chiaki-stream"
@@ -236,9 +163,6 @@ def prepare_stream_launch(host):
         log.error("stream preparation rejected: paired credentials unavailable")
         _report_error("stream_credentials_missing")
         return False, "Khóa ghép nối không hợp lệ; hãy ghép lại PS4"
-    if credentials["is_ps5"]:
-        log.warning("stream preparation rejected: saved PS5 credentials")
-        return False, "Bản này chỉ hỗ trợ PS4"
     discovered_target = int(getattr(host, "target", 0) or 0)
     stored_target = int(credentials.get("target", 0) or 0)
     if (discovered_target in (800, 900, 1000)
@@ -437,23 +361,6 @@ def _build_srch(protocol_version):
     return body.encode("ascii") + b"\x00"
 
 
-def _build_wakeup(regist_key):
-    key = str(regist_key or "").split("\x00", 1)[0]
-    if not key or len(key) > 8:
-        raise ValueError("invalid registration key")
-    credential = int(key, 16)
-    body = ("WAKEUP * HTTP/1.1\n"
-            "client-type:vr\n"
-            "auth-type:R\n"
-            "model:w\n"
-            "app-type:r\n"
-            "user-credential:%d\n"
-            "device-discovery-protocol-version:%s\n") % (
-                credential, PS4_PROTOCOL_VERSION,
-            )
-    return body.encode("ascii") + b"\x00"
-
-
 def _bind_discovery_socket(sock):
     for local_port in range(LOCAL_PORT_MIN, LOCAL_PORT_MAX + 1):
         try:
@@ -504,7 +411,6 @@ def _parse_srch(data, addr):
         return None
     host = DiscoveredHost(
         addr=addr[0],
-        is_ps5=False,
         state=host_state,
         system_version=headers.get("system-version", ""),
         running_app=urllib.parse.unquote(headers.get("running-app-name", "")),
@@ -532,24 +438,16 @@ def _target_from_version(version):
     return 0
 
 
-def discovery_broadcast(timeout=3.0, ps4_hosts=None):
-    """Send PS4-only SRCH broadcast/unicast and return discovered hosts.
+def discovery_broadcast(timeout=3.0):
+    """Send PS4-only SRCH broadcast and return responding hosts.
 
     Dung protocol upstream chiaki:
         - Gui SRCH broadcast toi cong dich 987 (PS4).
-        - Gui them SRCH unicast toi cac PS4 da pair, giong manual host upstream.
         - Mot socket nguon bind trong khoang 9303-9319 de nhan phan hoi PS4.
     """
     out = []
     seen = set()
 
-    manual_ps4_hosts = []
-    for addr in ps4_hosts or []:
-        addr = str(addr or "").strip()
-        if addr and addr not in manual_ps4_hosts:
-            manual_ps4_hosts.append(addr)
-
-    destinations = ["255.255.255.255"] + manual_ps4_hosts
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -557,15 +455,12 @@ def discovery_broadcast(timeout=3.0, ps4_hosts=None):
         source_port = _bind_discovery_socket(sock)
         packet = _build_srch(PS4_PROTOCOL_VERSION)
         for attempt in range(2):
-            for destination in destinations:
-                sock.sendto(packet, (destination, PS4_DISCOVERY_PORT))
+            sock.sendto(packet, ("255.255.255.255", PS4_DISCOVERY_PORT))
             if attempt == 0:
                 time.sleep(0.15)
         log.info(
-            "discovery: PS4-only single socket %s -> port=%d "
-            "src_port=%d manual_hosts=%d",
-            "broadcast+unicast" if len(destinations) > 1 else "broadcast",
-            PS4_DISCOVERY_PORT, source_port, len(manual_ps4_hosts),
+            "discovery: PS4-only single socket broadcast -> port=%d src_port=%d",
+            PS4_DISCOVERY_PORT, source_port,
         )
         end = time.time() + timeout
         while time.time() < end:
@@ -603,23 +498,18 @@ def regist_with_pin(host, pin, timeout=10.0):
         _report_error("pair_pin_invalid")
         return False, {"error": "PIN phai 8 so"}
     addr = getattr(host, "addr", "") or "unknown"
-    is_ps5 = bool(getattr(host, "is_ps5", False))
     target = int(getattr(host, "target", 0) or 0)
     account_id_configured = bool(
         str(getattr(state, "psn_account_id", "") or "").strip()
     )
     log.info(
-        "registration start: host=%s ps5=%s target=%d system_version=%s "
+        "registration start: host=%s target=%d system_version=%s "
         "account_id_configured=%s",
-        addr, is_ps5, target, getattr(host, "system_version", "") or "missing",
+        addr, target, getattr(host, "system_version", "") or "missing",
         account_id_configured,
     )
-    if is_ps5:
-        message = "PS5 support is disabled; this build is PS4-only"
-        log.warning("registration rejected: %s", message)
-        return False, {"error": message}
     if target not in (0, 800, 900, 1000):
-        message = "this beta supports PS4 firmware 8.0 or newer"
+        message = "this release supports PS4 firmware 8.0 or newer"
         log.warning("registration rejected: target=%d", target)
         _report_error("pair_ps4_target_unsupported")
         return False, {"error": message}
@@ -631,125 +521,13 @@ def regist_with_pin(host, pin, timeout=10.0):
         log.error("registration failed: host=%s error=%s", addr, exc)
         _report_error("pair_registration_failed")
         return False, {"error": str(exc)}
-    result.update({"addr": addr, "is_ps5": False, "target": target})
+    result.update({"addr": addr, "target": target})
     log.info(
         "registration success: host=%s key_type=%s mac=%s offline_account=%s",
         addr, result.get("rp_key_type"), result.get("server_mac"),
         result.get("used_offline_account"),
     )
     return True, result
-
-
-def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
-    """Gui WAKEUP toi PS4; PS5 bi vo hieu hoa trong ung dung."""
-    if ps5:
-        log.warning("wakeup rejected: PS5 support is disabled")
-        return False
-    try:
-        payload = _build_wakeup(regist_key)
-    except (TypeError, ValueError):
-        log.error("wakeup credential is invalid")
-        return False
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        sock.settimeout(timeout)
-        source_port = _bind_discovery_socket(sock)
-        sent = sock.sendto(payload, (addr, PS4_DISCOVERY_PORT))
-        log.info(
-            "wakeup sent: host=%s console=PS4 source_port=%d dest_port=%d "
-            "packets=1 bytes=%d format=lf+nul mode=upstream-unicast",
-            addr, source_port, PS4_DISCOVERY_PORT, len(payload),
-        )
-        return sent == len(payload)
-    except OSError as exc:
-        log.error("wakeup failed: %s", exc)
-        return False
-    finally:
-        sock.close()
-
-
-def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
-    """Use one discovery socket for SRCH, WAKEUP and READY polling."""
-    try:
-        wake_payload = _build_wakeup(regist_key)
-    except (TypeError, ValueError):
-        log.error("wakeup credential is invalid")
-        return None
-    srch_payload = _build_srch(PS4_PROTOCOL_VERSION)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    deadline = time.monotonic() + max(1.0, float(timeout))
-    wake_sent = False
-    wake_retried = False
-    silent_probes = 0
-    last_state = "unknown"
-    try:
-        sock.settimeout(1.0)
-        source_port = _bind_discovery_socket(sock)
-        log.info(
-            "wakeup transaction start: host=%s source_port=%d timeout=%.1f",
-            addr, source_port, timeout,
-        )
-        sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
-        wake_sent = sent == len(wake_payload)
-        log.info(
-            "wakeup transaction sent without standby response: "
-            "host=%s source_port=%d bytes=%d",
-            addr, source_port, sent,
-        )
-        while time.monotonic() < deadline:
-            probe_started = time.monotonic()
-            response_received = False
-            sock.sendto(srch_payload, (addr, PS4_DISCOVERY_PORT))
-            probe_deadline = min(deadline, time.monotonic() + 1.0)
-            while time.monotonic() < probe_deadline:
-                try:
-                    data, response_addr = sock.recvfrom(2048)
-                except socket.timeout:
-                    break
-                if response_addr[0] != addr:
-                    continue
-                discovered = _parse_srch(data, response_addr)
-                if not discovered:
-                    continue
-                response_received = True
-                last_state = discovered.state
-                log.info(
-                    "wakeup transaction response: host=%s state=%s source_port=%d",
-                    addr, last_state, source_port,
-                )
-                if last_state == "ready":
-                    return discovered
-                if last_state == "standby" and wake_sent and not wake_retried:
-                    sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
-                    wake_retried = True
-                    log.info(
-                        "wakeup transaction retry: host=%s source_port=%d bytes=%d",
-                        addr, source_port, sent,
-                    )
-                break
-            silent_probes = 0 if response_received else silent_probes + 1
-            if wake_sent and not wake_retried and silent_probes >= 3:
-                sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
-                wake_retried = True
-                log.info(
-                    "wakeup transaction retry without response: "
-                    "host=%s source_port=%d bytes=%d",
-                    addr, source_port, sent,
-                )
-            remaining = deadline - time.monotonic()
-            delay = min(1.0 - (time.monotonic() - probe_started), remaining)
-            if delay > 0:
-                time.sleep(delay)
-        log.error(
-            "wakeup transaction timeout: host=%s state=%s sent=%s retry=%s",
-            addr, last_state, wake_sent, wake_retried,
-        )
-        return None
-    except OSError as exc:
-        log.error("wakeup transaction failed: host=%s error=%s", addr, exc)
-        return None
-    finally:
-        sock.close()
 
 
 def _video_profile_from_state():
@@ -774,26 +552,3 @@ def _video_profile_from_state():
 def video_profile_summary():
     p = _video_profile_from_state()
     return "%dx%d@%dfps %dkbps" % (p["width"], p["height"], p["max_fps"], p["bitrate"])
-
-
-def init_session(addr, ps5, regist_key, morning, profile=None, log_cb=None):
-    """Stub - bản stream thật sẽ gọi native Chiaki session ở đây.
-
-    Tra ve (rc, session_handle). Hien tai rc = -1 de app biet chua ho tro.
-    """
-    if profile is None:
-        profile = _video_profile_from_state()
-    log.info("init_session stub: addr=%s ps5=%s profile=%s", addr, ps5, profile)
-    if log_cb:
-        log_cb("init_session not implemented (v0.2.0)")
-    return -1, None
-
-
-def run_stream(addr, ps5, profile, quit_evt, log_cb=None):
-    """Stub streaming loop - chi cho quit event."""
-    if log_cb:
-        log_cb("run_stream stub running")
-    log.info("run_stream stub: addr=%s ps5=%s", addr, ps5)
-    quit_evt.wait()
-    log.info("run_stream stub: quit")
-    return 0

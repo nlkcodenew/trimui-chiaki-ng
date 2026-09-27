@@ -185,8 +185,6 @@ def _issue_body(sections, reason, fingerprint):
     reason = _sanitize(str(reason).replace("`", ""))[:80]
     if reason == "native_stream_quality":
         summary = "Báo cáo chất lượng stream được gửi tự động từ thiết bị TrimUI."
-    elif reason.startswith("wakeup_"):
-        summary = "Báo cáo chẩn đoán đánh thức PlayStation được gửi tự động."
     elif reason.startswith(("ota_", "discovery_", "pair_", "stream_", "settings_")):
         summary = "Báo cáo lỗi vận hành được gửi tự động từ thiết bị TrimUI."
     elif reason.endswith("_retry"):
