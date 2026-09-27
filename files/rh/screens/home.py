@@ -168,14 +168,14 @@ class HomeScreen(BaseScreen):
             return
         self.scanning = True
         self.toast = tr("wake_sent")
-        self.toast_until = time.time() + 26
+        self.toast_until = time.time() + 121
         threading.Thread(
             target=self._wait_for_wakeup, args=(host,), daemon=True,
         ).start()
 
     def _wait_for_wakeup(self, host):
         try:
-            ready = chiaki.wake_paired_ps4_until_ready(host, timeout=25.0)
+            ready = chiaki.wake_paired_ps4_until_ready(host, timeout=120.0)
             if ready:
                 self.hosts = [ready if item.addr == host.addr else item
                               for item in self.hosts]
@@ -188,12 +188,12 @@ class HomeScreen(BaseScreen):
                 return
             self.toast = tr("wake_timeout")
             self.toast_until = time.time() + 8
-            self._report_error("wakeup_timeout_same_socket")
+            self._report_error("wakeup_timeout_ddp_only_beta11")
         except Exception as exc:
             log.error("wakeup transaction exception: %s", exc)
             self.toast = tr("wake_failed")
             self.toast_until = time.time() + 6
-            self._report_error("wakeup_same_socket_exception")
+            self._report_error("wakeup_ddp_only_beta11_exception")
         finally:
             self.scanning = False
 

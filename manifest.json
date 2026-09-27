@@ -1,14 +1,14 @@
 {
-  "version": "0.3.23-beta10",
+  "version": "0.3.23-beta11",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-27T14:12:51+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.23-beta10/files",
-  "release_tag": "v0.3.23-beta10/files",
+  "built": "2026-09-27T17:25:19+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.23-beta11/files",
+  "release_tag": "v0.3.23-beta11/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.23-beta10: giữ DDP WAKEUP upstream, thêm WOL theo MAC đã pair và trạng thái ARP đã ẩn dữ liệu để chẩn đoán NIC Rest Mode.",
-    "en": "v0.3.23-beta10: keep upstream DDP WAKEUP, add paired-MAC WOL and privacy-safe ARP state diagnostics for the Rest Mode NIC."
+    "vi": "v0.3.23-beta11: phép thử đối chứng chỉ gửi một DDP WAKEUP chuẩn Chiaki, không WOL hoặc retry, rồi theo dõi PS4 tối đa 120 giây.",
+    "en": "v0.3.23-beta11: controlled test sends one standard Chiaki DDP WAKEUP without WOL or retry, then observes the PS4 for up to 120 seconds."
   },
   "files": [
     {
@@ -133,8 +133,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "aed7b63a630d96c8da7e5f39ce57e1a4dfd6887f53d7d7b96b1eea6bdadadf62",
-      "size": 34919
+      "sha256": "d60e10055900dbefc716239488699b29e868f6ab99126cb6a61eed4186dc8ae0",
+      "size": 29332
     },
     {
       "path": "rh/device_identity.py",
@@ -153,8 +153,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "41311aaca1075b78f1225c310a94a4b0c68b96fe4104108ac9fbae82c1376041",
-      "size": 12467
+      "sha256": "fcd62a4d91206cc5b39b761c2c97839aacc8c0c987f0c7dc26cb14a126b62af5",
+      "size": 12710
     },
     {
       "path": "rh/inputs.py",
@@ -198,7 +198,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "e420bd6434b8a0b366e44a7fd5d8572ebc2ef6f9bf6d16069b9d11792267a200",
+      "sha256": "d9d669f4a868f1d387c82e3de0242f6ebe99cca5212f06c585f2659ba8d0c7c9",
       "size": 1185
     },
     {
@@ -238,8 +238,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "b7e20c6d89a9ab0fe921130fd2c907a347b64931b71907f0f8ca00f8475a37f0",
-      "size": 12716
+      "sha256": "6e1c123cd3f4b767f59d285bf3a961c9e20a9914126cfc175b020d0ff0e0e799",
+      "size": 12726
     },
     {
       "path": "rh/screens/pair.py",
@@ -644,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.23-beta10.zip",
-    "sha256": "234ce15fd2e78195cdc895af4ba78b04073a9e1be3fe3b198ea56b2043facd28",
-    "size": 10763846
+    "name": "trimui-chiaki-ng-v0.3.23-beta11.zip",
+    "sha256": "ac7ff70bab2cd29305d739c7fef0e8eae39bfa6f06444f0a9d12318435101f47",
+    "size": 10762869
   }
 }

@@ -11,7 +11,7 @@ chỉ tồn tại khi native stream chạy và menu tự đóng sau 15 phút kh�
 | Mục | Giá trị |
 |---|---|
 | Latest stable | `v0.3.22` |
-| Wake prerelease | `v0.3.23-beta10` |
+| Wake prerelease | `v0.3.23-beta11` |
 | Tag | `v0.3.21` |
 | Feature commit | release commit |
 | OTA files | 126 |
@@ -280,6 +280,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.22-beta8` | Tắt PS5; discovery PS4 dùng một socket để tránh cạnh tranh UDP port nguồn |
 | `v0.3.22-beta9` | Gửi WAKEUP unicast và directed broadcast của subnet để tránh phụ thuộc ARP |
 | `v0.3.23-beta10` | Giữ DDP upstream, thêm WOL cổng 9/7 theo MAC pair và log trạng thái ARP đã ẩn dữ liệu |
+| `v0.3.23-beta11` | Phép thử đối chứng: một DDP WAKEUP unicast chuẩn Chiaki, không WOL/broadcast/retry, chờ 120 giây |
 
 ## 10. Kiểm thử và build gate
 
@@ -293,7 +294,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-86 unittest của source hiện tại bao phủ:
+97 unittest của source hiện tại bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.

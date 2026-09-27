@@ -160,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: giữ DDP WAKEUP upstream, thêm WOL theo MAC đã pair và trạng thái ARP đã ẩn dữ liệu để chẩn đoán NIC Rest Mode." % version,
-            "en": "v%s: keep upstream DDP WAKEUP, add paired-MAC WOL and privacy-safe ARP state diagnostics for the Rest Mode NIC." % version,
+            "vi": "v%s: phép thử đối chứng chỉ gửi một DDP WAKEUP chuẩn Chiaki, không WOL hoặc retry, rồi theo dõi PS4 tối đa 120 giây." % version,
+            "en": "v%s: controlled test sends one standard Chiaki DDP WAKEUP without WOL or retry, then observes the PS4 for up to 120 seconds." % version,
         },
         "files": files,
         "remove": [],

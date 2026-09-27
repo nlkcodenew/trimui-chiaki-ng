@@ -20,7 +20,6 @@ native helper sau khi SDL menu đã đóng hoàn toàn.
 """
 
 import base64
-import ipaddress
 import json
 import os
 import shlex
@@ -202,7 +201,7 @@ def wake_paired_host(host):
     return send_wakeup(credentials["addr"], credentials["regist_key"])
 
 
-def wake_paired_ps4_until_ready(host, timeout=25.0):
+def wake_paired_ps4_until_ready(host, timeout=120.0):
     """Wake a paired PS4 and wait for READY on the same socket."""
     addr = str(getattr(host, "addr", "") or "")
     if not addr or bool(getattr(host, "is_ps5", False)):
@@ -211,10 +210,7 @@ def wake_paired_ps4_until_ready(host, timeout=25.0):
     if not credentials or credentials["is_ps5"]:
         log.error("wakeup transaction missing PS4 credentials: host=%s", addr)
         return None
-    return _wake_ps4_until_ready(
-        addr, credentials["regist_key"], timeout,
-        server_mac=credentials.get("server_mac", ""),
-    )
+    return _wake_ps4_until_ready(addr, credentials["regist_key"], timeout)
 
 def _rp_version_string(target):
     t = int(target or 0)
@@ -460,38 +456,6 @@ def _build_wakeup(regist_key):
     return body.encode("ascii") + b"\x00"
 
 
-def _build_magic_packet(server_mac):
-    mac = "".join(char for char in str(server_mac or "") if char.isalnum())
-    if len(mac) != 12:
-        raise ValueError("invalid server MAC")
-    try:
-        raw_mac = bytes.fromhex(mac)
-    except ValueError as exc:
-        raise ValueError("invalid server MAC") from exc
-    if len(raw_mac) != 6 or raw_mac == b"\x00" * 6:
-        raise ValueError("invalid server MAC")
-    return b"\xff" * 6 + raw_mac * 16
-
-
-def _arp_state_for_host(addr, arp_path="/proc/net/arp"):
-    """Return a privacy-safe ARP state without exposing IP or MAC."""
-    try:
-        with open(arp_path, "r", encoding="ascii", errors="ignore") as handle:
-            rows = handle.read().splitlines()[1:]
-    except OSError:
-        return "unavailable"
-    for row in rows:
-        columns = row.split()
-        if len(columns) < 6 or columns[0] != str(addr or ""):
-            continue
-        try:
-            flags = int(columns[2], 16)
-        except ValueError:
-            flags = 0
-        return "complete" if flags & 0x2 else "incomplete"
-    return "missing"
-
-
 def _bind_discovery_socket(sock):
     for local_port in range(LOCAL_PORT_MIN, LOCAL_PORT_MAX + 1):
         try:
@@ -501,45 +465,6 @@ def _bind_discovery_socket(sock):
             continue
     sock.bind(("", 0))
     return sock.getsockname()[1]
-
-
-def _directed_broadcast_for_host(addr, route_path="/proc/net/route"):
-    """Return the most specific IPv4 route's directed broadcast address."""
-    try:
-        host = ipaddress.IPv4Address(str(addr or ""))
-    except ipaddress.AddressValueError:
-        return ""
-    try:
-        with open(route_path, "r", encoding="ascii", errors="ignore") as handle:
-            rows = handle.read().splitlines()[1:]
-    except OSError:
-        return ""
-    best = None
-    for row in rows:
-        columns = row.split()
-        if len(columns) < 8:
-            continue
-        try:
-            flags = int(columns[3], 16)
-            destination = ipaddress.IPv4Address(
-                int(columns[1], 16).to_bytes(4, "little")
-            )
-            netmask = ipaddress.IPv4Address(
-                int(columns[7], 16).to_bytes(4, "little")
-            )
-            network = ipaddress.IPv4Network(
-                "%s/%s" % (destination, netmask), strict=False,
-            )
-        except (ValueError, OverflowError):
-            continue
-        if not flags & 0x1 or network.prefixlen in (0, 32) or host not in network:
-            continue
-        if best is None or network.prefixlen > best.prefixlen:
-            best = network
-    if best is None:
-        return ""
-    broadcast = str(best.broadcast_address)
-    return "" if broadcast == "255.255.255.255" else broadcast
 
 
 def _parse_srch(data, addr):
@@ -746,67 +671,36 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
         sock.close()
 
 
-def _wake_ps4_until_ready(addr, regist_key, timeout=25.0, server_mac=""):
-    """Send upstream DDP plus beta WOL, then poll a paired PS4."""
+def _wake_ps4_until_ready(addr, regist_key, timeout=120.0):
+    """Send one upstream DDP WAKEUP, then wait for the paired PS4."""
     try:
         wake_payload = _build_wakeup(regist_key)
     except (TypeError, ValueError):
         log.error("wakeup credential is invalid")
         return None
-    try:
-        magic_packet = _build_magic_packet(server_mac)
-    except (TypeError, ValueError):
-        magic_packet = b""
     srch_payload = _build_srch(PS4_PROTOCOL_VERSION)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     deadline = time.monotonic() + max(1.0, float(timeout))
-    wake_sent = False
-    wake_retried = False
-    silent_probes = 0
     last_state = "unknown"
+    probes = 0
     try:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.settimeout(1.0)
         source_port = _bind_discovery_socket(sock)
-        directed_broadcast = _directed_broadcast_for_host(addr)
-        destinations = [addr]
-        if directed_broadcast and directed_broadcast != addr:
-            destinations.append(directed_broadcast)
-        wol_destination = directed_broadcast or "255.255.255.255"
-        arp_before = _arp_state_for_host(addr)
         log.info(
-            "wakeup transaction start: host=%s source_port=%d timeout=%.1f "
-            "directed_broadcast=%s destinations=%d arp_before=%s wol_available=%s",
-            addr, source_port, timeout, bool(directed_broadcast),
-            len(destinations), arp_before, bool(magic_packet),
+            "wakeup DDP-only start: host=%s source_port=%d timeout=%.1f "
+            "wake_packets=1 wake_destination=unicast wol=False retry=False",
+            addr, source_port, timeout,
         )
-        sent = sum(
-            sock.sendto(wake_payload, (destination, PS4_DISCOVERY_PORT))
-            for destination in destinations
-        )
-        wake_sent = sent == len(wake_payload) * len(destinations)
+        sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
+        wake_sent = sent == len(wake_payload)
         log.info(
-            "wakeup transaction sent without standby response: "
-            "host=%s source_port=%d packets=%d bytes=%d",
-            addr, source_port, len(destinations), sent,
+            "wakeup DDP-only sent: host=%s source_port=%d packets=1 bytes=%d",
+            addr, source_port, sent,
         )
-        if magic_packet:
-            wol_sent = sum(
-                sock.sendto(magic_packet, (wol_destination, port))
-                for port in (9, 7)
-            )
-            log.info(
-                "wakeup beta WOL sent: packets=2 bytes=%d ports=9,7 "
-                "directed_broadcast=%s",
-                wol_sent, bool(directed_broadcast),
-            )
-        else:
-            log.warning("wakeup beta WOL skipped: saved_mac_available=False")
         while time.monotonic() < deadline:
             probe_started = time.monotonic()
-            response_received = False
-            for destination in destinations:
-                sock.sendto(srch_payload, (destination, PS4_DISCOVERY_PORT))
+            sock.sendto(srch_payload, (addr, PS4_DISCOVERY_PORT))
+            probes += 1
             probe_deadline = min(deadline, time.monotonic() + 1.0)
             while time.monotonic() < probe_deadline:
                 try:
@@ -818,58 +712,23 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0, server_mac=""):
                 discovered = _parse_srch(data, response_addr)
                 if not discovered:
                     continue
-                response_received = True
                 last_state = discovered.state
                 log.info(
-                    "wakeup transaction response: host=%s state=%s source_port=%d",
-                    addr, last_state, source_port,
+                    "wakeup DDP-only response: host=%s state=%s "
+                    "source_port=%d probes=%d",
+                    addr, last_state, source_port, probes,
                 )
                 if last_state == "ready":
                     return discovered
-                if last_state == "standby" and wake_sent and not wake_retried:
-                    sent = sum(
-                        sock.sendto(
-                            wake_payload, (destination, PS4_DISCOVERY_PORT),
-                        )
-                        for destination in destinations
-                    )
-                    wake_retried = True
-                    log.info(
-                        "wakeup transaction retry: host=%s source_port=%d "
-                        "packets=%d bytes=%d",
-                        addr, source_port, len(destinations), sent,
-                    )
                 break
-            silent_probes = 0 if response_received else silent_probes + 1
-            if wake_sent and not wake_retried and silent_probes >= 3:
-                sent = sum(
-                    sock.sendto(wake_payload, (destination, PS4_DISCOVERY_PORT))
-                    for destination in destinations
-                )
-                wake_retried = True
-                log.info(
-                    "wakeup transaction retry without response: "
-                    "host=%s source_port=%d packets=%d bytes=%d",
-                    addr, source_port, len(destinations), sent,
-                )
-                if magic_packet:
-                    wol_sent = sum(
-                        sock.sendto(magic_packet, (wol_destination, port))
-                        for port in (9, 7)
-                    )
-                    log.info(
-                        "wakeup beta WOL retry: packets=2 bytes=%d ports=9,7",
-                        wol_sent,
-                    )
             remaining = deadline - time.monotonic()
             delay = min(1.0 - (time.monotonic() - probe_started), remaining)
             if delay > 0:
                 time.sleep(delay)
         log.error(
-            "wakeup transaction timeout: host=%s state=%s sent=%s retry=%s "
-            "arp_after=%s wol_available=%s",
-            addr, last_state, wake_sent, wake_retried,
-            _arp_state_for_host(addr), bool(magic_packet),
+            "wakeup DDP-only timeout: host=%s state=%s sent=%s probes=%d "
+            "wol=False retry=False",
+            addr, last_state, wake_sent, probes,
         )
         return None
     except OSError as exc:
