@@ -1,14 +1,14 @@
 {
-  "version": "0.3.22-beta9",
+  "version": "0.3.23-beta10",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-27T12:18:25+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta9/files",
-  "release_tag": "v0.3.22-beta9/files",
+  "built": "2026-09-27T14:12:51+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.23-beta10/files",
+  "release_tag": "v0.3.23-beta10/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.22-beta9: gửi WAKEUP PS4 tới cả IP đã lưu và directed broadcast của đúng subnet để tránh mất gói do ARP khi Rest Mode.",
-    "en": "v0.3.22-beta9: send PS4 WAKEUP to both the saved IP and its subnet-directed broadcast to bypass stale ARP during Rest Mode."
+    "vi": "v0.3.23-beta10: giữ DDP WAKEUP upstream, thêm WOL theo MAC đã pair và trạng thái ARP đã ẩn dữ liệu để chẩn đoán NIC Rest Mode.",
+    "en": "v0.3.23-beta10: keep upstream DDP WAKEUP, add paired-MAC WOL and privacy-safe ARP state diagnostics for the Rest Mode NIC."
   },
   "files": [
     {
@@ -133,8 +133,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "0fafc107303070fd8257dfec69a887d7eab890be50a43e76999a14897c971147",
-      "size": 32367
+      "sha256": "aed7b63a630d96c8da7e5f39ce57e1a4dfd6887f53d7d7b96b1eea6bdadadf62",
+      "size": 34919
     },
     {
       "path": "rh/device_identity.py",
@@ -153,8 +153,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "ddc164b99360f98a9bf5a9084d1a18c222c581b63326082b593c6930b62cab35",
-      "size": 12473
+      "sha256": "41311aaca1075b78f1225c310a94a4b0c68b96fe4104108ac9fbae82c1376041",
+      "size": 12467
     },
     {
       "path": "rh/inputs.py",
@@ -198,8 +198,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "21e4a51ec5deacf404c13259f7c3aea06c983c4b81225fcf22c3ffb1676f30f7",
-      "size": 1184
+      "sha256": "e420bd6434b8a0b366e44a7fd5d8572ebc2ef6f9bf6d16069b9d11792267a200",
+      "size": 1185
     },
     {
       "path": "rh/modals/__init__.py",
@@ -644,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.22-beta9.zip",
-    "sha256": "476fe45d456d5d27119fc8bbf55dfa8382fa8196efdd57eb75b78de159bb30ff",
-    "size": 10763173
+    "name": "trimui-chiaki-ng-v0.3.23-beta10.zip",
+    "sha256": "234ce15fd2e78195cdc895af4ba78b04073a9e1be3fe3b198ea56b2043facd28",
+    "size": 10763846
   }
 }

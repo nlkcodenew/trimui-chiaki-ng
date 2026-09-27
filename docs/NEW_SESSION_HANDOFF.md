@@ -15,7 +15,7 @@
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`.
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
-- Release mới nhất: `v0.3.21`.
+- Release stable mới nhất: `v0.3.22`; beta wake mới nhất: `v0.3.23-beta10`.
 - Nội dung: hotfix quản lý `stay_alive` và menu idle; không đổi native/pair/stream.
 - GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
 - SHA-256 ZIP `v0.3.21`:
@@ -249,7 +249,7 @@ Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SH
 ## 7. Trạng thái kết thúc session
 
 - Không còn lỗi phát hành hoặc kiểm thử máy thật đang chờ xử lý.
-- `v0.3.21` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
+- `v0.3.22` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
 - Tiếp tục dùng `720p30/4000` trên Smart Pro S và `540p30/3000` trên Brick.
 - Không thay native binary, pair/session hoặc SDL mapping nếu không có Issue mới.
 - Release public có đủ ba asset; checksum, 126 OTA files và 129 ZIP entries đã
@@ -302,7 +302,7 @@ Trước commit/release, xác nhận không stage:
 ```text
 Tiếp tục repo E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước.
-Latest/release hiện tại là v0.3.21. Bản này khóa tối đa 720p, dùng HTTPS relay
+Latest stable hiện tại là v0.3.22. Beta wake hiện tại là v0.3.23-beta10. Bản này khóa tối đa 720p, dùng HTTPS relay
 không token client, có hướng dẫn 8 bước. Beta7 hiện HW-xxxxxxxxxxxx cạnh version
 và dùng mã này trong title Issue; CHI-xxxx chỉ là ID cài đặt phụ. Brick
 sun50iw10 đã stream thật thành công; Issue #39 đạt 8968/0/0

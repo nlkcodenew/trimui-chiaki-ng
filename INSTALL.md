@@ -1,9 +1,9 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho beta `v0.3.22-beta9`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho beta `v0.3.23-beta10`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
-Đây là bản thử nghiệm PS4 Wake tách từ bản ổn định `v0.3.21`. Cài thủ công từ
+Đây là bản thử nghiệm PS4 Wake tách khỏi bản ổn định `v0.3.22`. Cài thủ công từ
 trang release beta; không dùng bản này nếu không cần thử đánh thức PS4 Rest Mode.
 
 ## Yêu cầu
@@ -18,8 +18,8 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta9`.
-2. Tải `trimui-chiaki-ng-v0.3.22-beta9.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.23-beta10`.
+2. Tải `trimui-chiaki-ng-v0.3.23-beta10.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -47,12 +47,12 @@ nên giải nén đè không xóa ID cài đặt, cấu hình hay khóa ghép n�
 bản rất cũ thiếu `vendor/sdl2` và cần cài sạch, hãy backup các file dữ liệu trên
 cùng `secrets.json` trước khi xóa thư mục app.
 
-Beta9 chỉ hỗ trợ PS4. App không quét cổng PS5 `9302`, không hiển thị host PS5 đã
+Beta10 chỉ hỗ trợ PS4. App không quét cổng PS5 `9302`, không hiển thị host PS5 đã
 lưu và từ chối pair/wake/stream PS5. Dữ liệu PS5 cũ không bị xóa khi cài đè.
 
-Beta9 gửi cùng packet WAKEUP tới IP PS4 đã lưu và directed broadcast của route
-LAN tương ứng. Mục tiêu là tránh trường hợp unicast được kernel nhận nhưng không
-ra được Wi-Fi vì bảng ARP đã hết hạn khi PS4 ở Rest Mode.
+Beta10 giữ packet DDP WAKEUP tới IP PS4 và directed broadcast, đồng thời thử thêm
+magic packet WOL cổng `9`/`7` bằng MAC đã lưu khi pair. Log chỉ ghi trạng thái ARP
+và việc có/không có MAC hợp lệ; không ghi địa chỉ MAC thô.
 
 ## Trường hợp Brick Pro trước v0.3.11
 
@@ -118,6 +118,11 @@ Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro 
 8. Nếu chưa có khóa pre-10, chọn console, bấm **Y**, mở màn hình PIN Remote Play
    trên PS4 và nhập đủ 8 số.
 9. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và quay lại app.
+
+DNS chặn Sony/Internet không trực tiếp chặn các gói UDP nội bộ này. Tuy nhiên
+GoldHEN, payload chặn mạng hoặc firmware patch có thể làm NIC/DDP service không
+còn hoạt động trong Rest Mode. Nếu beta10 vẫn timeout và không có SRCH, đây là
+khả năng đáng nghi hơn việc packet DDP upstream sai định dạng.
 
 Không cần PSN cho PS4 firmware 9.00 trong luồng này. Không đăng PIN, Account ID,
 `regist_key` hoặc `rp_key` lên chat/Issue.

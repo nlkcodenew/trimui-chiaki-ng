@@ -117,6 +117,7 @@ def _paired_credentials(addr):
             "is_ps5": False,
             "regist_key": state.regist_key,
             "rp_key": state.rp_key,
+            "server_mac": getattr(state, "server_mac", ""),
             "target": int(getattr(state, "host_target", 0) or 0),
         })
     for entry in entries:
@@ -138,6 +139,7 @@ def _paired_credentials(addr):
                 "is_ps5": bool(entry.get("is_ps5", False)),
                 "regist_key": regist_key,
                 "rp_key": rp_key,
+                "server_mac": str(entry.get("server_mac") or ""),
                 "target": int(entry.get("target", 0) or 0),
             }
     return None
@@ -209,7 +211,10 @@ def wake_paired_ps4_until_ready(host, timeout=25.0):
     if not credentials or credentials["is_ps5"]:
         log.error("wakeup transaction missing PS4 credentials: host=%s", addr)
         return None
-    return _wake_ps4_until_ready(addr, credentials["regist_key"], timeout)
+    return _wake_ps4_until_ready(
+        addr, credentials["regist_key"], timeout,
+        server_mac=credentials.get("server_mac", ""),
+    )
 
 def _rp_version_string(target):
     t = int(target or 0)
@@ -455,6 +460,38 @@ def _build_wakeup(regist_key):
     return body.encode("ascii") + b"\x00"
 
 
+def _build_magic_packet(server_mac):
+    mac = "".join(char for char in str(server_mac or "") if char.isalnum())
+    if len(mac) != 12:
+        raise ValueError("invalid server MAC")
+    try:
+        raw_mac = bytes.fromhex(mac)
+    except ValueError as exc:
+        raise ValueError("invalid server MAC") from exc
+    if len(raw_mac) != 6 or raw_mac == b"\x00" * 6:
+        raise ValueError("invalid server MAC")
+    return b"\xff" * 6 + raw_mac * 16
+
+
+def _arp_state_for_host(addr, arp_path="/proc/net/arp"):
+    """Return a privacy-safe ARP state without exposing IP or MAC."""
+    try:
+        with open(arp_path, "r", encoding="ascii", errors="ignore") as handle:
+            rows = handle.read().splitlines()[1:]
+    except OSError:
+        return "unavailable"
+    for row in rows:
+        columns = row.split()
+        if len(columns) < 6 or columns[0] != str(addr or ""):
+            continue
+        try:
+            flags = int(columns[2], 16)
+        except ValueError:
+            flags = 0
+        return "complete" if flags & 0x2 else "incomplete"
+    return "missing"
+
+
 def _bind_discovery_socket(sock):
     for local_port in range(LOCAL_PORT_MIN, LOCAL_PORT_MAX + 1):
         try:
@@ -673,8 +710,9 @@ def regist_with_pin(host, pin, timeout=10.0):
         return False, {"error": str(exc)}
     result.update({"addr": addr, "is_ps5": False, "target": target})
     log.info(
-        "registration success: host=%s key_type=%s mac=%s offline_account=%s",
-        addr, result.get("rp_key_type"), result.get("server_mac"),
+        "registration success: host=%s key_type=%s mac_available=%s "
+        "offline_account=%s",
+        addr, result.get("rp_key_type"), bool(result.get("server_mac")),
         result.get("used_offline_account"),
     )
     return True, result
@@ -708,13 +746,17 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
         sock.close()
 
 
-def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
-    """Use one socket and directed broadcast to wake and poll a paired PS4."""
+def _wake_ps4_until_ready(addr, regist_key, timeout=25.0, server_mac=""):
+    """Send upstream DDP plus beta WOL, then poll a paired PS4."""
     try:
         wake_payload = _build_wakeup(regist_key)
     except (TypeError, ValueError):
         log.error("wakeup credential is invalid")
         return None
+    try:
+        magic_packet = _build_magic_packet(server_mac)
+    except (TypeError, ValueError):
+        magic_packet = b""
     srch_payload = _build_srch(PS4_PROTOCOL_VERSION)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     deadline = time.monotonic() + max(1.0, float(timeout))
@@ -730,11 +772,13 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
         destinations = [addr]
         if directed_broadcast and directed_broadcast != addr:
             destinations.append(directed_broadcast)
+        wol_destination = directed_broadcast or "255.255.255.255"
+        arp_before = _arp_state_for_host(addr)
         log.info(
             "wakeup transaction start: host=%s source_port=%d timeout=%.1f "
-            "directed_broadcast=%s destinations=%d",
+            "directed_broadcast=%s destinations=%d arp_before=%s wol_available=%s",
             addr, source_port, timeout, bool(directed_broadcast),
-            len(destinations),
+            len(destinations), arp_before, bool(magic_packet),
         )
         sent = sum(
             sock.sendto(wake_payload, (destination, PS4_DISCOVERY_PORT))
@@ -746,6 +790,18 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
             "host=%s source_port=%d packets=%d bytes=%d",
             addr, source_port, len(destinations), sent,
         )
+        if magic_packet:
+            wol_sent = sum(
+                sock.sendto(magic_packet, (wol_destination, port))
+                for port in (9, 7)
+            )
+            log.info(
+                "wakeup beta WOL sent: packets=2 bytes=%d ports=9,7 "
+                "directed_broadcast=%s",
+                wol_sent, bool(directed_broadcast),
+            )
+        else:
+            log.warning("wakeup beta WOL skipped: saved_mac_available=False")
         while time.monotonic() < deadline:
             probe_started = time.monotonic()
             response_received = False
@@ -796,13 +852,24 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
                     "host=%s source_port=%d packets=%d bytes=%d",
                     addr, source_port, len(destinations), sent,
                 )
+                if magic_packet:
+                    wol_sent = sum(
+                        sock.sendto(magic_packet, (wol_destination, port))
+                        for port in (9, 7)
+                    )
+                    log.info(
+                        "wakeup beta WOL retry: packets=2 bytes=%d ports=9,7",
+                        wol_sent,
+                    )
             remaining = deadline - time.monotonic()
             delay = min(1.0 - (time.monotonic() - probe_started), remaining)
             if delay > 0:
                 time.sleep(delay)
         log.error(
-            "wakeup transaction timeout: host=%s state=%s sent=%s retry=%s",
+            "wakeup transaction timeout: host=%s state=%s sent=%s retry=%s "
+            "arp_after=%s wol_available=%s",
             addr, last_state, wake_sent, wake_retried,
+            _arp_state_for_host(addr), bool(magic_packet),
         )
         return None
     except OSError as exc:

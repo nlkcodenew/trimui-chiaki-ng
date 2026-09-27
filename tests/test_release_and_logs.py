@@ -1000,7 +1000,8 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("đăng nhập tự động", vietnamese)
         self.assertIn("PIN 8 số", vietnamese)
         self.assertIn("START + SELECT", vietnamese)
-        self.assertIn("đánh thức PS4", vietnamese)
+        self.assertIn("DDP WAKEUP", vietnamese)
+        self.assertIn("WOL", vietnamese)
         self.assertIn("mã HW-... trên tiêu đề", vietnamese)
         self.assertNotIn("PS5", vietnamese)
 
@@ -1193,6 +1194,36 @@ class LogUploaderTests(unittest.TestCase):
             "",
         )
 
+    def test_magic_packet_uses_saved_ps4_mac_without_text_encoding(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        packet = chiaki._build_magic_packet("00:11:22:33:44:55")
+        self.assertEqual(len(packet), 102)
+        self.assertEqual(packet[:6], b"\xff" * 6)
+        self.assertEqual(packet[6:], bytes.fromhex("001122334455") * 16)
+        with self.assertRaises(ValueError):
+            chiaki._build_magic_packet("")
+        with self.assertRaises(ValueError):
+            chiaki._build_magic_packet("000000000000")
+
+    def test_arp_state_is_privacy_safe(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        arp_path = os.path.join(self.work_dir, "arp")
+        with open(arp_path, "w", encoding="ascii") as handle:
+            handle.write(
+                "IP address HW type Flags HW address Mask Device\n"
+                "192.168.1.45 0x1 0x2 00:11:22:33:44:55 * wlan0\n"
+                "192.168.1.46 0x1 0x0 00:00:00:00:00:00 * wlan0\n"
+            )
+        self.assertEqual(
+            chiaki._arp_state_for_host("192.168.1.45", arp_path), "complete",
+        )
+        self.assertEqual(
+            chiaki._arp_state_for_host("192.168.1.46", arp_path), "incomplete",
+        )
+        self.assertEqual(
+            chiaki._arp_state_for_host("192.168.1.47", arp_path), "missing",
+        )
+
     def test_ps4_wakeup_packet_uses_discovery_port(self):
         chiaki = importlib.import_module("rh.chiaki")
         sent = []
@@ -1326,19 +1357,25 @@ class LogUploaderTests(unittest.TestCase):
                 mock.patch.object(
                     chiaki, "_directed_broadcast_for_host",
                     return_value="192.168.1.255"), \
+                mock.patch.object(chiaki, "_arp_state_for_host",
+                                  return_value="missing"), \
                 mock.patch.object(chiaki.time, "monotonic",
                                   side_effect=monotonic), \
                 mock.patch.object(chiaki.time, "sleep", return_value=None):
             result = chiaki._wake_ps4_until_ready(
                 "192.168.1.45", "a49d08ed", timeout=10.0,
+                server_mac="001122334455",
             )
         self.assertIsNone(result)
         wake_packets = [packet for packet, _ in sent
                         if packet.startswith(b"WAKEUP")]
         self.assertEqual(len(wake_packets), 4)
+        magic_packets = [packet for packet, _ in sent if len(packet) == 102]
+        self.assertEqual(len(magic_packets), 4)
         destinations = {destination for _, destination in sent}
         self.assertEqual(destinations, {
             ("192.168.1.45", 987), ("192.168.1.255", 987),
+            ("192.168.1.255", 9), ("192.168.1.255", 7),
         })
         self.assertNotIn(("255.255.255.255", 987), destinations)
 
@@ -1599,6 +1636,7 @@ class LogUploaderTests(unittest.TestCase):
                 "target": 900,
                 "regist_key": "a49d08ed",
                 "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+                "server_mac": "001122334455",
             }], handle)
         try:
             hosts = chiaki.paired_hosts_for_discovery([])
@@ -1642,6 +1680,7 @@ class LogUploaderTests(unittest.TestCase):
                 "target": 900,
                 "regist_key": "a49d08ed",
                 "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+                "server_mac": "001122334455",
             }], handle)
         ready = chiaki.DiscoveredHost(
             name="PS4-896", addr="192.168.1.45", state="ready", target=900,
@@ -1717,13 +1756,19 @@ class LogUploaderTests(unittest.TestCase):
                 "target": 900,
                 "regist_key": "a49d08ed",
                 "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+                "server_mac": "001122334455",
             }], handle)
         host = chiaki.DiscoveredHost(
             name="PS4-896", addr="192.168.1.45", state="offline", target=900,
         )
         try:
             with mock.patch.object(
-                    chiaki.socket, "socket", return_value=FakeSocket()):
+                    chiaki.socket, "socket", return_value=FakeSocket()), \
+                    mock.patch.object(
+                        chiaki, "_directed_broadcast_for_host",
+                        return_value="192.168.1.255"), \
+                    mock.patch.object(
+                        chiaki, "_arp_state_for_host", return_value="missing"):
                 result = chiaki.wake_paired_ps4_until_ready(host, timeout=2.0)
         finally:
             os.remove(paired_path)
@@ -1731,6 +1776,8 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(result.state, "ready")
         self.assertTrue(sent[0][0].startswith(b"WAKEUP * HTTP/1.1"))
         self.assertEqual(sent[0][1], ("192.168.1.45", 987))
+        self.assertIn(("192.168.1.255", 9), [destination for _, destination in sent])
+        self.assertIn(("192.168.1.255", 7), [destination for _, destination in sent])
 
     def test_home_scan_without_pair_does_not_show_offline_host(self):
         chiaki = importlib.import_module("rh.chiaki")

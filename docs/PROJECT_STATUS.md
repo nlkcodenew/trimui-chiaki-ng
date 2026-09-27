@@ -10,7 +10,8 @@ chỉ tồn tại khi native stream chạy và menu tự đóng sau 15 phút kh�
 
 | Mục | Giá trị |
 |---|---|
-| Latest | `v0.3.21` |
+| Latest stable | `v0.3.22` |
+| Wake prerelease | `v0.3.23-beta10` |
 | Tag | `v0.3.21` |
 | Feature commit | release commit |
 | OTA files | 126 |
@@ -278,6 +279,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.22-beta7` | Sửa crash đọc credential khiến beta6 chưa gửi được packet WAKEUP |
 | `v0.3.22-beta8` | Tắt PS5; discovery PS4 dùng một socket để tránh cạnh tranh UDP port nguồn |
 | `v0.3.22-beta9` | Gửi WAKEUP unicast và directed broadcast của subnet để tránh phụ thuộc ARP |
+| `v0.3.23-beta10` | Giữ DDP upstream, thêm WOL cổng 9/7 theo MAC pair và log trạng thái ARP đã ẩn dữ liệu |
 
 ## 10. Kiểm thử và build gate
 

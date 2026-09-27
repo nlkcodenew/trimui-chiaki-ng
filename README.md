@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release mới nhất: `v0.3.21`.**
+**Release ổn định mới nhất: `v0.3.22`. Beta wake: `v0.3.23-beta10`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -43,6 +43,8 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
   PS5 cũ được giữ nguyên trên thẻ nhưng không xuất hiện hoặc được sử dụng.
 - `v0.3.22-beta9` giữ luồng PS4-only và gửi WAKEUP tới cả IP đã lưu lẫn directed
   broadcast của đúng subnet, nhằm tránh unicast bị mất ở bước ARP khi PS4 ngủ.
+- `v0.3.23-beta10` giữ nguyên DDP upstream và thử thêm magic packet WOL tới cổng
+  `9`/`7` bằng MAC do PS4 trả lúc pair; log chỉ ghi trạng thái ARP, không ghi IP/MAC.
 - Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
@@ -78,11 +80,11 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 | Brick Pro Stock OS | `v0.3.16` stream PS4 thật có hình, âm thanh và input |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
 | PS5/H265 | Đã vô hiệu hóa trong app; không còn thuộc phạm vi phát triển |
-| WAKEUP PS4 Rest Mode | Đang thử nghiệm riêng trong prerelease `v0.3.22-beta9` |
+| WAKEUP PS4 Rest Mode | Đang thử nghiệm riêng trong prerelease `v0.3.23-beta10` |
 
 ## Cài đặt
 
-1. Tải `trimui-chiaki-ng-v0.3.21.zip` tại
+1. Tải `trimui-chiaki-ng-v0.3.22.zip` tại
    [GitHub Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
    Không tải các gói **Source code** do GitHub tự tạo.
 2. Giải nén ZIP trực tiếp vào gốc thẻ nhớ.
@@ -116,7 +118,7 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
-Beta `v0.3.22-beta9` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
+Beta `v0.3.23-beta10` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
 PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên và
 hiện host đã pair ở trạng thái `offline`. Chọn host rồi bấm **A – ĐÁNH THỨC** để
 gửi WAKEUP tới IP đã lưu và directed broadcast của subnet, rồi chờ `ready` tối
@@ -131,6 +133,17 @@ thử; chưa khẳng định PS4 Rest Mode chắc chắn sẽ thức trên mọi
 Log beta8 `#46–#48` xác nhận packet upstream 135 byte đã gửi hai lần nhưng PS4
 không trả SRCH. Beta9 giữ nguyên packet và socket đó, đồng thời gửi tới directed
 broadcast lấy từ route Linux của subnet PS4 để không phụ thuộc ARP unicast.
+Issue `#49–#52` tiếp tục xác nhận hai lần thử beta9 gửi đủ unicast + directed
+broadcast nhưng không nhận bất kỳ phản hồi nào. Beta10 vì vậy thử thêm magic
+packet WOL chuẩn 102 byte bằng MAC đã pair và ghi `arp_before`/`arp_after` dưới
+dạng `missing`, `incomplete`, `complete` hoặc `unavailable`.
+
+Chặn Internet hoặc DNS Sony không trực tiếp chặn UDP LAN cổng `987`, `9` hay `7`.
+Tuy nhiên PS4 vẫn phải bật **Stay Connected to the Internet** và **Enable Turning
+On PS4 from Network** để giữ NIC trong Rest Mode. GoldHEN không mặc định cấm wake,
+nhưng payload/network blocker, firmware patch hoặc trạng thái NIC của máy hack có
+thể khiến PS4 không còn nghe DDP/WOL. Beta10 nhằm phân biệt khả năng này; không
+khẳng định generic WOL là cơ chế chính thức của Chiaki.
 
 Beta5 sửa lỗi ZIP beta4 ghi đè `settings.json`, làm đổi `CHI-E545` thành
 `CHI-E4DF` và xóa dữ liệu pair. ZIP beta5 không chứa `settings.json`,
@@ -181,7 +194,7 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][HW-C3A2FEFAB3F5] v0.3.22-beta9 reason fingerprint
+[device-log][HW-C3A2FEFAB3F5] v0.3.23-beta10 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.

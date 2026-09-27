@@ -160,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: gửi WAKEUP PS4 tới cả IP đã lưu và directed broadcast của đúng subnet để tránh mất gói do ARP khi Rest Mode." % version,
-            "en": "v%s: send PS4 WAKEUP to both the saved IP and its subnet-directed broadcast to bypass stale ARP during Rest Mode." % version,
+            "vi": "v%s: giữ DDP WAKEUP upstream, thêm WOL theo MAC đã pair và trạng thái ARP đã ẩn dữ liệu để chẩn đoán NIC Rest Mode." % version,
+            "en": "v%s: keep upstream DDP WAKEUP, add paired-MAC WOL and privacy-safe ARP state diagnostics for the Rest Mode NIC." % version,
         },
         "files": files,
         "remove": [],
