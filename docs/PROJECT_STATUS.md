@@ -199,6 +199,10 @@ trước khi kết nối lại để tránh nhiều Issue `already in use`.
 
 ## 7. WAKEUP
 
+> Điều tra đầy đủ và điểm dừng hiện tại nằm tại
+> `docs/PS4_WAKEUP_INVESTIGATION.md`. Wakeup đang tạm dừng theo yêu cầu người
+> dùng; không tự triển khai beta13 từ các giả thuyết bên dưới.
+
 Lịch sử:
 
 - `v0.3.7`: host paired offline và WAKEUP.
@@ -231,8 +235,24 @@ lỗi wrapper Python xảy ra trước khi gửi WAKEUP, không phải PS4 từ 
 Beta7 gọi đúng `_paired_credentials(addr)`, kiểm credential là PS4 và thêm test
 tích hợp đọc `paired_hosts.json` thật rồi xác nhận packet đầu tiên là WAKEUP.
 
-Không tiếp tục sửa packet nếu không có môi trường mạng/console khác chứng minh
-WAKEUP có thể hoạt động.
+Issue `#58` của beta11 xác nhận một DDP WAKEUP được gửi, PS4 bắt đầu trả `620
+Standby` sau khoảng 25 giây nhưng không chuyển sang `200 Ready`. Beta12 được tạo
+để poll mỗi 500 ms và gửi thêm một WAKEUP sau phản hồi Standby đầu tiên.
+
+Issue `#59/#60` của beta12 cho kết quả khác: scan vẫn `0 host`, WAKEUP ban đầu
+được kernel chấp nhận đủ 135 byte nhưng 240 SRCH trong 120,2 giây không nhận bất
+kỳ phản hồi nào. Vì `standby_seen=False`, WAKEUP thứ hai chưa từng được gửi;
+beta12 chưa kiểm thử được giả thuyết chính của nó.
+
+Rà soát desktop cho thấy beta12 mới mô phỏng một phần. Desktop giữ discovery
+service/socket sống lâu, quét 500 ms, tái sử dụng socket discovery để wake, tạo
+session kết nối ngay sau wake và có thể gọi wake lại trên nhiều update Standby
+khi session còn connecting. App beta12 dùng transaction riêng, đợi Ready trước
+khi stream và chỉ cho phép một WAKEUP bổ sung. Chưa có desktop control hoặc
+packet capture trên cùng PS4/LAN, nên chưa biết khác biệt nào là nguyên nhân.
+
+Không tiếp tục sửa packet hoặc phát hành beta mới nếu chưa đọc tài liệu điều tra
+và chưa có phép thử đối chứng/capture giúp tách trạng thái console, LAN và code.
 
 ## 8. Brick Pro và exFAT
 
@@ -283,6 +303,9 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.23-beta11` | Phép thử đối chứng: một DDP WAKEUP unicast chuẩn Chiaki, không WOL/broadcast/retry, chờ 120 giây |
 | `v0.3.23-beta12` | Poll 500 ms như desktop; gửi thêm đúng một DDP WAKEUP khi lần đầu nhận 620 Standby |
 
+Kết quả máy thật beta12: Issue `#60` không nhận `620`, nên mô tả trên là hành vi
+dự kiến của code chứ chưa phải đường chạy đã được xác nhận trên console.
+
 ## 10. Kiểm thử và build gate
 
 Lệnh chuẩn:
@@ -327,3 +350,5 @@ Verifier kiểm:
    kết thúc phiên hiện là cảnh báo vô hại, không phải lỗi stream.
 6. Từ `v0.3.22-beta8`, PS5 bị vô hiệu hóa ở discovery/UI/pair/wake/stream; giữ
    trường dữ liệu tương thích để cài đè không làm hỏng cấu hình cũ.
+7. Điều tra wake dừng tại beta12. Stable không bị ảnh hưởng; không tạo beta13
+   cho tới khi người dùng mở lại công việc và có đối chứng desktop/capture phù hợp.

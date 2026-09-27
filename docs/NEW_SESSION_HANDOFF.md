@@ -1,8 +1,21 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.21
+# Bàn giao session mới — trimui-chiaki-ng sau v0.3.23-beta12
 
-> Cập nhật: 2026-09-25. Đọc file này trước khi tiếp tục dự án.
+> Cập nhật: 2026-09-27. Đọc file này và
+> `docs/PS4_WAKEUP_INVESTIGATION.md` trước khi tiếp tục dự án.
 
 ## 1. Trạng thái ngắn gọn
+
+- Người dùng đã thử beta12 và wake vẫn thất bại. Issue private `#59/#60` xác
+  nhận scan `0 host`; transaction wake gửi WAKEUP ban đầu nhưng không nhận phản
+  hồi trong 240 probe/120,2 giây. Vì không thấy `620 Standby`, beta12 không gửi
+  WAKEUP thứ hai.
+- Wakeup đang **tạm dừng theo yêu cầu người dùng**. Session này chỉ phân tích,
+  ghi docs, commit và push; không làm beta13.
+- Rà soát lại desktop cho thấy beta12 chỉ mô phỏng một phần: desktop dùng
+  discovery service/socket dài hạn, bắt đầu session song song và có thể wake lại
+  trên nhiều update Standby. Chưa có desktop control/capture trên cùng PS4/LAN.
+- Mọi bằng chứng, giới hạn kết luận và thứ tự kiểm chứng nằm trong
+  `docs/PS4_WAKEUP_INVESTIGATION.md`.
 
 - `v0.3.21` giới hạn `/tmp/stay_alive` trong phiên native stream, thêm cleanup
   signal/exit và tự đóng menu sau 15 phút không thao tác. Chiaki không đọc hoặc
@@ -238,18 +251,20 @@ Profile ưu tiên:
 PS4 đôi khi giữ lease Remote Play khoảng hai phút sau khi client đã shutdown.
 Không pair lại hoặc bấm kết nối liên tục; chờ rồi thử lại.
 
-WAKEUP đã thử unicast/broadcast ở `v0.3.7–v0.3.9` nhưng console trong môi trường
-hiện tại không phản hồi. Từ `v0.3.10`, UI trở lại luồng bật PS4 bằng tay rồi quét.
-Không tiếp tục sửa WAKEUP nếu không có môi trường mới chứng minh console có thể
-được đánh thức.
+WAKEUP đã thử qua nhiều beta. Issue `#58` beta11 từng nhận `620 Standby` sau
+khoảng 25 giây nhưng không lên Ready; Issue `#60` beta12 lại không nhận phản hồi
+nào trong 120 giây, nên nhánh WAKEUP sau Standby chưa chạy. Không tiếp tục bằng
+phỏng đoán. Đọc `docs/PS4_WAKEUP_INVESTIGATION.md`, làm desktop control và packet
+capture đã khử dữ liệu nhạy cảm trước khi quyết định kiến trúc beta tiếp theo.
 
 Native binary hiện tại không thay đổi trong các bản vá Brick Pro. SHA-256:
 `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.
 
 ## 7. Trạng thái kết thúc session
 
-- Không còn lỗi phát hành hoặc kiểm thử máy thật đang chờ xử lý.
+- Wake PS4 Rest Mode chưa hoạt động và được chủ động tạm dừng tại beta12.
 - `v0.3.22` là latest; native/runtime giữ nguyên từ bản đã xác nhận trên Brick.
+- `v0.3.23-beta12` tiếp tục là prerelease; Issue `#59/#60` là bằng chứng mới nhất.
 - Tiếp tục dùng `720p30/4000` trên Smart Pro S và `540p30/3000` trên Brick.
 - Không thay native binary, pair/session hoặc SDL mapping nếu không có Issue mới.
 - Release public có đủ ba asset; checksum, 126 OTA files và 129 ZIP entries đã
@@ -308,5 +323,8 @@ và dùng mã này trong title Issue; CHI-xxxx chỉ là ID cài đặt phụ. B
 sun50iw10 đã stream thật thành công; Issue #39 đạt 8968/0/0
 rendered/lost/FEC và exit 0. Spruce sun55iw3 vẫn dùng runtime system. Không tắt
 TLS, không đọc/tiết lộ token và không sửa native/pair/input nếu không có Issue
-mới chứng minh regression.
+mới chứng minh regression. Wake đang tạm dừng theo yêu cầu người dùng. Đọc
+docs/PS4_WAKEUP_INVESTIGATION.md: Issue #60 không nhận 620 trong 240 probe nên
+WAKEUP thứ hai của beta12 chưa chạy; không làm beta13 trước desktop control và
+packet capture đã khử dữ liệu nhạy cảm.
 ```
