@@ -2,9 +2,9 @@
 """Lop wire protocol cho trimui-chiaki-ng.
 
 Bao gom:
-    - Discovery SRCH broadcast, response parse (port 987 PS4 / 9302 PS5)
+    - Discovery SRCH broadcast va response parse cho PS4 (port 987)
     - Wakeup WAKEUP voi regist-key plaintext
-    - Connect RPCrypt den controller port 9295 (PS4/PS5)
+    - Connect RPCrypt den controller port 9295
     - Doc chiaki.conf theo mau Switch (host_addr, psn_account_id, rp_key, rp_regist_key,
       rp_key_type, video_resolution, video_fps, target)
 
@@ -26,7 +26,6 @@ import shlex
 import socket
 import struct
 import tempfile
-import threading
 import time
 import urllib.parse
 from dataclasses import dataclass, field
@@ -144,10 +143,11 @@ def _paired_credentials(addr):
 
 
 def paired_hosts_for_discovery(discovered=None):
-    """Merge saved paired hosts into discovery without exposing credentials."""
+    """Merge saved paired PS4 hosts without exposing credentials."""
     from .paths import APP_DIR
 
-    hosts = list(discovered or [])
+    hosts = [host for host in (discovered or [])
+             if not bool(getattr(host, "is_ps5", False))]
     seen = {getattr(host, "addr", "") for host in hosts}
     entries = []
     paired_path = os.path.join(APP_DIR, "paired_hosts.json")
@@ -166,7 +166,7 @@ def paired_hosts_for_discovery(discovered=None):
             "target": int(getattr(state, "host_target", 0) or 0),
         })
     for entry in entries:
-        if not isinstance(entry, dict):
+        if not isinstance(entry, dict) or bool(entry.get("is_ps5", False)):
             continue
         addr = str(entry.get("addr") or "")
         if not addr or addr in seen or not _paired_credentials(addr):
@@ -189,13 +189,14 @@ def paired_ps4_addresses():
 
 
 def wake_paired_host(host):
-    """Wake a saved host using its private registration credential."""
-    credentials = _paired_credentials(getattr(host, "addr", ""))
-    if not credentials:
+    """Wake a saved PS4 using its private registration credential."""
+    if bool(getattr(host, "is_ps5", False)):
+        log.warning("wakeup rejected: PS5 support is disabled")
         return False
-    return send_wakeup(
-        credentials["addr"], credentials["regist_key"], credentials["is_ps5"],
-    )
+    credentials = _paired_credentials(getattr(host, "addr", ""))
+    if not credentials or credentials["is_ps5"]:
+        return False
+    return send_wakeup(credentials["addr"], credentials["regist_key"])
 
 
 def wake_paired_ps4_until_ready(host, timeout=25.0):
@@ -224,6 +225,9 @@ def prepare_stream_launch(host):
     """Chuẩn bị native stream rồi trả về (ok, thông báo)."""
     from .paths import APP_DIR
 
+    if bool(getattr(host, "is_ps5", False)):
+        log.warning("stream preparation rejected: PS5 support is disabled")
+        return False, "Bản này chỉ hỗ trợ PS4"
     binary = find_chiaki_binary(APP_DIR)
     if not binary:
         return False, "Thiếu bin/chiaki-stream"
@@ -232,6 +236,9 @@ def prepare_stream_launch(host):
         log.error("stream preparation rejected: paired credentials unavailable")
         _report_error("stream_credentials_missing")
         return False, "Khóa ghép nối không hợp lệ; hãy ghép lại PS4"
+    if credentials["is_ps5"]:
+        log.warning("stream preparation rejected: saved PS5 credentials")
+        return False, "Bản này chỉ hỗ trợ PS4"
     discovered_target = int(getattr(host, "target", 0) or 0)
     stored_target = int(credentials.get("target", 0) or 0)
     if (discovered_target in (800, 900, 1000)
@@ -258,7 +265,7 @@ def prepare_stream_launch(host):
             handle.write("host=%s\n" % credentials["addr"])
             handle.write("regist_key=%s\n" % credentials["regist_key"])
             handle.write("rp_key=%s\n" % credentials["rp_key"])
-            handle.write("ps5=%d\n" % int(credentials["is_ps5"]))
+            handle.write("ps5=0\n")
             handle.write("target=%d\n" % int(credentials.get("target", 0) or 0))
             handle.write("rp_version=%s\n" % rp_version)
             native_verbose = os.environ.get("CHIAKI_NATIVE_VERBOSE", "").lower() in (
@@ -342,7 +349,7 @@ def read_chiaki_conf(path=None):
     """Doc chiaki.conf theo mau Switch.
 
     File mau:
-        [PS5-xxx]
+        [PS4-xxx]
         host_addr = 192.168.1.10
         psn_online_id = user
         psn_account_id = base64==
@@ -411,12 +418,10 @@ def write_chiaki_conf(hosts, path=None):
 
 
 # Cong discovery theo upstream chiaki (lib/include/chiaki/discovery.h).
-# DAY LA CONG DICH ma PS4/PS5 lang nghe goi SRCH. Truoc v0.2.11 code gui SRCH
+# DAY LA CONG DICH ma PS4 lang nghe goi SRCH. Truoc v0.2.11 code gui SRCH
 # toi chinh cong nguon 9303-9308 nen khong bao gio toi duoc may PS -> luon 0 host.
 PS4_DISCOVERY_PORT = 987
-PS5_DISCOVERY_PORT = 9302
 PS4_PROTOCOL_VERSION = "00020020"
-PS5_PROTOCOL_VERSION = "00030010"
 # Khoang cong nguon cuc bo de bind va nhan phan hoi (PS tra loi ve dung cong nguon).
 LOCAL_PORT_MIN = 9303
 LOCAL_PORT_MAX = 9319
@@ -432,19 +437,20 @@ def _build_srch(protocol_version):
     return body.encode("ascii") + b"\x00"
 
 
-def _build_wakeup(regist_key, ps5=False):
+def _build_wakeup(regist_key):
     key = str(regist_key or "").split("\x00", 1)[0]
     if not key or len(key) > 8:
         raise ValueError("invalid registration key")
     credential = int(key, 16)
-    protocol = PS5_PROTOCOL_VERSION if ps5 else PS4_PROTOCOL_VERSION
     body = ("WAKEUP * HTTP/1.1\n"
             "client-type:vr\n"
             "auth-type:R\n"
             "model:w\n"
             "app-type:r\n"
             "user-credential:%d\n"
-            "device-discovery-protocol-version:%s\n") % (credential, protocol)
+            "device-discovery-protocol-version:%s\n") % (
+                credential, PS4_PROTOCOL_VERSION,
+            )
     return body.encode("ascii") + b"\x00"
 
 
@@ -459,7 +465,7 @@ def _bind_discovery_socket(sock):
     return sock.getsockname()[1]
 
 
-def _parse_srch(data, addr, ps5_mode):
+def _parse_srch(data, addr):
     try:
         text = data.decode("ascii", errors="ignore")
     except Exception:
@@ -493,32 +499,28 @@ def _parse_srch(data, addr, ps5_mode):
     except ValueError:
         req_port = 9295
     protocol = headers.get("device-discovery-protocol-version", "")
-    if protocol == PS4_PROTOCOL_VERSION:
-        ps5_mode = False
-    elif protocol == PS5_PROTOCOL_VERSION:
-        ps5_mode = True
+    if protocol and protocol != PS4_PROTOCOL_VERSION:
+        log.info("discovery: ignored non-PS4 protocol response")
+        return None
     host = DiscoveredHost(
         addr=addr[0],
-        is_ps5=ps5_mode,
+        is_ps5=False,
         state=host_state,
         system_version=headers.get("system-version", ""),
         running_app=urllib.parse.unquote(headers.get("running-app-name", "")),
         host_request_port=req_port,
     )
     host.name = urllib.parse.unquote(headers.get("host-name", ""))
-    host.target = _target_from_version(host.system_version, ps5_mode)
+    host.target = _target_from_version(host.system_version)
     return host
 
 
-def _target_from_version(version, ps5):
-    # chiaki_discovery_host_system_version_target: PS5 >= 8050001 -> PS5_1.
+def _target_from_version(version):
     digits = "".join(c for c in version if c.isdigit())
     try:
         v = int(digits) if digits else 0
     except ValueError:
         return 0
-    if ps5 and v >= 8050001:
-        return 1000100  # CHIAKI_TARGET_PS5_1
     if "09." in version or "9." in version or "0900000" in version:
         return 900  # CHIAKI_TARGET_PS4_9
     if v >= 8000000:
@@ -531,17 +533,15 @@ def _target_from_version(version, ps5):
 
 
 def discovery_broadcast(timeout=3.0, ps4_hosts=None):
-    """SRCH broadcast theo PSN protocol. Tra danh sach DiscoveredHost.
+    """Send PS4-only SRCH broadcast/unicast and return discovered hosts.
 
     Dung protocol upstream chiaki:
-        - Gui SRCH broadcast toi cong dich 987 (PS4) va 9302 (PS5).
+        - Gui SRCH broadcast toi cong dich 987 (PS4).
         - Gui them SRCH unicast toi cac PS4 da pair, giong manual host upstream.
-        - Socket nguon bind trong khoang 9303-9319; PS4/PS5 tra loi ve dung
-          dia chi + cong nguon cua goi SRCH.
+        - Mot socket nguon bind trong khoang 9303-9319 de nhan phan hoi PS4.
     """
     out = []
     seen = set()
-    lock = threading.Lock()
 
     manual_ps4_hosts = []
     for addr in ps4_hosts or []:
@@ -549,80 +549,48 @@ def discovery_broadcast(timeout=3.0, ps4_hosts=None):
         if addr and addr not in manual_ps4_hosts:
             manual_ps4_hosts.append(addr)
 
-    def worker(protocol_version, ps5_mode, dest_port, destinations):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.settimeout(timeout)
-            bound = False
-            for local_port in range(LOCAL_PORT_MIN, LOCAL_PORT_MAX + 1):
-                try:
-                    s.bind(("", local_port))
-                    bound = True
-                    break
-                except OSError:
-                    continue
-            if not bound:
-                s.bind(("", 0))
-            pkt = _build_srch(protocol_version)
+    destinations = ["255.255.255.255"] + manual_ps4_hosts
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.settimeout(timeout)
+        source_port = _bind_discovery_socket(sock)
+        packet = _build_srch(PS4_PROTOCOL_VERSION)
+        for attempt in range(2):
+            for destination in destinations:
+                sock.sendto(packet, (destination, PS4_DISCOVERY_PORT))
+            if attempt == 0:
+                time.sleep(0.15)
+        log.info(
+            "discovery: PS4-only single socket %s -> port=%d "
+            "src_port=%d manual_hosts=%d",
+            "broadcast+unicast" if len(destinations) > 1 else "broadcast",
+            PS4_DISCOVERY_PORT, source_port, len(manual_ps4_hosts),
+        )
+        end = time.time() + timeout
+        while time.time() < end:
             try:
-                src_port = s.getsockname()[1]
-            except OSError:
-                src_port = 0
-            # Gui 2 lan cach nhau mot chut: mot so firmware bo qua goi dau tien.
-            for attempt in range(2):
-                for destination in destinations:
-                    s.sendto(pkt, (destination, dest_port))
-                if attempt == 0:
-                    time.sleep(0.15)
+                data, addr = sock.recvfrom(2048)
+            except socket.timeout:
+                continue
+            except OSError as exc:
+                log.warning("discovery recvfrom error: %s", exc)
+                _report_error("discovery_receive_error")
+                break
+            host = _parse_srch(data, addr)
+            if host is None or host.addr in seen:
+                continue
             log.info(
-                "discovery: SRCH %s -> port=%d (%s) src_port=%d manual_hosts=%d",
-                "broadcast+unicast" if len(destinations) > 1 else "broadcast",
-                dest_port, "PS5" if ps5_mode else "PS4", src_port,
-                len(destinations) - 1,
+                "discovery host: console=PS4 state=%s system_version=%s target=%d",
+                host.state, host.system_version or "missing", host.target,
             )
-            end = time.time() + timeout
-            while time.time() < end:
-                try:
-                    data, addr = s.recvfrom(2048)
-                except socket.timeout:
-                    continue
-                except OSError as exc:
-                    log.warning("discovery recvfrom error: %s", exc)
-                    _report_error("discovery_receive_error")
-                    break
-                host = _parse_srch(data, addr, ps5_mode)
-                if host is None:
-                    continue
-                log.info(
-                    "discovery host: ps5=%s state=%s system_version=%s target=%d",
-                    host.is_ps5, host.state, host.system_version or "missing",
-                    host.target,
-                )
-                with lock:
-                    if host.addr in seen:
-                        continue
-                    seen.add(host.addr)
-                    out.append(host)
-        except OSError as exc:
-            log.warning("discovery worker dest %d error: %s", dest_port, exc)
-            _report_error("discovery_worker_error")
-        finally:
-            s.close()
-
-    threads = [
-        threading.Thread(target=worker, daemon=True,
-                         args=(PS4_PROTOCOL_VERSION, False, PS4_DISCOVERY_PORT,
-                               ["255.255.255.255"] + manual_ps4_hosts)),
-        threading.Thread(target=worker, daemon=True,
-                         args=(PS5_PROTOCOL_VERSION, True, PS5_DISCOVERY_PORT,
-                               ["255.255.255.255"])),
-    ]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join(timeout + 0.5)
+            seen.add(host.addr)
+            out.append(host)
+    except OSError as exc:
+        log.warning("PS4 discovery error: %s", exc)
+        _report_error("discovery_worker_error")
+    finally:
+        sock.close()
     log.info("discovery: %d host(s)", len(out))
     return out
 
@@ -647,9 +615,8 @@ def regist_with_pin(host, pin, timeout=10.0):
         account_id_configured,
     )
     if is_ps5:
-        message = "PS5 chua ho tro ghep noi; da xep hang gui chan doan len GitHub"
+        message = "PS5 support is disabled; this build is PS4-only"
         log.warning("registration rejected: %s", message)
-        _report_error("pair_ps5_registration_unavailable")
         return False, {"error": message}
     if target not in (0, 800, 900, 1000):
         message = "this beta supports PS4 firmware 8.0 or newer"
@@ -674,26 +641,24 @@ def regist_with_pin(host, pin, timeout=10.0):
 
 
 def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
-    """Gui WAKEUP toi PS4/PS5.
-
-    Tra True neu packet gui thanh cong (PS4/PS5 se bat tu standby thanh ready).
-    """
+    """Gui WAKEUP toi PS4; PS5 bi vo hieu hoa trong ung dung."""
+    if ps5:
+        log.warning("wakeup rejected: PS5 support is disabled")
+        return False
     try:
-        payload = _build_wakeup(regist_key, ps5)
+        payload = _build_wakeup(regist_key)
     except (TypeError, ValueError):
         log.error("wakeup credential is invalid")
         return False
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.settimeout(timeout)
         source_port = _bind_discovery_socket(sock)
-        port = 9302 if ps5 else 987
-        sent = sock.sendto(payload, (addr, port))
+        sent = sock.sendto(payload, (addr, PS4_DISCOVERY_PORT))
         log.info(
-            "wakeup sent: host=%s ps5=%s source_port=%d dest_port=%d "
+            "wakeup sent: host=%s console=PS4 source_port=%d dest_port=%d "
             "packets=1 bytes=%d format=lf+nul mode=upstream-unicast",
-            addr, ps5, source_port, port, len(payload),
+            addr, source_port, PS4_DISCOVERY_PORT, len(payload),
         )
         return sent == len(payload)
     except OSError as exc:
@@ -706,7 +671,7 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
 def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
     """Use one discovery socket for SRCH, WAKEUP and READY polling."""
     try:
-        wake_payload = _build_wakeup(regist_key, False)
+        wake_payload = _build_wakeup(regist_key)
     except (TypeError, ValueError):
         log.error("wakeup credential is invalid")
         return None
@@ -718,7 +683,6 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
     silent_probes = 0
     last_state = "unknown"
     try:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.settimeout(1.0)
         source_port = _bind_discovery_socket(sock)
         log.info(
@@ -744,7 +708,7 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
                     break
                 if response_addr[0] != addr:
                     continue
-                discovered = _parse_srch(data, response_addr, False)
+                discovered = _parse_srch(data, response_addr)
                 if not discovered:
                     continue
                 response_received = True

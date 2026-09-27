@@ -41,7 +41,7 @@ Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. Từ
 | Spruce OS | Đã xác nhận | Không thay đổi | Stream tốt ở `v0.3.14` | Issue `#35`, model `sun55iw3` |
 | Brick Pro Stock OS | Đã xác nhận | Đã OTA đến `v0.3.16` | Đã stream PS4 thật | Issue `#39`, video/audio/input đạt |
 | PS4 Pro 9.00/GoldHEN | — | — | Pair/session pre-10 đạt | Không cần PSN |
-| PS5/H265 | — | — | Chưa kiểm thử | Không tuyên bố hỗ trợ máy thật |
+| PS5/H265 | — | — | Đã vô hiệu hóa từ `v0.3.22-beta8` | Ngoài phạm vi phát triển |
 
 Một release chung đã được xác nhận trên máy thật. `sun50iw10` dùng dependency
 closure riêng trong `libs/brick-stock`; `sun55iw3` không nhận path này và tiếp
@@ -62,7 +62,7 @@ tục dùng library hệ thống. Không cần tách release ở trạng thái h
 ### Remote Play
 
 - `files/rh/chiaki.py`: discovery, registration wrapper, wakeup cũ và launcher.
-- `files/rh/ps4_regist.py`: handshake PS4/PS5 registration.
+- `files/rh/ps4_regist.py`: handshake registration PS4.
 - `files/bin/chiaki-stream`: native AArch64 Remote Play helper.
 - `files/libs/brick-stock`: 14 shared libraries AArch64, chỉ cho `sun50iw10`.
 - `files/launch.sh`: chọn Python, library path, crash marker và stream lifecycle.
@@ -161,8 +161,8 @@ Report:
 
 ### Discovery
 
-- PS4 destination port `987`; PS5 destination port `9302`.
-- Source socket bind `9303–9319`.
+- Chỉ quét PS4 tới destination port `987`; PS5 port `9302` bị vô hiệu hóa.
+- Một source socket duy nhất bind `9303–9319` cho cả broadcast và unicast PS4.
 - SRCH packet dùng LF và byte NUL cuối, parser chấp nhận LF/CRLF.
 - Chỉ host đang phản hồi xuất hiện trong UI từ `v0.3.10`.
 
@@ -276,6 +276,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.21` | Chỉ giữ `stay_alive` khi stream; menu idle 15 phút tự đóng để tránh hao pin |
 | `v0.3.22-beta6` | Wake host PS4 paired `offline`; title app/Issue dùng mã `HW-...` ổn định |
 | `v0.3.22-beta7` | Sửa crash đọc credential khiến beta6 chưa gửi được packet WAKEUP |
+| `v0.3.22-beta8` | Tắt PS5; discovery PS4 dùng một socket để tránh cạnh tranh UDP port nguồn |
 
 ## 10. Kiểm thử và build gate
 
@@ -319,5 +320,5 @@ Verifier kiểm:
 4. Không sửa pair/native/input nếu không có Issue mới chứng minh regression.
 5. `setterm: not found`, H264 `no frame!` lúc khởi động và server shutdown khi
    kết thúc phiên hiện là cảnh báo vô hại, không phải lỗi stream.
-6. Release `v0.3.19` dùng người thử PS5 để thu Issue thực tế; PS4/native giữ
-   nguyên từ binary đã được xác nhận hoạt động.
+6. Từ `v0.3.22-beta8`, PS5 bị vô hiệu hóa ở discovery/UI/pair/wake/stream; giữ
+   trường dữ liệu tương thích để cài đè không làm hỏng cấu hình cũ.

@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho beta `v0.3.22-beta7`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho beta `v0.3.22-beta8`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 Đây là bản thử nghiệm PS4 Wake tách từ bản ổn định `v0.3.21`. Cài thủ công từ
@@ -11,15 +11,15 @@ trang release beta; không dùng bản này nếu không cần thử đánh th�
 - Máy TrimUI Linux có Python 3.10+.
 - SDL2/SDL2_ttf, Opus và các thư viện hệ thống cần bởi native helper.
 - Thẻ microSD FAT32 hoặc exFAT có quyền ghi vào `Apps/`.
-- PS4/PS5 và máy TrimUI ở cùng LAN khi quét/ghép nối.
+- PS4 và máy TrimUI ở cùng LAN khi quét/ghép nối.
 
 Native helper đi kèm là ELF64 AArch64. Smart Pro S/TG5050 với Spruce OS và Brick
 Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm thanh và input.
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta7`.
-2. Tải `trimui-chiaki-ng-v0.3.22-beta7.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta8`.
+2. Tải `trimui-chiaki-ng-v0.3.22-beta8.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -46,6 +46,9 @@ Từ beta5, ZIP không chứa `settings.json`, `paired_hosts.json` hoặc `chiak
 nên giải nén đè không xóa ID cài đặt, cấu hình hay khóa ghép nối. Nếu đang dùng
 bản rất cũ thiếu `vendor/sdl2` và cần cài sạch, hãy backup các file dữ liệu trên
 cùng `secrets.json` trước khi xóa thư mục app.
+
+Beta8 chỉ hỗ trợ PS4. App không quét cổng PS5 `9302`, không hiển thị host PS5 đã
+lưu và từ chối pair/wake/stream PS5. Dữ liệu PS5 cũ không bị xóa khi cài đè.
 
 ## Trường hợp Brick Pro trước v0.3.11
 

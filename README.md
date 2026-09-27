@@ -1,6 +1,6 @@
 # trimui-chiaki-ng
 
-Ứng dụng PS4/PS5 Remote Play cho các máy TrimUI chạy Linux, tập trung vào:
+Ứng dụng PS4 Remote Play cho các máy TrimUI chạy Linux, tập trung vào:
 
 - TrimUI Smart Pro S/TG5050 và Spruce OS.
 - TrimUI Brick Pro chạy Stock OS.
@@ -38,6 +38,9 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
 - `v0.3.21` không giữ `/tmp/stay_alive` khi chỉ đứng ở menu, chỉ giữ marker trong
   phiên stream và tự đóng menu sau 15 phút không thao tác để tránh hao pin nếu
   người dùng bấm Power mà chưa chọn **THOÁT**. App không sửa cấu hình WoWLAN.
+- `v0.3.22-beta8` vô hiệu hóa toàn bộ luồng PS5 trong app. Discovery chỉ dùng một
+  socket PS4, không còn hai listener cùng tranh cổng nguồn `9303`; dữ liệu pair
+  PS5 cũ được giữ nguyên trên thẻ nhưng không xuất hiện hoặc được sử dụng.
 - Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
@@ -50,7 +53,7 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 
 ## Tính năng
 
-- Quét PS4/PS5 đang hoạt động trong LAN.
+- Quét PS4 đang hoạt động trong LAN bằng một socket UDP duy nhất.
 - Ghép nối PS4 firmware 9.00 bằng PIN LAN và giao thức pre-10.
 - Native Remote Play AArch64, H264, âm thanh Opus và input SDL GameController.
 - OTA theo manifest bất biến, kiểm SHA-256 trước khi thay file.
@@ -59,8 +62,10 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 - Tự tạo GitHub Issue cho lỗi kết thúc thật sự và báo cáo chất lượng stream.
 - Tiêu đề Issue chỉ dùng mã thiết bị băm `HW-xxxxxxxxxxxx`; model và mã cài đặt
   chỉ còn trong body để chẩn đoán, không dùng làm định danh chính.
-- Menu **Hướng dẫn sử dụng** trình bày bật máy, auto-login, pair PIN, stream và
-  thoát phiên; PS5 được ghi rõ mới chỉ quét, chưa hỗ trợ pair/stream.
+- Menu **Hướng dẫn sử dụng** trình bày bật máy, auto-login, pair PIN, stream,
+  thử đánh thức Rest Mode và thoát phiên.
+- PS5 bị vô hiệu hóa trong discovery, danh sách máy, pair, wake và stream; dự án
+  hiện chỉ phát triển luồng PS4.
 
 ## Tương thích đã xác nhận
 
@@ -70,8 +75,8 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 | Spruce OS | Stream tốt trên `sun55iw3`; tiếp tục dùng library hệ thống |
 | Brick Pro Stock OS | `v0.3.16` stream PS4 thật có hình, âm thanh và input |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
-| PS5/H265 | Có mã hỗ trợ trong helper nhưng chưa được kiểm thử máy thật |
-| WAKEUP PS4 Rest Mode | Đã thử thất bại trên môi trường hiện tại và tắt từ `v0.3.10` |
+| PS5/H265 | Đã vô hiệu hóa trong app; không còn thuộc phạm vi phát triển |
+| WAKEUP PS4 Rest Mode | Đang thử nghiệm riêng trong prerelease `v0.3.22-beta8` |
 
 ## Cài đặt
 
@@ -109,12 +114,17 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
-Beta `v0.3.22-beta7` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
+Beta `v0.3.22-beta8` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
 PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên và
 hiện host đã pair ở trạng thái `offline`. Chọn host rồi bấm **A – ĐÁNH THỨC** để
 gửi WAKEUP unicast ngay tới IP đã lưu và chờ `ready` tối đa 25 giây trên cùng
 một UDP socket. Beta không tự wake khi scan, không thay đổi WoWLAN của TrimUI và
 không thay bản ổn định.
+
+Beta8 chỉ tạo một socket discovery PS4 và chỉ gửi tới cổng `987`. Luồng PS5,
+cổng `9302` và socket discovery PS5 đã bị tắt để loại trừ khả năng hai socket
+cùng bind cổng nguồn `9303` nhận nhầm phản hồi. Đây là thay đổi cô lập để kiểm
+thử; chưa khẳng định PS4 Rest Mode chắc chắn sẽ thức trên mọi mạng.
 
 Beta5 sửa lỗi ZIP beta4 ghi đè `settings.json`, làm đổi `CHI-E545` thành
 `CHI-E4DF` và xóa dữ liệu pair. ZIP beta5 không chứa `settings.json`,
@@ -165,7 +175,7 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][HW-C3A2FEFAB3F5] v0.3.22-beta7 reason fingerprint
+[device-log][HW-C3A2FEFAB3F5] v0.3.22-beta8 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.

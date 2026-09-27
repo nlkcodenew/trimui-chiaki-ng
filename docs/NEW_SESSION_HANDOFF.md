@@ -206,7 +206,8 @@ Các lỗi có ý nghĩa được report:
 - Exception của update modal.
 - Socket discovery lỗi; không report kết quả bình thường `0 host`.
 - Pair registration/screen/save lỗi.
-- Pair PS5 bị chặn vì chưa hỗ trợ, với reason `pair_ps5_registration_unavailable`.
+- PS5 bị vô hiệu hóa và không xuất hiện trong discovery/UI; dữ liệu cũ chỉ được
+  giữ để tương thích khi cài đè.
 - Native helper thiếu hoặc chuẩn bị stream thất bại.
 - Settings load/save/callback lỗi.
 - Crash/exit code bất thường và chất lượng native stream.

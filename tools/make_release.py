@@ -160,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: sửa lỗi đọc credential khiến beta6 dừng trước khi gửi WAKEUP tới PS4 offline." % version,
-            "en": "v%s: fix the credential lookup crash that stopped beta6 before sending WAKEUP to an offline PS4." % version,
+            "vi": "v%s: tắt PS5 và dùng một socket discovery PS4 để tránh tranh phản hồi UDP trên cổng nguồn." % version,
+            "en": "v%s: disable PS5 and use one PS4 discovery socket to avoid competing UDP listeners on the source port." % version,
         },
         "files": files,
         "remove": [],

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""trimui-chiaki-ng - PS4/PS5 Remote Play cho TrimUI Smart Pro S.
+"""trimui-chiaki-ng - PS4 Remote Play cho TrimUI.
 
 Phiên bản 0.3.4:
     - Ghép nối PS4 thật bằng PIN 8 số và lưu khóa theo từng máy.

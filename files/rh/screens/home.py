@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Man hinh chinh: quet may PS4/PS5, BAT DAU CHOI, cai dat, cap nhat."""
+"""Man hinh chinh: quet may PS4, BAT DAU CHOI, cai dat, cap nhat."""
 
 import os
 import threading
@@ -17,7 +17,7 @@ log = get_logger()
 class HomeScreen(BaseScreen):
     """Man hinh chinh cua app. Cac muc menu:
 
-        1. QUET MAY PS4/PS5  (scan)
+        1. QUET MAY PS4      (scan)
         2. HUONG DAN         (guide)
         3. CAI DAT           (settings)
         4. CAP NHAT          (update)
@@ -72,7 +72,7 @@ class HomeScreen(BaseScreen):
             host = self.hosts[self.host_selected]
             paired = self._is_paired(host) if self.hosts else False
             if paired:
-                if host.state in ("offline", "standby", "waking") and not host.is_ps5:
+                if host.state in ("offline", "standby", "waking"):
                     return [("A", tr("wake")), ("Y", tr("pair")), ("B", tr("back"))]
                 return [("A", tr("connect")), ("Y", tr("pair")), ("B", tr("back"))]
             return [("A", tr("pair")), ("B", tr("back"))]
@@ -153,7 +153,7 @@ class HomeScreen(BaseScreen):
             self.toast = tr("pair_required") if "pair_required" in tr("pair_required") else "Chưa ghép - bấm Y để nhập PIN"
             self._open_pair(host)
             return
-        if host.state in ("offline", "standby", "waking") and not host.is_ps5:
+        if host.state in ("offline", "standby", "waking"):
             self._wake_host(host)
             return
         log.info("home: yeu cau stream toi %s (%s)", host.name or host.addr, host.addr)

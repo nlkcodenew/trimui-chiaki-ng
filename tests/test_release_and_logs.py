@@ -989,7 +989,7 @@ class LogUploaderTests(unittest.TestCase):
         screen._activate()
         engine.push_screen.assert_called_once_with("guide")
 
-    def test_guide_has_complete_ps4_flow_and_ps5_limit(self):
+    def test_guide_has_complete_ps4_only_flow(self):
         i18n = importlib.import_module("rh.i18n")
         screen = self.guide_module.GuideScreen(mock.Mock())
         self.assertEqual(len(screen.STEPS), 8)
@@ -1000,8 +1000,9 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("đăng nhập tự động", vietnamese)
         self.assertIn("PIN 8 số", vietnamese)
         self.assertIn("START + SELECT", vietnamese)
-        self.assertIn("chưa hỗ trợ ghép nối/stream PS5", vietnamese)
+        self.assertIn("đánh thức PS4", vietnamese)
         self.assertIn("mã HW-... trên tiêu đề", vietnamese)
+        self.assertNotIn("PS5", vietnamese)
 
     def test_guide_navigation_stays_in_bounds_and_b_returns(self):
         engine = mock.Mock()
@@ -1086,17 +1087,21 @@ class LogUploaderTests(unittest.TestCase):
             b"SRCH * HTTP/1.1\ndevice-discovery-protocol-version:00020020\n\x00",
         )
         self.assertEqual(chiaki.PS4_DISCOVERY_PORT, 987)
-        self.assertEqual(chiaki.PS5_DISCOVERY_PORT, 9302)
+        self.assertFalse(hasattr(chiaki, "PS5_DISCOVERY_PORT"))
 
-    def test_discovery_sends_to_ps4_and_ps5_destination_ports(self):
+    def test_discovery_uses_one_socket_and_ps4_destinations_only(self):
         chiaki = importlib.import_module("rh.chiaki")
         sent_dests = []
+        socket_options = []
+        socket_count = []
 
         class FakeSocket:
             def __init__(self, *args, **kwargs):
+                socket_count.append(self)
                 self._closed = False
 
-            def setsockopt(self, *args, **kwargs):
+            def setsockopt(self, level, option, value):
+                socket_options.append(option)
                 return None
 
             def settimeout(self, *args, **kwargs):
@@ -1125,8 +1130,9 @@ class LogUploaderTests(unittest.TestCase):
             )
         self.assertIn(("255.255.255.255", 987), sent_dests)
         self.assertIn(("192.168.1.45", 987), sent_dests)
-        self.assertIn(("255.255.255.255", 9302), sent_dests)
-        self.assertNotIn(("192.168.1.45", 9302), sent_dests)
+        self.assertEqual(len(socket_count), 1)
+        self.assertTrue(all(destination[1] == 987 for destination in sent_dests))
+        self.assertNotIn(chiaki.socket.SO_REUSEADDR, socket_options)
 
     def test_parse_srch_response_ready_and_standby(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1137,7 +1143,7 @@ class LogUploaderTests(unittest.TestCase):
             b"host-request-port:9295\n"
             b"device-discovery-protocol-version:00020020\n"
         )
-        host = chiaki._parse_srch(ready, ("192.168.1.50", 987), False)
+        host = chiaki._parse_srch(ready, ("192.168.1.50", 987))
         self.assertIsNotNone(host)
         self.assertEqual(host.state, "ready")
         self.assertEqual(host.name, "Living-Room-PS4")
@@ -1146,12 +1152,24 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(host.host_request_port, 9295)
         self.assertEqual(host.target, 900)
 
-        standby = b"HTTP/1.1 620 Standby\nhost-name:PS5\nsystem-version:08050001\n"
-        host5 = chiaki._parse_srch(standby, ("192.168.1.60", 9302), True)
-        self.assertIsNotNone(host5)
-        self.assertEqual(host5.state, "standby")
-        self.assertTrue(host5.is_ps5)
-        self.assertEqual(host5.target, 1000100)  # PS5_1
+        standby = (
+            b"HTTP/1.1 620 Standby\n"
+            b"host-name:Living-Room-PS4\n"
+            b"system-version:0900000\n"
+            b"device-discovery-protocol-version:00020020\n"
+        )
+        host = chiaki._parse_srch(standby, ("192.168.1.50", 987))
+        self.assertIsNotNone(host)
+        self.assertEqual(host.state, "standby")
+
+    def test_parse_srch_ignores_non_ps4_protocol(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        response = (
+            b"HTTP/1.1 200 OK\n"
+            b"host-name:Other-Console\n"
+            b"device-discovery-protocol-version:00030010\n"
+        )
+        self.assertIsNone(chiaki._parse_srch(response, ("192.168.1.60", 9302)))
 
     def test_ps4_wakeup_packet_uses_discovery_port(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1186,33 +1204,13 @@ class LogUploaderTests(unittest.TestCase):
         self.assertTrue(sent[0][0].endswith(b"\n\x00"))
         self.assertNotIn(b"\r", sent[0][0])
 
-    def test_ps5_wakeup_remains_unicast(self):
+    def test_ps5_wakeup_is_disabled_before_socket_creation(self):
         chiaki = importlib.import_module("rh.chiaki")
-        sent = []
-
-        class FakeSocket:
-            def setsockopt(self, *args, **kwargs):
-                return None
-
-            def settimeout(self, *args, **kwargs):
-                return None
-
-            def bind(self, addr):
-                return None
-
-            def sendto(self, data, dest):
-                sent.append(dest)
-                return len(data)
-
-            def close(self):
-                return None
-
-        with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()), \
-                mock.patch.object(chiaki.time, "sleep", return_value=None):
-            self.assertTrue(
+        with mock.patch.object(chiaki.socket, "socket") as create_socket:
+            self.assertFalse(
                 chiaki.send_wakeup("192.168.1.60", "a49d08ed", ps5=True),
             )
-        self.assertEqual(sent, [("192.168.1.60", 9302)])
+        create_socket.assert_not_called()
 
     def test_ps4_wakeup_uses_same_socket_until_ready(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1444,7 +1442,7 @@ class LogUploaderTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertEqual(result["error"], "HTTP 403")
 
-    def test_ps5_registration_limit_is_reported(self):
+    def test_ps5_registration_is_disabled_without_diagnostic(self):
         chiaki = importlib.import_module("rh.chiaki")
         host = chiaki.DiscoveredHost(
             name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100,
@@ -1452,8 +1450,8 @@ class LogUploaderTests(unittest.TestCase):
         with mock.patch.object(chiaki, "_report_error") as report:
             ok, result = chiaki.regist_with_pin(host, "12345678")
         self.assertFalse(ok)
-        self.assertIn("da xep hang gui chan doan len GitHub", result["error"])
-        report.assert_called_once_with("pair_ps5_registration_unavailable")
+        self.assertIn("PS4-only", result["error"])
+        report.assert_not_called()
 
     def test_native_stream_launcher_keeps_keys_out_of_script(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1583,6 +1581,28 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(hosts[0].state, "offline")
         self.assertFalse(hasattr(hosts[0], "regist_key"))
 
+    def test_saved_and_discovered_ps5_hosts_are_hidden(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.60",
+                "name": "Old-PS5",
+                "is_ps5": True,
+                "target": 1000100,
+                "regist_key": "a49d08ed",
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        discovered = chiaki.DiscoveredHost(
+            name="Old-PS5", addr="192.168.1.60", is_ps5=True,
+            state="ready", target=1000100,
+        )
+        try:
+            hosts = chiaki.paired_hosts_for_discovery([discovered])
+        finally:
+            os.remove(paired_path)
+        self.assertEqual(hosts, [])
+
     def test_discovered_host_wins_over_saved_offline_host(self):
         chiaki = importlib.import_module("rh.chiaki")
         paired_path = os.path.join(self.app_dir, "paired_hosts.json")
@@ -1625,7 +1645,7 @@ class LogUploaderTests(unittest.TestCase):
                 self.assertTrue(chiaki.wake_paired_host(host))
         finally:
             os.remove(paired_path)
-        wake.assert_called_once_with("192.168.1.45", regist_key, False)
+        wake.assert_called_once_with("192.168.1.45", regist_key)
 
     def test_wake_paired_ps4_uses_real_saved_credential_and_sends_wakeup(self):
         chiaki = importlib.import_module("rh.chiaki")
