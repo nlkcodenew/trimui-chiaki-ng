@@ -29,9 +29,9 @@ GitHub Release có ba asset:
 GitHub Actions đã hoàn tất thành công. Ba asset công khai tải qua
 Release `v0.3.21` có 126 file OTA, 129 entry ZIP và SHA-256 ở bảng trên.
 
-Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
-mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
-`secrets.json` hay dữ liệu máy thật.
+Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. Từ
+`v0.3.22-beta5`, ZIP cũng không chứa `settings.json`, `paired_hosts.json` hoặc
+`chiaki.conf`; app tự tạo settings ở lần chạy đầu và cài đè giữ nguyên dữ liệu.
 
 ## 2. Ma trận nền tảng
 
@@ -133,9 +133,9 @@ Identity gửi lên Issue:
 - `HW-xxxxxxxxxxxx`: SHA-256 pseudonym từ nguồn phần cứng ưu tiên.
 - `APP-xxxxxxxxxxxx`: fallback nếu không có ID phần cứng.
 
-Máy Brick Pro của người dùng đang thử có
-`sun50iw10 / CHI-E545 / HW-C3A2FEFAB3F5`. Ghi nhớ `CHI-E545 = Brick Pro` khi
-đọc Issue mới.
+Máy Brick Pro của người dùng đang thử có hardware ID ổn định
+`HW-C3A2FEFAB3F5`. ID cài đặt đổi từ `CHI-E545` sang `CHI-E4DF` vì ZIP beta4
+ghi đè `settings.json`; cả hai ID đều là cùng Brick Pro.
 
 Không report:
 
@@ -203,12 +203,16 @@ Lịch sử:
 - Issue `#26–#30`: console vẫn không phản hồi trong môi trường thật.
 - `v0.3.10`: tắt WAKEUP/offline host trong UI, trở lại bật PS4 bằng tay.
 
-Beta `v0.3.22-beta4` giữ ZIP đúng `Apps/Chiaki/`, gửi SRCH broadcast và unicast
+Beta `v0.3.22-beta5` giữ ZIP đúng `Apps/Chiaki/`, gửi SRCH broadcast và unicast
 tới IP PS4 đã pair, đồng thời report `discovery_ps4_standby_not_found` một lần
 mỗi phiên nếu Rest Mode vẫn không phản hồi. Khi discovery xác nhận `standby`:
 SRCH unicast, WAKEUP và polling `ready` dùng cùng một UDP socket trong tối đa
 25 giây. Beta không chèn host `offline`, không tự wake khi scan và không thay
-đổi WoWLAN của TrimUI. Nhánh ổn định `v0.3.21` giữ nguyên.
+đổi WoWLAN của TrimUI. Beta5 còn loại dữ liệu người dùng khỏi ZIP, log
+`system-version → target` và trạng thái có/không Account-ID mà không ghi giá trị.
+Issue diagnostics `#29–#31` cho thấy `80108b03` sau khi mất pair; cần đóng/mở
+lại **Add Device** để tạo PIN mới thay vì retry PIN cũ. Nhánh ổn định `v0.3.21`
+giữ nguyên.
 
 Không tiếp tục sửa packet nếu không có môi trường mạng/console khác chứng minh
 WAKEUP có thể hoạt động.

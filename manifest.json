@@ -1,14 +1,14 @@
 {
-  "version": "0.3.22-beta4",
+  "version": "0.3.22-beta5",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-27T09:59:18+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta4/files",
-  "release_tag": "v0.3.22-beta4/files",
+  "built": "2026-09-27T10:39:10+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta5/files",
+  "release_tag": "v0.3.22-beta5/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.22-beta4: thêm SRCH unicast tới PS4 đã pair và tự gửi chẩn đoán khi Rest Mode không phản hồi.",
-    "en": "v0.3.22-beta4: add unicast SRCH for paired PS4 hosts and diagnostics when Rest Mode does not respond."
+    "vi": "v0.3.22-beta5: giữ cấu hình khi cài đè và bổ sung chẩn đoán pair/discovery PS4 an toàn.",
+    "en": "v0.3.22-beta5: preserve settings on overwrite installs and improve safe PS4 pairing/discovery diagnostics."
   },
   "files": [
     {
@@ -133,8 +133,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "de0198560c0eebe9faafb89dba5aca64266af0a8d8ea7480e83c17c535ae71cd",
-      "size": 30469
+      "sha256": "5d9ea3714e8de191bce4b33a8f7d83da63fbba7c5b0f7a110e5e942f1e977140",
+      "size": 30970
     },
     {
       "path": "rh/device_identity.py",
@@ -178,8 +178,8 @@
     },
     {
       "path": "rh/ps4_regist.py",
-      "sha256": "00c24dc2c2406d93e0207b6a631a46d1524dc3c026326caac51fa399bc9784f2",
-      "size": 13660
+      "sha256": "acb535beab9cb7cef26676dd2a180c2b29f46747d95b9e0bce2d576f828c197d",
+      "size": 13687
     },
     {
       "path": "rh/ssl_context.py",
@@ -188,8 +188,8 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "944a38cb25f61822c52ae2aa431d968aef5ad57085e504e627a44ba6cbd21ec5",
-      "size": 5336
+      "sha256": "6687a179ff2953c18f85c0197748a372aff3683492795d0f8d47563ac83a58ee",
+      "size": 5335
     },
     {
       "path": "rh/updater.py",
@@ -198,7 +198,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "4a9a3163a9638ae16dc33d05fd726821be0d183bf286656ad62a2cca00a4cb1b",
+      "sha256": "632f43a6f9ee0398a769e8aa63c9c3019fc612d828a121d4d8b3d1cf0e2efd9d",
       "size": 1184
     },
     {
@@ -644,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.22-beta4.zip",
-    "sha256": "b27b3f789a4a586dc48d75d53f42a2c5ad3de61d49d5882f9d81d69b1a1a9d29",
-    "size": 10762940
+    "name": "trimui-chiaki-ng-v0.3.22-beta5.zip",
+    "sha256": "62280137a4f73432700dd78547282c30770c40582bce8ae5adfcd932f34de4b3",
+    "size": 10762740
   }
 }

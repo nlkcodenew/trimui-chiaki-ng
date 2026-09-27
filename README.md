@@ -109,13 +109,19 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
-Beta `v0.3.22-beta4` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
+Beta `v0.3.22-beta5` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
 PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên để
-đọc log từ thiết bị `CHI-E545`. Beta không thay bản ổn định và chỉ hiện nút
+đọc log từ Brick Pro có hardware ID `HW-C3A2FEFAB3F5`. Beta không thay bản ổn định và chỉ hiện nút
 **ĐÁNH THỨC** khi discovery thật nhận PS4 đã ghép ở trạng thái `standby`. Khi
 người dùng bấm **A**, app dùng cùng một UDP socket để xác nhận `standby`, gửi
 WAKEUP unicast và chờ `ready` tối đa 25 giây. Beta không thêm host `offline`,
 không tự wake khi scan và không thay đổi cấu hình WoWLAN của thiết bị TrimUI.
+
+Beta5 sửa lỗi ZIP beta4 ghi đè `settings.json`, làm đổi `CHI-E545` thành
+`CHI-E4DF` và xóa dữ liệu pair. ZIP beta5 không chứa `settings.json`,
+`paired_hosts.json` hoặc `chiaki.conf`; cài mới tự tạo settings ở lần chạy đầu.
+Nếu pair báo `HTTP 403 / 80108b03`, thoát màn **Add Device** trên PS4, mở lại để
+lấy PIN mới rồi chỉ gửi một lần; không tiếp tục bấm lại PIN cũ.
 
 1. Bật PS4 bằng nút nguồn hoặc tay cầm và chờ auto-login hoàn tất.
 2. Đặt PS4 và TrimUI cùng mạng LAN/Wi-Fi 5 GHz.
@@ -154,7 +160,7 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][sun50iw10][CHI-E545][HW-C3A2FEFAB3F5] v0.3.19 reason fingerprint
+[device-log][sun50iw10][CHI-E4DF][HW-C3A2FEFAB3F5] v0.3.22-beta5 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.

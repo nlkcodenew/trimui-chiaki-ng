@@ -9,6 +9,7 @@ import logging
 import os
 import shutil
 import ssl
+import subprocess
 import sys
 import tempfile
 import types
@@ -406,6 +407,34 @@ class LogUploaderTests(unittest.TestCase):
             names = set(archive.namelist())
         self.assertIn("Apps/Chiaki/app.py", names)
         self.assertNotIn("App/Chiaki/app.py", names)
+        self.assertNotIn("Apps/Chiaki/settings.json", names)
+        self.assertNotIn("Apps/Chiaki/paired_hosts.json", names)
+        self.assertNotIn("Apps/Chiaki/chiaki.conf", names)
+
+    def test_clean_install_creates_settings_when_zip_omits_it(self):
+        clean_app = os.path.join(self.work_dir, "clean-app")
+        shutil.copytree(self.app_dir, clean_app)
+        settings_path = os.path.join(clean_app, "settings.json")
+        os.remove(settings_path)
+        script = (
+            "import json, os; from rh import state; "
+            "print(json.dumps({'exists': os.path.isfile(state.SETTINGS_FILE), "
+            "'logging': state.enable_logging, 'device_id': state.device_id}))"
+        )
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = clean_app
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=clean_app,
+            env=environment,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        generated = json.loads(result.stdout.strip())
+        self.assertTrue(generated["exists"])
+        self.assertTrue(generated["logging"])
+        self.assertRegex(generated["device_id"], r"^CHI-[0-9A-F]{4}$")
 
     def test_release_bytes_normalize_text_but_preserve_binary(self):
         root = os.path.dirname(os.path.dirname(__file__))
@@ -1331,6 +1360,25 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(result["rp_key_type"], 2)
         self.assertEqual(result["server_mac"], "001122334455")
         self.assertEqual(base64.b64decode(result["rp_key"]), bytes(range(16)))
+
+    def test_registration_pending_error_requests_a_new_pin(self):
+        regist = importlib.import_module("rh.ps4_regist")
+        connection = mock.MagicMock()
+        connection.__enter__.return_value = connection
+        response = (
+            b"HTTP/1.1 403 Forbidden\r\n"
+            b"RP-Application-Reason: 80108b03\r\n"
+            b"Content-Length: 0\r\n\r\n"
+        )
+        with mock.patch.object(regist, "_search", return_value=("192.168.1.45", 9295)), \
+                mock.patch.object(regist.time, "sleep"), \
+                mock.patch.object(regist.socket, "create_connection", return_value=connection), \
+                mock.patch.object(regist, "_recv_http", return_value=(response, b"")):
+            with self.assertRaises(regist.RegistError) as caught:
+                regist.register("192.168.1.45", "12345678", target=1000)
+        self.assertIn("reopen it", str(caught.exception))
+        self.assertIn("new PIN", str(caught.exception))
+        self.assertNotIn("Account-ID", str(caught.exception))
 
     def test_regist_with_pin_never_returns_stub_keys(self):
         chiaki = importlib.import_module("rh.chiaki")

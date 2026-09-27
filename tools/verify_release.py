@@ -34,6 +34,8 @@ BRICK_RUNTIME = {
 }
 
 FORBIDDEN_MANIFEST = {
+    "chiaki.conf",
+    "paired_hosts.json",
     "settings.json",
     "secrets.json",
     "secrets..json",
@@ -48,7 +50,6 @@ REQUIRED_ARCHIVE = {
     "Apps/Chiaki/icon.png",
     "Apps/Chiaki/launch.sh",
     "Apps/Chiaki/reporting.json",
-    "Apps/Chiaki/settings.json",
     "Apps/Chiaki/rh/screens/guide.py",
     "Apps/Chiaki/assets/fallback.ttf",
     "Apps/Chiaki/bin/chiaki-stream",
@@ -195,6 +196,14 @@ def main():
         fail("ZIP is missing: %s" % ", ".join(sorted(missing)))
     if any(name.startswith("App/Chiaki/") for name in names):
         fail("ZIP contains obsolete App/Chiaki path; expected Apps/Chiaki")
+    forbidden_user_files = {
+        "Apps/Chiaki/chiaki.conf",
+        "Apps/Chiaki/paired_hosts.json",
+        "Apps/Chiaki/settings.json",
+    }
+    leaked_user_files = forbidden_user_files & names
+    if leaked_user_files:
+        fail("user data appears in ZIP: %s" % ", ".join(sorted(leaked_user_files)))
     for name in names:
         base = os.path.basename(name)
         if base in ("secrets.json", "secrets..json") or base.startswith(".log_upload_state"):

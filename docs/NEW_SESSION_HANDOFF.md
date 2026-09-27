@@ -112,7 +112,8 @@ cách ghi log:
 `v0.3.13` ghi nhận máy Brick Pro hiện tại:
 
 - Model: `sun50iw10`.
-- ID cài đặt/thẻ: `CHI-E545`.
+- ID cài đặt/thẻ hiện tại: `CHI-E4DF`; ID cũ `CHI-E545` bị thay khi beta4 ghi
+  đè `settings.json`.
 - ID phần cứng băm: `HW-C3A2FEFAB3F5`.
 
 `RH-5930` trong RetroHub là ID ngẫu nhiên của RetroHub, không phải serial máy.
@@ -166,7 +167,7 @@ Quy tắc OTA:
 
 - Chỉ popup khi remote version mới hơn `APP_VERSION`.
 - Lệch hash trong cùng version không popup.
-- `settings.json` bị loại ở build và runtime.
+- `settings.json` bị loại khỏi manifest/updater và từ beta5 cũng bị loại khỏi ZIP.
 - Mọi file tải về phải khớp SHA-256.
 - Staging file được flush/`fsync`; thư mục đích được `fsync` sau replace.
 - `rh/version.py` được apply cuối cùng.

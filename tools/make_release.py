@@ -28,6 +28,8 @@ EXCLUDE_FILES = {"desktop.ini", ".DS_Store"}
 # Dua no vao manifest se lam pending_files luon co no vi hash luon lech sau
 # lan chay dau, gay vong lap popup. Exclude ngay tu be build.
 EXCLUDE_USER_FILES = {
+    "chiaki.conf",
+    "paired_hosts.json",
     "settings.json",
     "secrets.json",
     "secrets..json",
@@ -35,8 +37,11 @@ EXCLUDE_USER_FILES = {
     ".pending_crash",
 }
 ARCHIVE_EXCLUDE_FILES = {
+    "chiaki.conf",
+    "paired_hosts.json",
     "secrets.json",
     "secrets..json",
+    "settings.json",
     "settings.json.tmp",
 }
 ARCHIVE_EXCLUDE_PREFIXES = (
@@ -155,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: thêm SRCH unicast tới PS4 đã pair và tự gửi chẩn đoán khi Rest Mode không phản hồi." % version,
-            "en": "v%s: add unicast SRCH for paired PS4 hosts and diagnostics when Rest Mode does not respond." % version,
+            "vi": "v%s: giữ cấu hình khi cài đè và bổ sung chẩn đoán pair/discovery PS4 an toàn." % version,
+            "en": "v%s: preserve settings on overwrite installs and improve safe PS4 pairing/discovery diagnostics." % version,
         },
         "files": files,
         "remove": [],

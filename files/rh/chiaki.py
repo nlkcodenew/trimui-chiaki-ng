@@ -595,6 +595,11 @@ def discovery_broadcast(timeout=3.0, ps4_hosts=None):
                 host = _parse_srch(data, addr, ps5_mode)
                 if host is None:
                     continue
+                log.info(
+                    "discovery host: ps5=%s state=%s system_version=%s target=%d",
+                    host.is_ps5, host.state, host.system_version or "missing",
+                    host.target,
+                )
                 with lock:
                     if host.addr in seen:
                         continue
@@ -632,7 +637,15 @@ def regist_with_pin(host, pin, timeout=10.0):
     addr = getattr(host, "addr", "") or "unknown"
     is_ps5 = bool(getattr(host, "is_ps5", False))
     target = int(getattr(host, "target", 0) or 0)
-    log.info("registration start: host=%s ps5=%s target=%d", addr, is_ps5, target)
+    account_id_configured = bool(
+        str(getattr(state, "psn_account_id", "") or "").strip()
+    )
+    log.info(
+        "registration start: host=%s ps5=%s target=%d system_version=%s "
+        "account_id_configured=%s",
+        addr, is_ps5, target, getattr(host, "system_version", "") or "missing",
+        account_id_configured,
+    )
     if is_ps5:
         message = "PS5 chua ho tro ghep noi; da xep hang gui chan doan len GitHub"
         log.warning("registration rejected: %s", message)

@@ -10,6 +10,9 @@ Thumbs.db
 dist/
 files/secrets.json
 files/secrets..json
+files/settings.json.tmp
+files/paired_hosts.json
+files/chiaki.conf
 files/.log_upload_state.json
 files/.pending_crash
 files/Chiaki-loi.txt*

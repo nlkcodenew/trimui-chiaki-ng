@@ -335,8 +335,8 @@ def register(host, pin, account_id_b64="", timeout=10.0, target=1000):
         detail = "HTTP %s" % code
         if reason:
             detail += ", reason %s" % reason
-        if used_offline_default:
-            detail += "; offline Account-ID may be required"
+        if reason.lower() == "80108b03":
+            detail += "; close PS4 Add Device, reopen it, then use the new PIN"
         raise RegistError(detail)
     if not response_payload:
         raise RegistError("empty registration response from PS4")
