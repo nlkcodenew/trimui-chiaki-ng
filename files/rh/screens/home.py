@@ -188,12 +188,12 @@ class HomeScreen(BaseScreen):
                 return
             self.toast = tr("wake_timeout")
             self.toast_until = time.time() + 8
-            self._report_error("wakeup_timeout_ddp_only_beta11")
+            self._report_error("wakeup_timeout_standby_confirm_beta12")
         except Exception as exc:
             log.error("wakeup transaction exception: %s", exc)
             self.toast = tr("wake_failed")
             self.toast_until = time.time() + 6
-            self._report_error("wakeup_ddp_only_beta11_exception")
+            self._report_error("wakeup_standby_confirm_beta12_exception")
         finally:
             self.scanning = False
 

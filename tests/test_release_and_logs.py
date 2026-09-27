@@ -1001,9 +1001,10 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("PIN 8 số", vietnamese)
         self.assertIn("START + SELECT", vietnamese)
         self.assertIn("DDP WAKEUP", vietnamese)
-        self.assertIn("Beta11", vietnamese)
+        self.assertIn("Beta12", vietnamese)
         self.assertIn("120 giây", vietnamese)
-        self.assertIn("không magic packet", vietnamese)
+        self.assertIn("Không magic packet", vietnamese)
+        self.assertIn("620 Standby", vietnamese)
         self.assertIn("mã HW-... trên tiêu đề", vietnamese)
         self.assertNotIn("PS5", vietnamese)
 
@@ -1215,7 +1216,7 @@ class LogUploaderTests(unittest.TestCase):
             )
         create_socket.assert_not_called()
 
-    def test_ps4_wakeup_uses_same_socket_until_ready(self):
+    def test_ps4_wakeup_confirms_once_after_first_standby_until_ready(self):
         chiaki = importlib.import_module("rh.chiaki")
         sent = []
         standby = (
@@ -1265,11 +1266,14 @@ class LogUploaderTests(unittest.TestCase):
         self.assertTrue(all(dest == ("192.168.1.45", 987) for _, dest in sent))
         wake_packets = [packet for packet, _ in sent
                         if packet.startswith(b"WAKEUP")]
-        self.assertEqual(len(wake_packets), 1)
+        self.assertEqual(len(wake_packets), 2)
         self.assertTrue(all(packet.endswith(b"\n\x00") for packet in wake_packets))
+        packet_kinds = ["wake" if packet.startswith(b"WAKEUP") else "srch"
+                        for packet, _ in sent]
+        self.assertEqual(packet_kinds, ["wake", "srch", "wake", "srch", "srch"])
         self.assertEqual(sleep.call_count, 2)
 
-    def test_ps4_wakeup_is_one_unicast_ddp_without_wol_or_retry(self):
+    def test_ps4_wakeup_without_standby_is_one_unicast_ddp_without_timer_retry(self):
         chiaki = importlib.import_module("rh.chiaki")
         sent = []
 

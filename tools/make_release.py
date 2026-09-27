@@ -160,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: phép thử đối chứng chỉ gửi một DDP WAKEUP chuẩn Chiaki, không WOL hoặc retry, rồi theo dõi PS4 tối đa 120 giây." % version,
-            "en": "v%s: controlled test sends one standard Chiaki DDP WAKEUP without WOL or retry, then observes the PS4 for up to 120 seconds." % version,
+            "vi": "v%s: mô phỏng Chiaki desktop, poll DDP mỗi 500 ms và gửi thêm đúng một WAKEUP khi PS4 lần đầu trả 620 Standby; không WOL/broadcast." % version,
+            "en": "v%s: mirror Chiaki desktop by polling DDP every 500 ms and sending exactly one additional WAKEUP on the first 620 Standby response; no WOL/broadcast." % version,
         },
         "files": files,
         "remove": [],

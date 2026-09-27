@@ -8,7 +8,7 @@
 
 ## Trạng thái hiện tại
 
-**Release ổn định mới nhất: `v0.3.22`. Beta wake: `v0.3.23-beta11`.**
+**Release ổn định mới nhất: `v0.3.22`. Beta wake: `v0.3.23-beta12`.**
 
 - `v0.3.11` đóng gói Mozilla CA bundle cho Brick Pro Stock OS. OTA và GitHub
   Issue uploader vẫn bắt buộc xác minh certificate và hostname.
@@ -49,6 +49,10 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
   nháy và cấp nguồn ổ USB nhưng không chuyển sang đèn trắng. Bản này chỉ gửi một
   DDP WAKEUP unicast chuẩn Chiaki, không magic WOL, broadcast wake hoặc retry,
   rồi theo dõi trạng thái PS4 tối đa 120 giây.
+- `v0.3.23-beta12` dựa trên Issue `#58`: PS4 bắt đầu trả `620 Standby` sau khoảng
+  25 giây nhưng beta11 không gửi lại WAKEUP. Bản này mô phỏng Chiaki desktop:
+  discovery mỗi 500 ms, gửi WAKEUP cho host manual/offline, rồi gửi thêm đúng một
+  WAKEUP khi PS4 lần đầu xuất hiện ở trạng thái `STANDBY`.
 - Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
@@ -84,7 +88,7 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 | Brick Pro Stock OS | `v0.3.16` stream PS4 thật có hình, âm thanh và input |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
 | PS5/H265 | Đã vô hiệu hóa trong app; không còn thuộc phạm vi phát triển |
-| WAKEUP PS4 Rest Mode | Đang thử nghiệm riêng trong prerelease `v0.3.23-beta11` |
+| WAKEUP PS4 Rest Mode | Đang thử nghiệm riêng trong prerelease `v0.3.23-beta12` |
 
 ## Cài đặt
 
@@ -122,13 +126,14 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
-Beta `v0.3.23-beta11` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
+Beta `v0.3.23-beta12` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
 PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên và
 hiện host đã pair ở trạng thái `offline`. Chọn host rồi bấm **A – ĐÁNH THỨC** để
-gửi đúng một DDP WAKEUP unicast tới IP đã lưu, rồi chờ `ready` tối đa 120 giây
-trên cùng một UDP socket. Bản này không gửi magic packet WOL cổng `7`/`9`, không
-gửi broadcast WAKEUP và không retry WAKEUP. Beta không tự wake khi scan, không
-thay đổi WoWLAN của TrimUI và không thay bản ổn định.
+gửi một DDP WAKEUP unicast tới IP đã lưu. App tiếp tục SRCH mỗi 500 ms trên cùng
+socket; nếu PS4 lần đầu trả `620 Standby`, app gửi thêm đúng một WAKEUP unicast,
+sau đó chỉ chờ `200 Ready` trong tối đa 120 giây. Bản này không gửi magic packet
+WOL cổng `7`/`9`, broadcast WAKEUP hoặc retry theo timer. Beta không tự wake khi
+scan, không thay đổi WoWLAN của TrimUI và không thay bản ổn định.
 
 Beta8 chỉ tạo một socket discovery PS4 và chỉ gửi tới cổng `987`. Luồng PS5,
 cổng `9302` và socket discovery PS5 đã bị tắt để loại trừ khả năng hai socket
@@ -145,11 +150,17 @@ nhấp nháy và cấp nguồn ổ USB nhưng không hoàn tất resume. Vì WOL
 không thuộc luồng Chiaki gốc, beta11 loại bỏ hoàn toàn cơ chế này để tách nguyên
 nhân DDP khỏi hiện tượng đánh thức phần cứng không hoàn chỉnh.
 
+Issue `#58` của beta11 cho thấy PS4 không hack và không gắn USB bắt đầu trả
+`620 Standby` ở probe 26, khoảng 25 giây sau WAKEUP đầu, rồi giữ trạng thái đó
+đến hết 120 giây. Chiaki desktop chạy discovery mỗi 500 ms và gửi WAKEUP khi host
+đã được discovery xác nhận `STANDBY`; beta12 mô phỏng chính thời điểm này thay vì
+gửi lặp theo số giây.
+
 Chặn Internet hoặc DNS Sony không trực tiếp chặn UDP LAN cổng `987`.
 Tuy nhiên PS4 vẫn phải bật **Stay Connected to the Internet** và **Enable Turning
 On PS4 from Network** để giữ NIC trong Rest Mode. GoldHEN không mặc định cấm wake,
 nhưng payload/network blocker, firmware patch hoặc trạng thái NIC của máy hack có
-thể khiến PS4 không còn nghe hoặc không hoàn tất DDP wake. Phép thử beta11 nên
+thể khiến PS4 không còn nghe hoặc không hoàn tất DDP wake. Phép thử beta12 nên
 được thực hiện sau cold boot không GoldHEN, không ổ USB ngoài; có thể giữ DNS chặn
 Sony để tránh cập nhật firmware vì DNS đó không cản gói UDP nội bộ.
 
@@ -202,7 +213,7 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][HW-C3A2FEFAB3F5] v0.3.23-beta11 reason fingerprint
+[device-log][HW-C3A2FEFAB3F5] v0.3.23-beta12 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.

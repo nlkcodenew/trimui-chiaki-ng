@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho beta `v0.3.23-beta11`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho beta `v0.3.23-beta12`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 Đây là bản thử nghiệm PS4 Wake tách khỏi bản ổn định `v0.3.22`. Cài thủ công từ
@@ -18,8 +18,8 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.23-beta11`.
-2. Tải `trimui-chiaki-ng-v0.3.23-beta11.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.23-beta12`.
+2. Tải `trimui-chiaki-ng-v0.3.23-beta12.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -47,12 +47,13 @@ nên giải nén đè không xóa ID cài đặt, cấu hình hay khóa ghép n�
 bản rất cũ thiếu `vendor/sdl2` và cần cài sạch, hãy backup các file dữ liệu trên
 cùng `secrets.json` trước khi xóa thư mục app.
 
-Beta11 chỉ hỗ trợ PS4. App không quét cổng PS5 `9302`, không hiển thị host PS5 đã
+Beta12 chỉ hỗ trợ PS4. App không quét cổng PS5 `9302`, không hiển thị host PS5 đã
 lưu và từ chối pair/wake/stream PS5. Dữ liệu PS5 cũ không bị xóa khi cài đè.
 
-Beta11 chỉ gửi một packet DDP WAKEUP unicast chuẩn Chiaki tới IP PS4 đã pair,
-không gửi magic packet WOL cổng `9`/`7`, broadcast wake hoặc retry WAKEUP. App
-theo dõi phản hồi trên cùng socket tối đa 120 giây.
+Beta12 gửi DDP WAKEUP unicast cho host PS4 offline, tiếp tục SRCH mỗi 500 ms và
+gửi thêm đúng một WAKEUP khi PS4 lần đầu trả `620 Standby`, giống thời điểm wake
+của Chiaki desktop. App không gửi magic packet WOL, broadcast wake hoặc retry
+theo timer và theo dõi phản hồi trên cùng socket tối đa 120 giây.
 
 ## Trường hợp Brick Pro trước v0.3.11
 
@@ -110,7 +111,8 @@ Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro 
 1. Bật đủ `Stay Connected to the Internet` và `Enable Turning On PS4 from Network`.
 2. Đưa PS4 vào Rest Mode, mở app và quét; PS4 đã ghép có thể hiện `offline` nếu
    Rest Mode không trả lời discovery.
-3. Chọn PS4 đã ghép và bấm **A**. Beta gửi một DDP WAKEUP rồi chờ tối đa 120 giây.
+3. Chọn PS4 đã ghép và bấm **A**. Beta gửi WAKEUP ban đầu; nếu PS4 lần đầu trả
+   `620 Standby`, app gửi thêm đúng một WAKEUP rồi chờ `200 Ready` tối đa 120 giây.
 4. Khi app báo PS4 sẵn sàng, bấm **A** lần nữa để stream.
 5. Nếu wake timeout, thoát app để gửi chẩn đoán rồi cung cấp mã `HW-...`.
 6. Để kiểm tra stream độc lập, vẫn có thể bật PS4 bằng nút nguồn hoặc tay cầm.
@@ -119,7 +121,7 @@ Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro 
    trên PS4 và nhập đủ 8 số.
 9. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và quay lại app.
 
-Để test beta11 có giá trị đối chứng, hãy tắt PS4 hoàn toàn để mất trạng thái
+Để test beta12 có giá trị đối chứng, hãy tắt PS4 hoàn toàn để mất trạng thái
 GoldHEN, rút ổ USB/SSD box, khởi động lại nhưng không chạy exploit, rồi đưa máy
 vào Rest Mode. Có thể giữ DNS chặn Sony/Internet để tránh cập nhật firmware vì
 DNS này không trực tiếp chặn UDP LAN cổng `987`. Quan sát đèn PS4 đủ 120 giây;

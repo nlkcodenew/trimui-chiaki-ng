@@ -424,6 +424,7 @@ def write_chiaki_conf(hosts, path=None):
 # toi chinh cong nguon 9303-9308 nen khong bao gio toi duoc may PS -> luon 0 host.
 PS4_DISCOVERY_PORT = 987
 PS4_PROTOCOL_VERSION = "00020020"
+PS4_DISCOVERY_POLL_INTERVAL = 0.5
 # Khoang cong nguon cuc bo de bind va nhan phan hoi (PS tra loi ve dung cong nguon).
 LOCAL_PORT_MIN = 9303
 LOCAL_PORT_MAX = 9319
@@ -672,7 +673,7 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
 
 
 def _wake_ps4_until_ready(addr, regist_key, timeout=120.0):
-    """Send one upstream DDP WAKEUP, then wait for the paired PS4."""
+    """Send DDP WAKEUP, then confirm once after the first STANDBY reply."""
     try:
         wake_payload = _build_wakeup(regist_key)
     except (TypeError, ValueError):
@@ -680,28 +681,36 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=120.0):
         return None
     srch_payload = _build_srch(PS4_PROTOCOL_VERSION)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    deadline = time.monotonic() + max(1.0, float(timeout))
+    started_at = time.monotonic()
+    deadline = started_at + max(1.0, float(timeout))
     last_state = "unknown"
+    last_logged_state = ""
     probes = 0
+    standby_seen = False
+    standby_wake_attempted = False
+    standby_wake_sent = False
     try:
-        sock.settimeout(1.0)
+        sock.settimeout(PS4_DISCOVERY_POLL_INTERVAL)
         source_port = _bind_discovery_socket(sock)
         log.info(
-            "wakeup DDP-only start: host=%s source_port=%d timeout=%.1f "
-            "wake_packets=1 wake_destination=unicast wol=False retry=False",
+            "wakeup standby-confirm start: host=%s source_port=%d timeout=%.1f "
+            "wake_packets_max=2 wake_destination=unicast wol=False timer_retry=False",
             addr, source_port, timeout,
         )
         sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
-        wake_sent = sent == len(wake_payload)
+        initial_wake_sent = sent == len(wake_payload)
         log.info(
-            "wakeup DDP-only sent: host=%s source_port=%d packets=1 bytes=%d",
+            "wakeup standby-confirm initial sent: host=%s source_port=%d "
+            "packets=1 bytes=%d",
             addr, source_port, sent,
         )
         while time.monotonic() < deadline:
             probe_started = time.monotonic()
             sock.sendto(srch_payload, (addr, PS4_DISCOVERY_PORT))
             probes += 1
-            probe_deadline = min(deadline, time.monotonic() + 1.0)
+            probe_deadline = min(
+                deadline, time.monotonic() + PS4_DISCOVERY_POLL_INTERVAL,
+            )
             while time.monotonic() < probe_deadline:
                 try:
                     data, response_addr = sock.recvfrom(2048)
@@ -713,22 +722,47 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=120.0):
                 if not discovered:
                     continue
                 last_state = discovered.state
-                log.info(
-                    "wakeup DDP-only response: host=%s state=%s "
-                    "source_port=%d probes=%d",
-                    addr, last_state, source_port, probes,
-                )
+                if last_state != last_logged_state:
+                    log.info(
+                        "wakeup standby-confirm response: host=%s state=%s "
+                        "source_port=%d probes=%d elapsed=%.1f",
+                        addr, last_state, source_port, probes,
+                        time.monotonic() - started_at,
+                    )
+                    last_logged_state = last_state
                 if last_state == "ready":
                     return discovered
+                if last_state == "standby" and not standby_wake_attempted:
+                    standby_seen = True
+                    standby_wake_attempted = True
+                    confirmed_sent = sock.sendto(
+                        wake_payload, (addr, PS4_DISCOVERY_PORT),
+                    )
+                    standby_wake_sent = confirmed_sent == len(wake_payload)
+                    log.info(
+                        "wakeup standby-confirm sent after first standby: "
+                        "host=%s source_port=%d probe=%d packets=1 bytes=%d "
+                        "elapsed=%.1f",
+                        addr, source_port, probes, confirmed_sent,
+                        time.monotonic() - started_at,
+                    )
                 break
             remaining = deadline - time.monotonic()
-            delay = min(1.0 - (time.monotonic() - probe_started), remaining)
+            delay = min(
+                PS4_DISCOVERY_POLL_INTERVAL
+                - (time.monotonic() - probe_started),
+                remaining,
+            )
             if delay > 0:
                 time.sleep(delay)
         log.error(
-            "wakeup DDP-only timeout: host=%s state=%s sent=%s probes=%d "
-            "wol=False retry=False",
-            addr, last_state, wake_sent, probes,
+            "wakeup standby-confirm timeout: host=%s state=%s "
+            "initial_sent=%s standby_seen=%s standby_wake_attempted=%s "
+            "standby_wake_sent=%s probes=%d elapsed=%.1f "
+            "wol=False timer_retry=False",
+            addr, last_state, initial_wake_sent, standby_seen,
+            standby_wake_attempted, standby_wake_sent, probes,
+            time.monotonic() - started_at,
         )
         return None
     except OSError as exc:
