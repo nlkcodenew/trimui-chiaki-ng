@@ -3,7 +3,7 @@
 """Tạo manifest OTA và gói ZIP cài đặt cho GitHub Releases.
 
 Quét toàn bộ files/, tính sha256 cho mỗi file OTA và tạo ZIP có cấu trúc
-App/Chiaki/ để người dùng giải nén trực tiếp vào gốc thẻ nhớ.
+Apps/Chiaki/ để người dùng giải nén trực tiếp vào gốc thẻ nhớ.
 """
 
 import hashlib
@@ -94,7 +94,7 @@ def _archive_excluded(name):
 
 
 def build_release_zip(version):
-    """Tạo ZIP có cấu trúc App/Chiaki để giải nén vào gốc thẻ nhớ."""
+    """Tạo ZIP có cấu trúc Apps/Chiaki để giải nén vào gốc thẻ nhớ."""
     shutil.rmtree(DIST_DIR, ignore_errors=True)
     os.makedirs(DIST_DIR, exist_ok=True)
     archive_name = "trimui-chiaki-ng-v%s.zip" % version
@@ -110,7 +110,7 @@ def build_release_zip(version):
                 src = os.path.join(root, name)
                 rel = os.path.relpath(src, FILES_DIR).replace(os.sep, "/")
                 executable = rel.endswith(".sh") or rel.startswith("bin/")
-                _archive_file(archive, src, "App/Chiaki/%s" % rel, executable)
+                _archive_file(archive, src, "Apps/Chiaki/%s" % rel, executable)
     with open(archive_path, "rb") as handle:
         checksum = sha256(handle.read())
     checksum_path = archive_path + ".sha256"
@@ -155,8 +155,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: beta PS4 Wake, gửi SRCH và WAKEUP unicast trên cùng socket khi console được nhận diện standby." % version,
-            "en": "v%s: PS4 Wake beta using the same UDP socket for standby discovery and unicast WAKEUP." % version,
+            "vi": "v%s: sửa ZIP cài đúng Apps/Chiaki và thử PS4 Wake trên cùng socket khi console standby." % version,
+            "en": "v%s: fix the ZIP root to Apps/Chiaki and test same-socket PS4 Wake for standby consoles." % version,
         },
         "files": files,
         "remove": [],

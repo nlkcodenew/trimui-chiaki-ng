@@ -14,6 +14,7 @@ import tempfile
 import types
 import unittest
 import urllib.error
+import zipfile
 from unittest import mock
 
 
@@ -390,6 +391,21 @@ class LogUploaderTests(unittest.TestCase):
             verify_release = handle.read()
         self.assertIn('"secrets..json"', make_release)
         self.assertIn('"secrets..json"', verify_release)
+
+    def test_release_zip_uses_trimui_apps_directory(self):
+        root = os.path.dirname(os.path.dirname(__file__))
+        path = os.path.join(root, "tools", "make_release.py")
+        spec = importlib.util.spec_from_file_location("release_zip_root_test", path)
+        release_builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(release_builder)
+        dist_dir = os.path.join(self.work_dir, "release-root")
+        with mock.patch.object(release_builder, "DIST_DIR", dist_dir):
+            archive_name, _, _ = release_builder.build_release_zip("0.0.0-test")
+        archive_path = os.path.join(dist_dir, archive_name)
+        with zipfile.ZipFile(archive_path) as archive:
+            names = set(archive.namelist())
+        self.assertIn("Apps/Chiaki/app.py", names)
+        self.assertNotIn("App/Chiaki/app.py", names)
 
     def test_release_bytes_normalize_text_but_preserve_binary(self):
         root = os.path.dirname(os.path.dirname(__file__))

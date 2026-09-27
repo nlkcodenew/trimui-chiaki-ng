@@ -1,20 +1,20 @@
 {
-  "version": "0.3.22-beta2",
+  "version": "0.3.22-beta3",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-27T09:18:30+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta2/files",
-  "release_tag": "v0.3.22-beta2/files",
+  "built": "2026-09-27T09:42:28+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta3/files",
+  "release_tag": "v0.3.22-beta3/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.22-beta2: beta PS4 Wake, gửi SRCH và WAKEUP unicast trên cùng socket khi console được nhận diện standby.",
-    "en": "v0.3.22-beta2: PS4 Wake beta using the same UDP socket for standby discovery and unicast WAKEUP."
+    "vi": "v0.3.22-beta3: sửa ZIP cài đúng Apps/Chiaki và thử PS4 Wake trên cùng socket khi console standby.",
+    "en": "v0.3.22-beta3: fix the ZIP root to Apps/Chiaki and test same-socket PS4 Wake for standby consoles."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "0329e80a979ec28576a2e78b7328ed30f7eda14319159a5aa14d32c4f6abd17f",
-      "size": 4929
+      "sha256": "2c9ba6a207dea9a15d72958a2d172563dfad4e28165cf62de30fa57c006908e9",
+      "size": 4930
     },
     {
       "path": "config.json",
@@ -198,7 +198,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "e44edce5c86b0c4474b1524fcc5515c1b8c76ed562e5196d0b3be049c263ecc1",
+      "sha256": "1d800fd3dac23e4a086dbc4026d599b7cbc0e379ace2b5cd9f4ad938819c5e49",
       "size": 1184
     },
     {
@@ -644,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.22-beta2.zip",
-    "sha256": "08659ad987256860cbafd55e770ee31db2dd79e81da6dd4971a757cacc8f50ae",
-    "size": 10762307
+    "name": "trimui-chiaki-ng-v0.3.22-beta3.zip",
+    "sha256": "9836a3bc73927c258f5efab344ee23aecff1b0e83821d34114fb881ccea7ee33",
+    "size": 10762607
   }
 }

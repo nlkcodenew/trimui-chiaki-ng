@@ -43,18 +43,18 @@ FORBIDDEN_MANIFEST = {
 REQUIRED_ARCHIVE = {
     "CAI_DAT.md",
     "LICENSE.txt",
-    "App/Chiaki/app.py",
-    "App/Chiaki/config.json",
-    "App/Chiaki/icon.png",
-    "App/Chiaki/launch.sh",
-    "App/Chiaki/reporting.json",
-    "App/Chiaki/settings.json",
-    "App/Chiaki/rh/screens/guide.py",
-    "App/Chiaki/assets/fallback.ttf",
-    "App/Chiaki/bin/chiaki-stream",
-    "App/Chiaki/certs/README.txt",
-    "App/Chiaki/certs/cacert.pem",
-    "App/Chiaki/vendor/sdl2/__init__.py",
+    "Apps/Chiaki/app.py",
+    "Apps/Chiaki/config.json",
+    "Apps/Chiaki/icon.png",
+    "Apps/Chiaki/launch.sh",
+    "Apps/Chiaki/reporting.json",
+    "Apps/Chiaki/settings.json",
+    "Apps/Chiaki/rh/screens/guide.py",
+    "Apps/Chiaki/assets/fallback.ttf",
+    "Apps/Chiaki/bin/chiaki-stream",
+    "Apps/Chiaki/certs/README.txt",
+    "Apps/Chiaki/certs/cacert.pem",
+    "Apps/Chiaki/vendor/sdl2/__init__.py",
 }
 
 
@@ -187,12 +187,14 @@ def main():
     with zipfile.ZipFile(archive_path) as archive:
         names = set(archive.namelist())
         for item in manifest.get("files", []):
-            archived = archive.read("App/Chiaki/%s" % item["path"])
+            archived = archive.read("Apps/Chiaki/%s" % item["path"])
             if hashlib.sha256(archived).hexdigest() != item.get("sha256"):
                 fail("ZIP payload hash mismatch: %s" % item["path"])
     missing = REQUIRED_ARCHIVE - names
     if missing:
         fail("ZIP is missing: %s" % ", ".join(sorted(missing)))
+    if any(name.startswith("App/Chiaki/") for name in names):
+        fail("ZIP contains obsolete App/Chiaki path; expected Apps/Chiaki")
     for name in names:
         base = os.path.basename(name)
         if base in ("secrets.json", "secrets..json") or base.startswith(".log_upload_state"):

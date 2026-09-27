@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho beta `v0.3.22-beta2`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho beta `v0.3.22-beta3`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 Đây là bản thử nghiệm PS4 Wake tách từ bản ổn định `v0.3.21`. Cài thủ công từ
@@ -18,8 +18,8 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta2`.
-2. Tải `trimui-chiaki-ng-v0.3.22-beta2.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta3`.
+2. Tải `trimui-chiaki-ng-v0.3.22-beta3.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -38,6 +38,9 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
    ```
 
 5. Eject thẻ an toàn, lắp lại và mở **Apps → Chiaki-ng**.
+
+Nếu đã giải nén `v0.3.22-beta2`, hãy xóa thư mục sai `App/Chiaki/` ở gốc thẻ.
+Không xóa `Apps/Chiaki/`; `beta3` ghi đè đúng thư mục app đang được Brick Pro chạy.
 
 Nếu đang dùng bản rất cũ thiếu `vendor/sdl2`, nên xóa thư mục `Apps/Chiaki/` cũ
 trước khi giải nén. Không xóa `settings.json`, `paired_hosts.json` hoặc

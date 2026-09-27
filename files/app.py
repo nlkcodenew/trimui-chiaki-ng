@@ -8,7 +8,7 @@ Phiên bản 0.3.4:
     - Audio Opus, gamepad, rung đơn, log native và quay lại menu sau stream.
     - Quản lý log an toàn và giữ START+SELECT để thoát stream mà không tắt PS4.
 
-Luu y khi update tu v0.2.0 hoac v0.2.1: nen xoa App/Chiaki cu va giai nen
+Luu y khi update tu v0.2.0 hoac v0.2.1: nen xoa Apps/Chiaki cu va giai nen
 Release moi nhat vao goc the de vendor/sdl2 duoc cai day du.
 
 Video stream chạy bằng native helper AArch64: libchiaki + FFmpeg + SDL2.
