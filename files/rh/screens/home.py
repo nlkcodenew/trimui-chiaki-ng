@@ -7,7 +7,7 @@ import time
 from .. import state, chiaki
 from ..i18n import tr
 from ..version import APP_VERSION
-from ..device_identity import install_id
+from ..device_identity import hardware_id
 from ..logger import get_logger
 from .base import BaseScreen
 
@@ -65,14 +65,14 @@ class HomeScreen(BaseScreen):
         threading.Thread(target=worker, daemon=True).start()
 
     def get_header_title(self):
-        return "%s v%s | ID: %s" % (tr("app_title"), APP_VERSION, install_id())
+        return "%s v%s | %s" % (tr("app_title"), APP_VERSION, hardware_id())
 
     def get_footer_actions(self):
         if self.hosts:
             host = self.hosts[self.host_selected]
             paired = self._is_paired(host) if self.hosts else False
             if paired:
-                if host.state == "standby" and not host.is_ps5:
+                if host.state in ("offline", "standby", "waking") and not host.is_ps5:
                     return [("A", tr("wake")), ("Y", tr("pair")), ("B", tr("back"))]
                 return [("A", tr("connect")), ("Y", tr("pair")), ("B", tr("back"))]
             return [("A", tr("pair")), ("B", tr("back"))]
@@ -95,14 +95,15 @@ class HomeScreen(BaseScreen):
             log.error("scan exception: %s", exc)
             self._report_error("discovery_exception")
             hosts = []
-        self.hosts = hosts
+        self.hosts = chiaki.paired_hosts_for_discovery(hosts)
         self.scanning = False
         if hosts:
             self.toast = tr("scan_done") % len(hosts)
             log.info("scan: %d host(s) %s",
                      len(hosts), [h.addr for h in hosts])
         else:
-            self.toast = tr("scan_none")
+            self.toast = (tr("scan_paired_offline") if self.hosts
+                          else tr("scan_none"))
             log.info("scan: khong thay host")
             if paired_ps4 and not self.discovery_miss_reported:
                 self.discovery_miss_reported = True
@@ -152,7 +153,7 @@ class HomeScreen(BaseScreen):
             self.toast = tr("pair_required") if "pair_required" in tr("pair_required") else "Chưa ghép - bấm Y để nhập PIN"
             self._open_pair(host)
             return
-        if host.state == "standby" and not host.is_ps5:
+        if host.state in ("offline", "standby", "waking") and not host.is_ps5:
             self._wake_host(host)
             return
         log.info("home: yeu cau stream toi %s (%s)", host.name or host.addr, host.addr)

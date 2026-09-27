@@ -109,12 +109,12 @@ cách ghi log:
 
 ### Định danh thiết bị
 
-`v0.3.13` ghi nhận máy Brick Pro hiện tại:
+Máy Brick Pro đang thử nghiệm được ghi nhận như sau:
 
 - Model: `sun50iw10`.
-- ID cài đặt/thẻ hiện tại: `CHI-E4DF`; ID cũ `CHI-E545` bị thay khi beta4 ghi
-  đè `settings.json`.
-- ID phần cứng băm: `HW-C3A2FEFAB3F5`.
+- Các ID cài đặt/thẻ đã thấy: `CHI-E545`, `CHI-E4DF`, `CHI-EC6F`; chúng có thể
+  đổi khi mất settings hoặc thay bản cài.
+- Mã đối chiếu thiết bị ổn định: `HW-C3A2FEFAB3F5`.
 
 `RH-5930` trong RetroHub là ID ngẫu nhiên của RetroHub, không phải serial máy.
 
@@ -193,8 +193,11 @@ Không đọc file sai tên `secrets..json`; chỉ cảnh báo tên sai mà khô
 Issue title có dạng:
 
 ```text
-[device-log][model][CHI-xxxx][HW-xxxxxxxxxxxx] vX.Y.Z reason fingerprint
+[device-log][HW-xxxxxxxxxxxx] vX.Y.Z reason fingerprint
 ```
+
+Chỉ dùng `HW-...` để đối chiếu thiết bị. `CHI-...` là ID của lần cài/thẻ nhớ,
+có thể đổi nếu `settings.json` bị mất và chỉ còn xuất hiện trong body Issue.
 
 Các lỗi có ý nghĩa được report:
 
@@ -299,7 +302,8 @@ Trước commit/release, xác nhận không stage:
 Tiếp tục repo E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước.
 Latest/release hiện tại là v0.3.21. Bản này khóa tối đa 720p, dùng HTTPS relay
-không token client, có hướng dẫn 8 bước và hiện CHI-xxxx cạnh version. Brick
+không token client, có hướng dẫn 8 bước. Beta6 hiện HW-xxxxxxxxxxxx cạnh version
+và dùng mã này trong title Issue; CHI-xxxx chỉ là ID cài đặt phụ. Brick
 sun50iw10 đã stream thật thành công; Issue #39 đạt 8968/0/0
 rendered/lost/FEC và exit 0. Spruce sun55iw3 vẫn dùng runtime system. Không tắt
 TLS, không đọc/tiết lộ token và không sửa native/pair/input nếu không có Issue

@@ -24,8 +24,8 @@
   `OPENSSL_1_1_1`; launcher Brick preload đúng OpenSSL 1.1.1 đã đóng gói.
 - `v0.3.17` khóa profile tối đa 720p và chuyển báo cáo lỗi sang HTTPS relay;
   GitHub token chỉ nằm trong Worker secret, không còn trong app hoặc thẻ nhớ.
-- `v0.3.18` thêm hướng dẫn sử dụng 8 bước ngay trong menu và hiển thị mã cài
-  đặt `CHI-xxxx` cạnh version để đối chiếu đúng Issue khi hỗ trợ người dùng.
+- `v0.3.18` thêm hướng dẫn sử dụng 8 bước ngay trong menu. Từ beta6, tiêu đề
+  hiển thị mã thiết bị băm ổn định `HW-xxxxxxxxxxxx` thay cho mã cài đặt.
 
 Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật có hình,
 âm thanh, input. Issue `#39` ghi nhận native exit `0`, tổng `8968` frame,
@@ -57,8 +57,8 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 - Mozilla CA bundle dùng chung cho OTA và uploader, không tắt TLS verification.
 - Log xoay vòng, nút xóa log an toàn và retry báo cáo pending.
 - Tự tạo GitHub Issue cho lỗi kết thúc thật sự và báo cáo chất lượng stream.
-- ID Issue gồm model, mã cài đặt `CHI-xxxx` và mã phần cứng băm
-  `HW-xxxxxxxxxxxx` để phân biệt nhiều máy mà không gửi serial/MAC thô.
+- Tiêu đề Issue chỉ dùng mã thiết bị băm `HW-xxxxxxxxxxxx`; model và mã cài đặt
+  chỉ còn trong body để chẩn đoán, không dùng làm định danh chính.
 - Menu **Hướng dẫn sử dụng** trình bày bật máy, auto-login, pair PIN, stream và
   thoát phiên; PS5 được ghi rõ mới chỉ quét, chưa hỗ trợ pair/stream.
 
@@ -109,19 +109,22 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
-Beta `v0.3.22-beta5` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
-PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên để
-đọc log từ Brick Pro có hardware ID `HW-C3A2FEFAB3F5`. Beta không thay bản ổn định và chỉ hiện nút
-**ĐÁNH THỨC** khi discovery thật nhận PS4 đã ghép ở trạng thái `standby`. Khi
-người dùng bấm **A**, app dùng cùng một UDP socket để xác nhận `standby`, gửi
-WAKEUP unicast và chờ `ready` tối đa 25 giây. Beta không thêm host `offline`,
-không tự wake khi scan và không thay đổi cấu hình WoWLAN của thiết bị TrimUI.
+Beta `v0.3.22-beta6` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
+PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên và
+hiện host đã pair ở trạng thái `offline`. Chọn host rồi bấm **A – ĐÁNH THỨC** để
+gửi WAKEUP unicast ngay tới IP đã lưu và chờ `ready` tối đa 25 giây trên cùng
+một UDP socket. Beta không tự wake khi scan, không thay đổi WoWLAN của TrimUI và
+không thay bản ổn định.
 
 Beta5 sửa lỗi ZIP beta4 ghi đè `settings.json`, làm đổi `CHI-E545` thành
 `CHI-E4DF` và xóa dữ liệu pair. ZIP beta5 không chứa `settings.json`,
 `paired_hosts.json` hoặc `chiaki.conf`; cài mới tự tạo settings ở lần chạy đầu.
 Nếu pair báo `HTTP 403 / 80108b03`, thoát màn **Add Device** trên PS4, mở lại để
 lấy PIN mới rồi chỉ gửi một lần; không tiếp tục bấm lại PIN cũ.
+
+Log `#36` xác nhận pair thành công nhưng PS4 Rest Mode không trả cả SRCH
+broadcast lẫn unicast. Vì vậy beta6 không còn đợi PS4 trả `standby` trước khi gửi
+WAKEUP.
 
 1. Bật PS4 bằng nút nguồn hoặc tay cầm và chờ auto-login hoàn tất.
 2. Đặt PS4 và TrimUI cùng mạng LAN/Wi-Fi 5 GHz.
@@ -160,7 +163,7 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][sun50iw10][CHI-E4DF][HW-C3A2FEFAB3F5] v0.3.22-beta5 reason fingerprint
+[device-log][HW-C3A2FEFAB3F5] v0.3.22-beta6 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.
@@ -168,8 +171,9 @@ Issue có dạng:
   raw value không rời thiết bị.
 - `RH-...` của RetroHub là ID riêng của RetroHub, không phải serial phần cứng.
 
-Tiêu đề màn hình chính hiển thị `CHIAKI-NG vX.Y.Z | ID: CHI-xxxx`. Khi báo lỗi,
-người dùng chỉ cần gửi mã `CHI-xxxx`; mã này trùng với mã trong title/body Issue.
+Tiêu đề màn hình chính hiển thị `CHIAKI-NG vX.Y.Z | HW-xxxxxxxxxxxx`. Khi báo
+lỗi, chỉ cần gửi mã `HW-...`; mã này ổn định theo thiết bị và trùng title Issue.
+`CHI-xxxx` chỉ là mã của lần cài/thẻ nhớ nên có thể đổi sau khi mất settings.
 
 Không gửi Issue cho trạng thái bình thường như quét `0 host`, người dùng hủy,
 thoát bình thường hoặc một URL OTA lỗi nhưng fallback thành công. Khi mất mạng,

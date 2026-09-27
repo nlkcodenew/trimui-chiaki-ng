@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho beta `v0.3.22-beta5`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho beta `v0.3.22-beta6`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 Đây là bản thử nghiệm PS4 Wake tách từ bản ổn định `v0.3.21`. Cài thủ công từ
@@ -18,8 +18,8 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta5`.
-2. Tải `trimui-chiaki-ng-v0.3.22-beta5.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta6`.
+2. Tải `trimui-chiaki-ng-v0.3.22-beta6.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -95,15 +95,17 @@ File tải về được ghi vào staging, kiểm hash, `fsync` và thay atomica
 ## Ghép nối và stream PS4
 
 Có thể chọn **Hướng dẫn sử dụng** trong menu chính để xem 8 bước ngay trên máy.
-Tiêu đề chính hiển thị `ID: CHI-xxxx`; hãy gửi mã này khi cần tìm đúng Issue/log.
+Tiêu đề chính hiển thị `HW-xxxxxxxxxxxx`; hãy gửi mã này khi cần tìm đúng thiết
+bị trong Issue/log. `CHI-xxxx` có thể đổi theo lần cài và không còn là mã chính.
 
 Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro S:
 
 1. Bật đủ `Stay Connected to the Internet` và `Enable Turning On PS4 from Network`.
-2. Đưa PS4 vào Rest Mode, mở app và quét; PS4 phải hiện trạng thái `standby`.
-3. Chọn PS4 đã ghép và bấm **A**. Beta gửi WAKEUP rồi chờ tối đa 25 giây.
+2. Đưa PS4 vào Rest Mode, mở app và quét; PS4 đã ghép có thể hiện `offline` nếu
+   Rest Mode không trả lời discovery.
+3. Chọn PS4 đã ghép và bấm **A**. Beta gửi WAKEUP trực tiếp rồi chờ tối đa 25 giây.
 4. Khi app báo PS4 sẵn sàng, bấm **A** lần nữa để stream.
-5. Nếu wake timeout, thoát app để gửi chẩn đoán rồi cung cấp mã `CHI-xxxx`.
+5. Nếu wake timeout, thoát app để gửi chẩn đoán rồi cung cấp mã `HW-...`.
 6. Để kiểm tra stream độc lập, vẫn có thể bật PS4 bằng nút nguồn hoặc tay cầm.
 7. Dùng LAN hoặc Wi-Fi 5 GHz; tắt Bluetooth nếu cần giảm nhiễu.
 8. Nếu chưa có khóa pre-10, chọn console, bấm **Y**, mở màn hình PIN Remote Play
@@ -142,8 +144,8 @@ không dùng shared secret nhúng trong app vì người nhận có thể trích
 Từ `v0.3.13`, report có:
 
 - Model thiết bị, ví dụ `sun50iw10`.
-- ID cài đặt/thẻ `CHI-xxxx`.
-- ID phần cứng băm `HW-xxxxxxxxxxxx`.
+- Mã thiết bị băm ổn định `HW-xxxxxxxxxxxx` trong tiêu đề Issue.
+- ID cài đặt/thẻ `CHI-xxxx` trong body chỉ là dữ liệu phụ và có thể đổi.
 - Version, loại lỗi, fingerprint và phần cuối log đã lọc.
 
 ID `RH-xxxx` của RetroHub không phải serial phần cứng. Nếu không đọc được nguồn

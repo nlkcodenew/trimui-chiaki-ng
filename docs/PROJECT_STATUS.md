@@ -129,13 +129,16 @@ Sanitizer lọc:
 Identity gửi lên Issue:
 
 - Model đã làm sạch.
-- `CHI-xxxx`: ID ngẫu nhiên lưu trong settings của bản cài/thẻ.
-- `HW-xxxxxxxxxxxx`: SHA-256 pseudonym từ nguồn phần cứng ưu tiên.
+- `CHI-xxxx`: ID ngẫu nhiên của lần cài/thẻ, có thể đổi; chỉ dùng chẩn đoán phụ.
+- `HW-xxxxxxxxxxxx`: SHA-256 pseudonym từ nguồn phần cứng ưu tiên, là mã chính.
 - `APP-xxxxxxxxxxxx`: fallback nếu không có ID phần cứng.
 
+Từ beta6, title Issue và tiêu đề app chỉ ghi `HW-...`/`APP-...`; model và
+`CHI-...` vẫn nằm trong body nhưng không dùng để đối chiếu thiết bị.
+
 Máy Brick Pro của người dùng đang thử có hardware ID ổn định
-`HW-C3A2FEFAB3F5`. ID cài đặt đổi từ `CHI-E545` sang `CHI-E4DF` vì ZIP beta4
-ghi đè `settings.json`; cả hai ID đều là cùng Brick Pro.
+`HW-C3A2FEFAB3F5`. Các ID cài đặt `CHI-E545`, `CHI-E4DF`, `CHI-EC6F` đã xuất
+hiện trên cùng thiết bị; beta4 từng ghi đè `settings.json` và làm mất pair.
 
 Không report:
 
@@ -203,16 +206,23 @@ Lịch sử:
 - Issue `#26–#30`: console vẫn không phản hồi trong môi trường thật.
 - `v0.3.10`: tắt WAKEUP/offline host trong UI, trở lại bật PS4 bằng tay.
 
-Beta `v0.3.22-beta5` giữ ZIP đúng `Apps/Chiaki/`, gửi SRCH broadcast và unicast
+Beta `v0.3.22-beta6` giữ ZIP đúng `Apps/Chiaki/`, gửi SRCH broadcast và unicast
 tới IP PS4 đã pair, đồng thời report `discovery_ps4_standby_not_found` một lần
-mỗi phiên nếu Rest Mode vẫn không phản hồi. Khi discovery xác nhận `standby`:
-SRCH unicast, WAKEUP và polling `ready` dùng cùng một UDP socket trong tối đa
-25 giây. Beta không chèn host `offline`, không tự wake khi scan và không thay
-đổi WoWLAN của TrimUI. Beta5 còn loại dữ liệu người dùng khỏi ZIP, log
-`system-version → target` và trạng thái có/không Account-ID mà không ghi giá trị.
+mỗi phiên nếu Rest Mode vẫn không phản hồi. App phục hồi host đã pair dưới trạng
+thái `offline`; khi người dùng bấm **A**, WAKEUP được gửi ngay tới IP đã lưu rồi
+polling `ready` trên cùng UDP socket trong tối đa 25 giây. Beta không tự wake khi
+scan và không thay đổi WoWLAN của TrimUI. Beta5 còn loại dữ liệu người dùng khỏi
+ZIP, log `system-version → target` và trạng thái có/không Account-ID mà không ghi
+giá trị.
 Issue diagnostics `#29–#31` cho thấy `80108b03` sau khi mất pair; cần đóng/mở
 lại **Add Device** để tạo PIN mới thay vì retry PIN cũ. Nhánh ổn định `v0.3.21`
 giữ nguyên.
+
+Issue `#32`, `#33`, `#36` đều là log beta4, cùng hardware ID
+`HW-C3A2FEFAB3F5`. `#32` xác nhận pair thành công với Account-ID zero; `#36`
+xác nhận Rest Mode trả `0 host` dù đã SRCH broadcast + unicast tới IP paired.
+Beta6 vì vậy khôi phục host paired `offline` trong UI và gửi WAKEUP trực tiếp
+trước khi có response `standby`, sau đó polling `ready` trên cùng socket.
 
 Không tiếp tục sửa packet nếu không có môi trường mạng/console khác chứng minh
 WAKEUP có thể hoạt động.
@@ -258,6 +268,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.19` | Luôn bật diagnostics; report cả lần thử pair PS5 chưa hỗ trợ |
 | `v0.3.20` | Giữ log launcher trong app và bắt lỗi bootstrap trước khi đọc settings |
 | `v0.3.21` | Chỉ giữ `stay_alive` khi stream; menu idle 15 phút tự đóng để tránh hao pin |
+| `v0.3.22-beta6` | Wake host PS4 paired `offline`; title app/Issue dùng mã `HW-...` ổn định |
 
 ## 10. Kiểm thử và build gate
 

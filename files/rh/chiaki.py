@@ -199,7 +199,7 @@ def wake_paired_host(host):
 
 
 def wake_paired_ps4_until_ready(host, timeout=25.0):
-    """Wake a discovered standby PS4 and wait for READY on the same socket."""
+    """Wake a paired PS4 and wait for READY on the same socket."""
     addr = str(getattr(host, "addr", "") or "")
     if not addr or bool(getattr(host, "is_ps5", False)):
         return None
@@ -715,6 +715,7 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
     deadline = time.monotonic() + max(1.0, float(timeout))
     wake_sent = False
     wake_retried = False
+    silent_probes = 0
     last_state = "unknown"
     try:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -724,8 +725,16 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
             "wakeup transaction start: host=%s source_port=%d timeout=%.1f",
             addr, source_port, timeout,
         )
+        sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
+        wake_sent = sent == len(wake_payload)
+        log.info(
+            "wakeup transaction sent without standby response: "
+            "host=%s source_port=%d bytes=%d",
+            addr, source_port, sent,
+        )
         while time.monotonic() < deadline:
             probe_started = time.monotonic()
+            response_received = False
             sock.sendto(srch_payload, (addr, PS4_DISCOVERY_PORT))
             probe_deadline = min(deadline, time.monotonic() + 1.0)
             while time.monotonic() < probe_deadline:
@@ -738,6 +747,7 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
                 discovered = _parse_srch(data, response_addr, False)
                 if not discovered:
                     continue
+                response_received = True
                 last_state = discovered.state
                 log.info(
                     "wakeup transaction response: host=%s state=%s source_port=%d",
@@ -745,14 +755,7 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
                 )
                 if last_state == "ready":
                     return discovered
-                if last_state == "standby" and not wake_sent:
-                    sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
-                    wake_sent = sent == len(wake_payload)
-                    log.info(
-                        "wakeup transaction sent: host=%s source_port=%d bytes=%d",
-                        addr, source_port, sent,
-                    )
-                elif last_state == "standby" and wake_sent and not wake_retried:
+                if last_state == "standby" and wake_sent and not wake_retried:
                     sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
                     wake_retried = True
                     log.info(
@@ -760,6 +763,15 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
                         addr, source_port, sent,
                     )
                 break
+            silent_probes = 0 if response_received else silent_probes + 1
+            if wake_sent and not wake_retried and silent_probes >= 3:
+                sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
+                wake_retried = True
+                log.info(
+                    "wakeup transaction retry without response: "
+                    "host=%s source_port=%d bytes=%d",
+                    addr, source_port, sent,
+                )
             remaining = deadline - time.monotonic()
             delay = min(1.0 - (time.monotonic() - probe_started), remaining)
             if delay > 0:

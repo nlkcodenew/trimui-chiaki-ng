@@ -165,7 +165,8 @@ def _collect():
 
 
 def _fingerprint(sections, reason=None):
-    payload = "%s\n%s" % (
+    payload = "%s\n%s\n%s" % (
+        diagnostic_identity()["hardware_id"],
         _clean_reason(reason),
         "\n".join(text[-8000:] for _, text in sections),
     )
@@ -173,7 +174,10 @@ def _fingerprint(sections, reason=None):
 
 
 def _content_fingerprint(sections):
-    payload = "\n".join(text[-8000:] for _, text in sections)
+    payload = "%s\n%s" % (
+        diagnostic_identity()["hardware_id"],
+        "\n".join(text[-8000:] for _, text in sections),
+    )
     return hashlib.sha256(payload.encode("utf-8", errors="replace")).hexdigest()
 
 
@@ -198,8 +202,8 @@ def _issue_body(sections, reason, fingerprint):
         "| App | trimui-chiaki-ng v%s |" % APP_VERSION,
         "| Lý do | `%s` |" % reason,
         "| Model | `%s` |" % identity["model"],
-        "| Mã cài đặt | `%s` |" % identity["install_id"],
-        "| Mã phần cứng băm | `%s` |" % identity["hardware_id"],
+        "| Mã thiết bị băm (ổn định) | `%s` |" % identity["hardware_id"],
+        "| Mã cài đặt (có thể đổi) | `%s` |" % identity["install_id"],
         "| Python | `%s` |" % platform.python_version(),
         "| Hệ thống | `%s` |" % _sanitize(platform.platform()),
         "| Fingerprint | `%s` |" % fingerprint[:16],
@@ -286,10 +290,8 @@ def _upload_pending(reason="crash", force=False):
 
     identity = diagnostic_identity()
     title_reason = reason[:80]
-    title = "[device-log][%s][%s][%s] v%s %s %s" % (
-        identity["model"][:32], identity["install_id"][:16],
-        identity["hardware_id"][:16], APP_VERSION, title_reason,
-        fingerprint[:8],
+    title = "[device-log][%s] v%s %s %s" % (
+        identity["hardware_id"][:16], APP_VERSION, title_reason, fingerprint[:8],
     )
     body = _issue_body(sections, reason, fingerprint)
     try:

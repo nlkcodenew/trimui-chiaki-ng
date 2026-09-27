@@ -160,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: giữ cấu hình khi cài đè và bổ sung chẩn đoán pair/discovery PS4 an toàn." % version,
-            "en": "v%s: preserve settings on overwrite installs and improve safe PS4 pairing/discovery diagnostics." % version,
+            "vi": "v%s: đánh thức PS4 paired dù Rest Mode không trả SRCH và dùng mã HW ổn định trong Issue." % version,
+            "en": "v%s: wake paired PS4 hosts even without Rest Mode SRCH and use stable HW IDs in Issue titles." % version,
         },
         "files": files,
         "remove": [],

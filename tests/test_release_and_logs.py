@@ -100,11 +100,11 @@ class LogUploaderTests(unittest.TestCase):
             self.assertEqual(len(captured), 1)
             title = captured[0][1]
             body = captured[0][2]
-            self.assertIn("[TrimUI Brick Pro]", title)
-            self.assertIn("[CHI-ABCD]", title)
             self.assertIn("[HW-0123456789AB]", title)
-            self.assertIn("Mã cài đặt", body)
-            self.assertIn("Mã phần cứng băm", body)
+            self.assertNotIn("TrimUI Brick Pro", title)
+            self.assertNotIn("CHI-ABCD", title)
+            self.assertIn("Mã cài đặt (có thể đổi)", body)
+            self.assertIn("Mã thiết bị băm (ổn định)", body)
             self.assertNotIn("SECRET_VALUE", body)
             self.assertNotIn("PlayerName", body)
             self.assertNotIn("SERIAL-PRIVATE-123", body)
@@ -961,29 +961,23 @@ class LogUploaderTests(unittest.TestCase):
     def test_home_title_includes_app_version(self):
         home_module = importlib.import_module("rh.screens.home")
         version = importlib.import_module("rh.version").APP_VERSION
-        state = importlib.import_module("rh.state")
-        original_id = state.device_id
-        state.device_id = "CHI-ABCD"
-        screen = home_module.HomeScreen()
-        try:
+        with mock.patch.object(home_module, "hardware_id",
+                               return_value="HW-0123456789AB"):
+            screen = home_module.HomeScreen()
             title = screen.get_header_title()
-        finally:
-            state.device_id = original_id
         self.assertIn(version, title)
-        self.assertIn("ID: CHI-ABCD", title)
+        self.assertIn("HW-0123456789AB", title)
         self.assertTrue(title.startswith("CHIAKI-NG"))
 
-    def test_header_install_id_matches_issue_identity(self):
-        state = importlib.import_module("rh.state")
-        original_id = state.device_id
-        state.device_id = "CHI-E2E1"
-        try:
+    def test_header_hardware_id_matches_issue_identity(self):
+        with mock.patch.object(self.home_module, "hardware_id",
+                               return_value="HW-0123456789AB"), \
+                mock.patch.object(self.device_identity, "hardware_id",
+                                  return_value="HW-0123456789AB"):
             title = self.home_module.HomeScreen().get_header_title()
             identity = self.device_identity.diagnostic_identity()
-        finally:
-            state.device_id = original_id
-        self.assertIn(identity["install_id"], title)
-        self.assertEqual(identity["install_id"], "CHI-E2E1")
+        self.assertIn(identity["hardware_id"], title)
+        self.assertNotIn(identity["install_id"], title)
 
     def test_home_menu_opens_user_guide(self):
         engine = mock.Mock()
@@ -1007,7 +1001,7 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("PIN 8 số", vietnamese)
         self.assertIn("START + SELECT", vietnamese)
         self.assertIn("chưa hỗ trợ ghép nối/stream PS5", vietnamese)
-        self.assertIn("mã ID trên tiêu đề", vietnamese)
+        self.assertIn("mã HW-... trên tiêu đề", vietnamese)
 
     def test_guide_navigation_stays_in_bounds_and_b_returns(self):
         engine = mock.Mock()
@@ -1273,6 +1267,54 @@ class LogUploaderTests(unittest.TestCase):
         self.assertEqual(len(wake_packets), 2)
         self.assertTrue(all(packet.endswith(b"\n\x00") for packet in wake_packets))
         self.assertEqual(sleep.call_count, 2)
+
+    def test_ps4_wakeup_is_sent_before_any_standby_response(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        sent = []
+
+        class FakeSocket:
+            def setsockopt(self, *args, **kwargs):
+                return None
+
+            def settimeout(self, *args, **kwargs):
+                return None
+
+            def bind(self, addr):
+                self.bound = addr
+
+            def getsockname(self):
+                return ("0.0.0.0", 9303)
+
+            def sendto(self, data, dest):
+                sent.append((data, dest))
+                return len(data)
+
+            def recvfrom(self, size):
+                raise chiaki.socket.timeout()
+
+            def close(self):
+                return None
+
+        clock = {"now": 0.0}
+
+        def monotonic():
+            now = clock["now"]
+            clock["now"] += 0.25
+            return now
+
+        with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()), \
+                mock.patch.object(chiaki.time, "monotonic",
+                                  side_effect=monotonic), \
+                mock.patch.object(chiaki.time, "sleep", return_value=None):
+            result = chiaki._wake_ps4_until_ready(
+                "192.168.1.45", "a49d08ed", timeout=10.0,
+            )
+        self.assertIsNone(result)
+        wake_packets = [packet for packet, _ in sent
+                        if packet.startswith(b"WAKEUP")]
+        self.assertEqual(len(wake_packets), 2)
+        self.assertTrue(all(destination == ("192.168.1.45", 987)
+                            for _, destination in sent))
 
     def test_wakeup_diagnostic_is_queued_without_blocking(self):
         with mock.patch.object(self.uploader, "start_pending_upload", return_value="thread") as start:
@@ -1585,18 +1627,19 @@ class LogUploaderTests(unittest.TestCase):
             os.remove(paired_path)
         wake.assert_called_once_with("192.168.1.45", regist_key, False)
 
-    def test_home_scan_does_not_show_saved_offline_host(self):
+    def test_home_scan_without_pair_does_not_show_offline_host(self):
         chiaki = importlib.import_module("rh.chiaki")
         home = importlib.import_module("rh.screens.home")
         i18n = importlib.import_module("rh.i18n")
         screen = home.HomeScreen(mock.Mock())
         with mock.patch.object(chiaki, "paired_ps4_addresses", return_value=[]), \
                 mock.patch.object(chiaki, "discovery_broadcast", return_value=[]), \
-                mock.patch.object(chiaki, "paired_hosts_for_discovery") as merge:
+                mock.patch.object(chiaki, "paired_hosts_for_discovery",
+                                  return_value=[]) as merge:
             screen._do_scan()
         self.assertEqual(screen.hosts, [])
         self.assertEqual(screen.toast, i18n.TEXTS["VI"]["scan_none"])
-        merge.assert_not_called()
+        merge.assert_called_once_with([])
 
     def test_home_reports_paired_ps4_discovery_miss_once_per_session(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1607,6 +1650,12 @@ class LogUploaderTests(unittest.TestCase):
                 return_value=["192.168.1.45"]), \
                 mock.patch.object(
                     chiaki, "discovery_broadcast", return_value=[]) as discover, \
+                mock.patch.object(
+                    chiaki, "paired_hosts_for_discovery",
+                    return_value=[chiaki.DiscoveredHost(
+                        name="PS4-896", addr="192.168.1.45",
+                        state="offline", target=900,
+                    )]), \
                 mock.patch.object(screen, "_report_error") as report:
             screen._do_scan()
             screen._do_scan()
@@ -1615,6 +1664,20 @@ class LogUploaderTests(unittest.TestCase):
             timeout=3.0, ps4_hosts=["192.168.1.45"],
         )
         report.assert_called_once_with("discovery_ps4_standby_not_found")
+
+    def test_home_offline_ps4_wakes_instead_of_starting_stream(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        home = importlib.import_module("rh.screens.home")
+        screen = home.HomeScreen(mock.Mock())
+        host = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", state="offline", target=900,
+        )
+        with mock.patch.object(screen, "_is_paired", return_value=True), \
+                mock.patch.object(screen, "_wake_host") as wake, \
+                mock.patch.object(chiaki, "prepare_stream_launch") as prepare:
+            screen._start_stream(host)
+        wake.assert_called_once_with(host)
+        prepare.assert_not_called()
 
     def test_home_ready_host_starts_stream_without_wakeup(self):
         chiaki = importlib.import_module("rh.chiaki")
