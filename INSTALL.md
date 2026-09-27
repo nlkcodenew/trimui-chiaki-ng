@@ -1,6 +1,6 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho beta `v0.3.22-beta8`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho beta `v0.3.22-beta9`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
 
 Đây là bản thử nghiệm PS4 Wake tách từ bản ổn định `v0.3.21`. Cài thủ công từ
@@ -18,8 +18,8 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta8`.
-2. Tải `trimui-chiaki-ng-v0.3.22-beta8.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta9`.
+2. Tải `trimui-chiaki-ng-v0.3.22-beta9.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -47,8 +47,12 @@ nên giải nén đè không xóa ID cài đặt, cấu hình hay khóa ghép n�
 bản rất cũ thiếu `vendor/sdl2` và cần cài sạch, hãy backup các file dữ liệu trên
 cùng `secrets.json` trước khi xóa thư mục app.
 
-Beta8 chỉ hỗ trợ PS4. App không quét cổng PS5 `9302`, không hiển thị host PS5 đã
+Beta9 chỉ hỗ trợ PS4. App không quét cổng PS5 `9302`, không hiển thị host PS5 đã
 lưu và từ chối pair/wake/stream PS5. Dữ liệu PS5 cũ không bị xóa khi cài đè.
+
+Beta9 gửi cùng packet WAKEUP tới IP PS4 đã lưu và directed broadcast của route
+LAN tương ứng. Mục tiêu là tránh trường hợp unicast được kernel nhận nhưng không
+ra được Wi-Fi vì bảng ARP đã hết hạn khi PS4 ở Rest Mode.
 
 ## Trường hợp Brick Pro trước v0.3.11
 

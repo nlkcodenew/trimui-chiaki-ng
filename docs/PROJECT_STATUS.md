@@ -277,6 +277,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.22-beta6` | Wake host PS4 paired `offline`; title app/Issue dùng mã `HW-...` ổn định |
 | `v0.3.22-beta7` | Sửa crash đọc credential khiến beta6 chưa gửi được packet WAKEUP |
 | `v0.3.22-beta8` | Tắt PS5; discovery PS4 dùng một socket để tránh cạnh tranh UDP port nguồn |
+| `v0.3.22-beta9` | Gửi WAKEUP unicast và directed broadcast của subnet để tránh phụ thuộc ARP |
 
 ## 10. Kiểm thử và build gate
 

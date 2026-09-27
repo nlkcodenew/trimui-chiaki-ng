@@ -1171,6 +1171,28 @@ class LogUploaderTests(unittest.TestCase):
         )
         self.assertIsNone(chiaki._parse_srch(response, ("192.168.1.60", 9302)))
 
+    def test_directed_broadcast_uses_most_specific_linux_route(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        route_path = os.path.join(self.work_dir, "route")
+        with open(route_path, "w", encoding="ascii") as handle:
+            handle.write(
+                "Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT\n"
+                "wlan0 00000000 0100000A 0003 0 0 0 00000000 0 0 0\n"
+                "wlan0 001FA8C0 00000000 0001 0 0 0 00FFFFFF 0 0 0\n"
+            )
+        self.assertEqual(
+            chiaki._directed_broadcast_for_host(
+                "192.168.31.116", route_path=route_path,
+            ),
+            "192.168.31.255",
+        )
+        self.assertEqual(
+            chiaki._directed_broadcast_for_host(
+                "192.168.32.116", route_path=route_path,
+            ),
+            "",
+        )
+
     def test_ps4_wakeup_packet_uses_discovery_port(self):
         chiaki = importlib.import_module("rh.chiaki")
         sent = []
@@ -1301,6 +1323,9 @@ class LogUploaderTests(unittest.TestCase):
             return now
 
         with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()), \
+                mock.patch.object(
+                    chiaki, "_directed_broadcast_for_host",
+                    return_value="192.168.1.255"), \
                 mock.patch.object(chiaki.time, "monotonic",
                                   side_effect=monotonic), \
                 mock.patch.object(chiaki.time, "sleep", return_value=None):
@@ -1310,9 +1335,12 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIsNone(result)
         wake_packets = [packet for packet, _ in sent
                         if packet.startswith(b"WAKEUP")]
-        self.assertEqual(len(wake_packets), 2)
-        self.assertTrue(all(destination == ("192.168.1.45", 987)
-                            for _, destination in sent))
+        self.assertEqual(len(wake_packets), 4)
+        destinations = {destination for _, destination in sent}
+        self.assertEqual(destinations, {
+            ("192.168.1.45", 987), ("192.168.1.255", 987),
+        })
+        self.assertNotIn(("255.255.255.255", 987), destinations)
 
     def test_wakeup_diagnostic_is_queued_without_blocking(self):
         with mock.patch.object(self.uploader, "start_pending_upload", return_value="thread") as start:

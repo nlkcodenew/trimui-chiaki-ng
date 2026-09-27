@@ -20,6 +20,7 @@ native helper sau khi SDL menu đã đóng hoàn toàn.
 """
 
 import base64
+import ipaddress
 import json
 import os
 import shlex
@@ -465,6 +466,45 @@ def _bind_discovery_socket(sock):
     return sock.getsockname()[1]
 
 
+def _directed_broadcast_for_host(addr, route_path="/proc/net/route"):
+    """Return the most specific IPv4 route's directed broadcast address."""
+    try:
+        host = ipaddress.IPv4Address(str(addr or ""))
+    except ipaddress.AddressValueError:
+        return ""
+    try:
+        with open(route_path, "r", encoding="ascii", errors="ignore") as handle:
+            rows = handle.read().splitlines()[1:]
+    except OSError:
+        return ""
+    best = None
+    for row in rows:
+        columns = row.split()
+        if len(columns) < 8:
+            continue
+        try:
+            flags = int(columns[3], 16)
+            destination = ipaddress.IPv4Address(
+                int(columns[1], 16).to_bytes(4, "little")
+            )
+            netmask = ipaddress.IPv4Address(
+                int(columns[7], 16).to_bytes(4, "little")
+            )
+            network = ipaddress.IPv4Network(
+                "%s/%s" % (destination, netmask), strict=False,
+            )
+        except (ValueError, OverflowError):
+            continue
+        if not flags & 0x1 or network.prefixlen in (0, 32) or host not in network:
+            continue
+        if best is None or network.prefixlen > best.prefixlen:
+            best = network
+    if best is None:
+        return ""
+    broadcast = str(best.broadcast_address)
+    return "" if broadcast == "255.255.255.255" else broadcast
+
+
 def _parse_srch(data, addr):
     try:
         text = data.decode("ascii", errors="ignore")
@@ -669,7 +709,7 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
 
 
 def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
-    """Use one discovery socket for SRCH, WAKEUP and READY polling."""
+    """Use one socket and directed broadcast to wake and poll a paired PS4."""
     try:
         wake_payload = _build_wakeup(regist_key)
     except (TypeError, ValueError):
@@ -683,23 +723,34 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
     silent_probes = 0
     last_state = "unknown"
     try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.settimeout(1.0)
         source_port = _bind_discovery_socket(sock)
+        directed_broadcast = _directed_broadcast_for_host(addr)
+        destinations = [addr]
+        if directed_broadcast and directed_broadcast != addr:
+            destinations.append(directed_broadcast)
         log.info(
-            "wakeup transaction start: host=%s source_port=%d timeout=%.1f",
-            addr, source_port, timeout,
+            "wakeup transaction start: host=%s source_port=%d timeout=%.1f "
+            "directed_broadcast=%s destinations=%d",
+            addr, source_port, timeout, bool(directed_broadcast),
+            len(destinations),
         )
-        sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
-        wake_sent = sent == len(wake_payload)
+        sent = sum(
+            sock.sendto(wake_payload, (destination, PS4_DISCOVERY_PORT))
+            for destination in destinations
+        )
+        wake_sent = sent == len(wake_payload) * len(destinations)
         log.info(
             "wakeup transaction sent without standby response: "
-            "host=%s source_port=%d bytes=%d",
-            addr, source_port, sent,
+            "host=%s source_port=%d packets=%d bytes=%d",
+            addr, source_port, len(destinations), sent,
         )
         while time.monotonic() < deadline:
             probe_started = time.monotonic()
             response_received = False
-            sock.sendto(srch_payload, (addr, PS4_DISCOVERY_PORT))
+            for destination in destinations:
+                sock.sendto(srch_payload, (destination, PS4_DISCOVERY_PORT))
             probe_deadline = min(deadline, time.monotonic() + 1.0)
             while time.monotonic() < probe_deadline:
                 try:
@@ -720,21 +771,30 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
                 if last_state == "ready":
                     return discovered
                 if last_state == "standby" and wake_sent and not wake_retried:
-                    sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
+                    sent = sum(
+                        sock.sendto(
+                            wake_payload, (destination, PS4_DISCOVERY_PORT),
+                        )
+                        for destination in destinations
+                    )
                     wake_retried = True
                     log.info(
-                        "wakeup transaction retry: host=%s source_port=%d bytes=%d",
-                        addr, source_port, sent,
+                        "wakeup transaction retry: host=%s source_port=%d "
+                        "packets=%d bytes=%d",
+                        addr, source_port, len(destinations), sent,
                     )
                 break
             silent_probes = 0 if response_received else silent_probes + 1
             if wake_sent and not wake_retried and silent_probes >= 3:
-                sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
+                sent = sum(
+                    sock.sendto(wake_payload, (destination, PS4_DISCOVERY_PORT))
+                    for destination in destinations
+                )
                 wake_retried = True
                 log.info(
                     "wakeup transaction retry without response: "
-                    "host=%s source_port=%d bytes=%d",
-                    addr, source_port, sent,
+                    "host=%s source_port=%d packets=%d bytes=%d",
+                    addr, source_port, len(destinations), sent,
                 )
             remaining = deadline - time.monotonic()
             delay = min(1.0 - (time.monotonic() - probe_started), remaining)

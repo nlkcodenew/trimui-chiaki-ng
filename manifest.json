@@ -1,14 +1,14 @@
 {
-  "version": "0.3.22-beta8",
+  "version": "0.3.22-beta9",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-27T11:58:33+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta8/files",
-  "release_tag": "v0.3.22-beta8/files",
+  "built": "2026-09-27T12:18:25+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta9/files",
+  "release_tag": "v0.3.22-beta9/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.22-beta8: tắt PS5 và dùng một socket discovery PS4 để tránh tranh phản hồi UDP trên cổng nguồn.",
-    "en": "v0.3.22-beta8: disable PS5 and use one PS4 discovery socket to avoid competing UDP listeners on the source port."
+    "vi": "v0.3.22-beta9: gửi WAKEUP PS4 tới cả IP đã lưu và directed broadcast của đúng subnet để tránh mất gói do ARP khi Rest Mode.",
+    "en": "v0.3.22-beta9: send PS4 WAKEUP to both the saved IP and its subnet-directed broadcast to bypass stale ARP during Rest Mode."
   },
   "files": [
     {
@@ -133,8 +133,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "7247ef7fc0a56e4c0034d2e536c5d25ef6ef1db52730fa68e57cdd733ec2edf4",
-      "size": 30032
+      "sha256": "0fafc107303070fd8257dfec69a887d7eab890be50a43e76999a14897c971147",
+      "size": 32367
     },
     {
       "path": "rh/device_identity.py",
@@ -198,7 +198,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "0ad1d8d25a6720449482d440780647f5f090f150916e58a3952e9418d70f9596",
+      "sha256": "21e4a51ec5deacf404c13259f7c3aea06c983c4b81225fcf22c3ffb1676f30f7",
       "size": 1184
     },
     {
@@ -644,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.22-beta8.zip",
-    "sha256": "7d609018f5636094b5febcbb62851889296d439588ae1dddbe7de98ddf1bc228",
-    "size": 10762555
+    "name": "trimui-chiaki-ng-v0.3.22-beta9.zip",
+    "sha256": "476fe45d456d5d27119fc8bbf55dfa8382fa8196efdd57eb75b78de159bb30ff",
+    "size": 10763173
   }
 }

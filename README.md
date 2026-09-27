@@ -41,6 +41,8 @@ Brick Pro Stock OS đã OTA thành công đến `v0.3.16` và stream PS4 thật 
 - `v0.3.22-beta8` vô hiệu hóa toàn bộ luồng PS5 trong app. Discovery chỉ dùng một
   socket PS4, không còn hai listener cùng tranh cổng nguồn `9303`; dữ liệu pair
   PS5 cũ được giữ nguyên trên thẻ nhưng không xuất hiện hoặc được sử dụng.
+- `v0.3.22-beta9` giữ luồng PS4-only và gửi WAKEUP tới cả IP đã lưu lẫn directed
+  broadcast của đúng subnet, nhằm tránh unicast bị mất ở bước ARP khi PS4 ngủ.
 - Từ `v0.3.17`, UI không còn 1080p; cấu hình 1080p cũ hoặc giá trị không hợp lệ
 đều bị cap về 720p. HTTPS relay đã được kiểm thử end-to-end với repo chẩn đoán
 private và không làm thay đổi native stream/runtime đã xác nhận trên máy thật.
@@ -76,7 +78,7 @@ tách theo OS nếu một thay đổi tương lai tạo ra ABI/GPU không thể 
 | Brick Pro Stock OS | `v0.3.16` stream PS4 thật có hình, âm thanh và input |
 | PS4 Pro 9.00 GoldHEN | Pair PIN LAN và session pre-10 hoạt động |
 | PS5/H265 | Đã vô hiệu hóa trong app; không còn thuộc phạm vi phát triển |
-| WAKEUP PS4 Rest Mode | Đang thử nghiệm riêng trong prerelease `v0.3.22-beta8` |
+| WAKEUP PS4 Rest Mode | Đang thử nghiệm riêng trong prerelease `v0.3.22-beta9` |
 
 ## Cài đặt
 
@@ -114,17 +116,21 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
-Beta `v0.3.22-beta8` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
+Beta `v0.3.22-beta9` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
 PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên và
 hiện host đã pair ở trạng thái `offline`. Chọn host rồi bấm **A – ĐÁNH THỨC** để
-gửi WAKEUP unicast ngay tới IP đã lưu và chờ `ready` tối đa 25 giây trên cùng
-một UDP socket. Beta không tự wake khi scan, không thay đổi WoWLAN của TrimUI và
-không thay bản ổn định.
+gửi WAKEUP tới IP đã lưu và directed broadcast của subnet, rồi chờ `ready` tối
+đa 25 giây trên cùng một UDP socket. Beta không tự wake khi scan, không thay đổi
+WoWLAN của TrimUI và không thay bản ổn định.
 
 Beta8 chỉ tạo một socket discovery PS4 và chỉ gửi tới cổng `987`. Luồng PS5,
 cổng `9302` và socket discovery PS5 đã bị tắt để loại trừ khả năng hai socket
 cùng bind cổng nguồn `9303` nhận nhầm phản hồi. Đây là thay đổi cô lập để kiểm
 thử; chưa khẳng định PS4 Rest Mode chắc chắn sẽ thức trên mọi mạng.
+
+Log beta8 `#46–#48` xác nhận packet upstream 135 byte đã gửi hai lần nhưng PS4
+không trả SRCH. Beta9 giữ nguyên packet và socket đó, đồng thời gửi tới directed
+broadcast lấy từ route Linux của subnet PS4 để không phụ thuộc ARP unicast.
 
 Beta5 sửa lỗi ZIP beta4 ghi đè `settings.json`, làm đổi `CHI-E545` thành
 `CHI-E4DF` và xóa dữ liệu pair. ZIP beta5 không chứa `settings.json`,
@@ -175,7 +181,7 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][HW-C3A2FEFAB3F5] v0.3.22-beta8 reason fingerprint
+[device-log][HW-C3A2FEFAB3F5] v0.3.22-beta9 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.
