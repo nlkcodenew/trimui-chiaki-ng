@@ -201,7 +201,7 @@ Lịch sử:
 - Issue `#26–#30`: console vẫn không phản hồi trong môi trường thật.
 - `v0.3.10`: tắt WAKEUP/offline host trong UI, trở lại bật PS4 bằng tay.
 
-Beta `v0.3.22-beta1` thử lại riêng cho PS4 được discovery xác nhận `standby`:
+Beta `v0.3.22-beta2` thử lại riêng cho PS4 được discovery xác nhận `standby`:
 SRCH unicast, WAKEUP và polling `ready` dùng cùng một UDP socket trong tối đa
 25 giây. Beta không chèn host `offline`, không tự wake khi scan và không thay
 đổi WoWLAN của TrimUI. Nhánh ổn định `v0.3.21` giữ nguyên.

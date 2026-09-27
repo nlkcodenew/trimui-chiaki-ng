@@ -692,6 +692,7 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
             addr, source_port, timeout,
         )
         while time.monotonic() < deadline:
+            probe_started = time.monotonic()
             sock.sendto(srch_payload, (addr, PS4_DISCOVERY_PORT))
             probe_deadline = min(deadline, time.monotonic() + 1.0)
             while time.monotonic() < probe_deadline:
@@ -726,6 +727,10 @@ def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
                         addr, source_port, sent,
                     )
                 break
+            remaining = deadline - time.monotonic()
+            delay = min(1.0 - (time.monotonic() - probe_started), remaining)
+            if delay > 0:
+                time.sleep(delay)
         log.error(
             "wakeup transaction timeout: host=%s state=%s sent=%s retry=%s",
             addr, last_state, wake_sent, wake_retried,

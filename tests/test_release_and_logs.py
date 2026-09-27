@@ -1211,7 +1211,8 @@ class LogUploaderTests(unittest.TestCase):
                 self.closed = True
 
         fake_socket = FakeSocket()
-        with mock.patch.object(chiaki.socket, "socket", return_value=fake_socket):
+        with mock.patch.object(chiaki.socket, "socket", return_value=fake_socket), \
+                mock.patch.object(chiaki.time, "sleep") as sleep:
             host = chiaki._wake_ps4_until_ready(
                 "192.168.1.45", "a49d08ed", timeout=25.0,
             )
@@ -1223,6 +1224,7 @@ class LogUploaderTests(unittest.TestCase):
                         if packet.startswith(b"WAKEUP")]
         self.assertEqual(len(wake_packets), 2)
         self.assertTrue(all(packet.endswith(b"\n\x00") for packet in wake_packets))
+        self.assertEqual(sleep.call_count, 2)
 
     def test_wakeup_diagnostic_is_queued_without_blocking(self):
         with mock.patch.object(self.uploader, "start_pending_upload", return_value="thread") as start:
