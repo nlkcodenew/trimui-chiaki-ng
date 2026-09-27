@@ -109,6 +109,12 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
+Beta `v0.3.22-beta1` thử lại PS4 Wake mà không thay bản ổn định: chỉ hiện nút
+**ĐÁNH THỨC** khi discovery thật nhận PS4 đã ghép ở trạng thái `standby`. Khi
+người dùng bấm **A**, app dùng cùng một UDP socket để xác nhận `standby`, gửi
+WAKEUP unicast và chờ `ready` tối đa 25 giây. Beta không thêm host `offline`,
+không tự wake khi scan và không thay đổi cấu hình WoWLAN của thiết bị TrimUI.
+
 1. Bật PS4 bằng nút nguồn hoặc tay cầm và chờ auto-login hoàn tất.
 2. Đặt PS4 và TrimUI cùng mạng LAN/Wi-Fi 5 GHz.
 3. Nếu chưa ghép nối đúng giao thức pre-10, chọn PS4, bấm **Y** và nhập PIN 8 số.

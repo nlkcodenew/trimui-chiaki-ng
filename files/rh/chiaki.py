@@ -191,6 +191,18 @@ def wake_paired_host(host):
         credentials["addr"], credentials["regist_key"], credentials["is_ps5"],
     )
 
+
+def wake_paired_ps4_until_ready(host, timeout=25.0):
+    """Wake a discovered standby PS4 and wait for READY on the same socket."""
+    addr = str(getattr(host, "addr", "") or "")
+    if not addr or bool(getattr(host, "is_ps5", False)):
+        return None
+    credentials = _paired_credentials(addr, False)
+    if not credentials:
+        log.error("wakeup transaction missing PS4 credentials: host=%s", addr)
+        return None
+    return _wake_ps4_until_ready(addr, credentials["regist_key"], timeout)
+
 def _rp_version_string(target):
     t = int(target or 0)
     if t == 800:
@@ -414,6 +426,33 @@ def _build_srch(protocol_version):
     return body.encode("ascii") + b"\x00"
 
 
+def _build_wakeup(regist_key, ps5=False):
+    key = str(regist_key or "").split("\x00", 1)[0]
+    if not key or len(key) > 8:
+        raise ValueError("invalid registration key")
+    credential = int(key, 16)
+    protocol = PS5_PROTOCOL_VERSION if ps5 else PS4_PROTOCOL_VERSION
+    body = ("WAKEUP * HTTP/1.1\n"
+            "client-type:vr\n"
+            "auth-type:R\n"
+            "model:w\n"
+            "app-type:r\n"
+            "user-credential:%d\n"
+            "device-discovery-protocol-version:%s\n") % (credential, protocol)
+    return body.encode("ascii") + b"\x00"
+
+
+def _bind_discovery_socket(sock):
+    for local_port in range(LOCAL_PORT_MIN, LOCAL_PORT_MAX + 1):
+        try:
+            sock.bind(("", local_port))
+            return local_port
+        except OSError:
+            continue
+    sock.bind(("", 0))
+    return sock.getsockname()[1]
+
+
 def _parse_srch(data, addr, ps5_mode):
     try:
         text = data.decode("ascii", errors="ignore")
@@ -607,61 +646,94 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
     Tra True neu packet gui thanh cong (PS4/PS5 se bat tu standby thanh ready).
     """
     try:
-        credential = int(regist_key, 16)
+        payload = _build_wakeup(regist_key, ps5)
     except (TypeError, ValueError):
         log.error("wakeup credential is invalid")
         return False
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.settimeout(timeout)
-        source_port = 0
-        for local_port in range(LOCAL_PORT_MIN, LOCAL_PORT_MAX + 1):
-            try:
-                sock.bind(("", local_port))
-                source_port = local_port
-                break
-            except OSError:
-                continue
-        if not source_port:
-            sock.bind(("", 0))
-            source_port = sock.getsockname()[1]
-        protocol = "00030010" if ps5 else "00020020"
-        pkt = ("WAKEUP * HTTP/1.1\n"
-               "client-type:vr\n"
-               "auth-type:R\n"
-               "model:w\n"
-               "app-type:r\n"
-               "user-credential:%d\n"
-               "device-discovery-protocol-version:%s\n") % (credential, protocol)
-        payload = pkt.encode("ascii") + b"\x00"
+        source_port = _bind_discovery_socket(sock)
         port = 9302 if ps5 else 987
-        destinations = [addr]
-        if not ps5 and addr != "255.255.255.255":
-            destinations.append("255.255.255.255")
-        sent = 0
-        for attempt in range(2):
-            for destination in destinations:
-                try:
-                    sock.sendto(payload, (destination, port))
-                    sent += 1
-                except OSError as exc:
-                    log.warning(
-                        "wakeup destination failed: dest=%s:%d attempt=%d error=%s",
-                        destination, port, attempt + 1, exc,
-                    )
-            if attempt == 0:
-                time.sleep(0.1)
+        sent = sock.sendto(payload, (addr, port))
         log.info(
             "wakeup sent: host=%s ps5=%s source_port=%d dest_port=%d "
-            "destinations=%s packets=%d bytes=%d format=lf+nul",
-            addr, ps5, source_port, port, destinations, sent, len(payload),
+            "packets=1 bytes=%d format=lf+nul mode=upstream-unicast",
+            addr, ps5, source_port, port, len(payload),
         )
-        return sent > 0
+        return sent == len(payload)
     except OSError as exc:
         log.error("wakeup failed: %s", exc)
         return False
+    finally:
+        sock.close()
+
+
+def _wake_ps4_until_ready(addr, regist_key, timeout=25.0):
+    """Use one discovery socket for SRCH, WAKEUP and READY polling."""
+    try:
+        wake_payload = _build_wakeup(regist_key, False)
+    except (TypeError, ValueError):
+        log.error("wakeup credential is invalid")
+        return None
+    srch_payload = _build_srch(PS4_PROTOCOL_VERSION)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    deadline = time.monotonic() + max(1.0, float(timeout))
+    wake_sent = False
+    wake_retried = False
+    last_state = "unknown"
+    try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.settimeout(1.0)
+        source_port = _bind_discovery_socket(sock)
+        log.info(
+            "wakeup transaction start: host=%s source_port=%d timeout=%.1f",
+            addr, source_port, timeout,
+        )
+        while time.monotonic() < deadline:
+            sock.sendto(srch_payload, (addr, PS4_DISCOVERY_PORT))
+            probe_deadline = min(deadline, time.monotonic() + 1.0)
+            while time.monotonic() < probe_deadline:
+                try:
+                    data, response_addr = sock.recvfrom(2048)
+                except socket.timeout:
+                    break
+                if response_addr[0] != addr:
+                    continue
+                discovered = _parse_srch(data, response_addr, False)
+                if not discovered:
+                    continue
+                last_state = discovered.state
+                log.info(
+                    "wakeup transaction response: host=%s state=%s source_port=%d",
+                    addr, last_state, source_port,
+                )
+                if last_state == "ready":
+                    return discovered
+                if last_state == "standby" and not wake_sent:
+                    sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
+                    wake_sent = sent == len(wake_payload)
+                    log.info(
+                        "wakeup transaction sent: host=%s source_port=%d bytes=%d",
+                        addr, source_port, sent,
+                    )
+                elif last_state == "standby" and wake_sent and not wake_retried:
+                    sent = sock.sendto(wake_payload, (addr, PS4_DISCOVERY_PORT))
+                    wake_retried = True
+                    log.info(
+                        "wakeup transaction retry: host=%s source_port=%d bytes=%d",
+                        addr, source_port, sent,
+                    )
+                break
+        log.error(
+            "wakeup transaction timeout: host=%s state=%s sent=%s retry=%s",
+            addr, last_state, wake_sent, wake_retried,
+        )
+        return None
+    except OSError as exc:
+        log.error("wakeup transaction failed: host=%s error=%s", addr, exc)
+        return None
     finally:
         sock.close()
 

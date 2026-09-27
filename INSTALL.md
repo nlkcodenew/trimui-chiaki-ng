@@ -1,7 +1,10 @@
 # Cài đặt trimui-chiaki-ng trên TrimUI
 
-Hướng dẫn này áp dụng cho `v0.3.21`, dùng chung cho TrimUI Smart Pro S/Spruce
+Hướng dẫn này áp dụng cho beta `v0.3.22-beta1`, dùng chung cho TrimUI Smart Pro S/Spruce
 OS và TrimUI Brick Pro Stock OS.
+
+Đây là bản thử nghiệm PS4 Wake tách từ bản ổn định `v0.3.21`. Cài thủ công từ
+trang release beta; không dùng bản này nếu không cần thử đánh thức PS4 Rest Mode.
 
 ## Yêu cầu
 
@@ -15,8 +18,8 @@ Pro Stock OS đều đã được xác nhận stream PS4 thật có hình, âm t
 
 ## Cài GitHub Release
 
-1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.21.zip`. Không tải **Source code**.
+1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/tag/v0.3.22-beta1`.
+2. Tải `trimui-chiaki-ng-v0.3.22-beta1.zip`. Không tải **Source code**.
 3. Tháo thẻ an toàn khỏi máy, cắm vào PC và giải nén ZIP vào gốc thẻ.
 4. Không tạo thêm lớp thư mục tên ZIP. Cấu trúc đúng:
 
@@ -93,13 +96,16 @@ Tiêu đề chính hiển thị `ID: CHI-xxxx`; hãy gửi mã này khi cần t�
 
 Luồng PS4 Pro firmware 9.00/GoldHEN đã được xác nhận trên Smart Pro S:
 
-1. Bật PS4 bằng nút nguồn hoặc tay cầm và chờ auto-login.
-2. Dùng LAN hoặc Wi-Fi 5 GHz; tắt Bluetooth nếu cần giảm nhiễu.
-3. Mở app và quét. App chỉ hiện console đang phản hồi.
-4. Nếu chưa có khóa pre-10, chọn console, bấm **Y**, mở màn hình PIN Remote Play
+1. Bật đủ `Stay Connected to the Internet` và `Enable Turning On PS4 from Network`.
+2. Đưa PS4 vào Rest Mode, mở app và quét; PS4 phải hiện trạng thái `standby`.
+3. Chọn PS4 đã ghép và bấm **A**. Beta gửi WAKEUP rồi chờ tối đa 25 giây.
+4. Khi app báo PS4 sẵn sàng, bấm **A** lần nữa để stream.
+5. Nếu wake timeout, thoát app để gửi chẩn đoán rồi cung cấp mã `CHI-xxxx`.
+6. Để kiểm tra stream độc lập, vẫn có thể bật PS4 bằng nút nguồn hoặc tay cầm.
+7. Dùng LAN hoặc Wi-Fi 5 GHz; tắt Bluetooth nếu cần giảm nhiễu.
+8. Nếu chưa có khóa pre-10, chọn console, bấm **Y**, mở màn hình PIN Remote Play
    trên PS4 và nhập đủ 8 số.
-5. Quét lại, chọn console đã ghép và bấm **A**.
-6. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và quay lại app.
+9. Giữ **START + SELECT** khoảng 1,2 giây để dừng stream và quay lại app.
 
 Không cần PSN cho PS4 firmware 9.00 trong luồng này. Không đăng PIN, Account ID,
 `regist_key` hoặc `rp_key` lên chat/Issue.

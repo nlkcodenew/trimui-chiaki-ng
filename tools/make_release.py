@@ -153,9 +153,10 @@ def main():
         # release_tag truc tiep voi path app.py thay vi biet source nam trong
         # thu muc files/. Updater moi cung chap nhan dinh dang nay.
         "release_tag": "v%s/files" % version,
+        "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: chỉ giữ máy thức khi đang stream và tự đóng menu sau 15 phút không thao tác để tránh hao pin khi bị bỏ quên." % version,
-            "en": "v%s: only keep the device awake while streaming and close the idle menu after 15 minutes to prevent unattended battery drain." % version,
+            "vi": "v%s: beta PS4 Wake, gửi SRCH và WAKEUP unicast trên cùng socket khi console được nhận diện standby." % version,
+            "en": "v%s: PS4 Wake beta using the same UDP socket for standby discovery and unicast WAKEUP." % version,
         },
         "files": files,
         "remove": [],

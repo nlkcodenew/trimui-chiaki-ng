@@ -1130,18 +1130,15 @@ class LogUploaderTests(unittest.TestCase):
 
             def sendto(self, data, dest):
                 sent.append((data, dest))
+                return len(data)
 
             def close(self):
                 return None
 
         with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()):
-            with mock.patch.object(chiaki.time, "sleep", return_value=None):
-                self.assertTrue(chiaki.send_wakeup("192.168.1.45", "a49d08ed"))
+            self.assertTrue(chiaki.send_wakeup("192.168.1.45", "a49d08ed"))
         self.assertEqual(sent[0][1], ("192.168.1.45", 987))
-        self.assertEqual(sent[1][1], ("255.255.255.255", 987))
-        self.assertEqual(sent[2][1], ("192.168.1.45", 987))
-        self.assertEqual(sent[3][1], ("255.255.255.255", 987))
-        self.assertEqual(len(sent), 4)
+        self.assertEqual(len(sent), 1)
         self.assertIn(b"WAKEUP * HTTP/1.1", sent[0][0])
         self.assertIn(b"device-discovery-protocol-version:00020020", sent[0][0])
         self.assertTrue(sent[0][0].endswith(b"\n\x00"))
@@ -1163,6 +1160,7 @@ class LogUploaderTests(unittest.TestCase):
 
             def sendto(self, data, dest):
                 sent.append(dest)
+                return len(data)
 
             def close(self):
                 return None
@@ -1172,7 +1170,59 @@ class LogUploaderTests(unittest.TestCase):
             self.assertTrue(
                 chiaki.send_wakeup("192.168.1.60", "a49d08ed", ps5=True),
             )
-        self.assertEqual(sent, [("192.168.1.60", 9302)] * 2)
+        self.assertEqual(sent, [("192.168.1.60", 9302)])
+
+    def test_ps4_wakeup_uses_same_socket_until_ready(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        sent = []
+        standby = (
+            b"HTTP/1.1 620 Standby\n"
+            b"host-name:Living-Room-PS4\n"
+            b"system-version:0900000\n"
+            b"device-discovery-protocol-version:00020020\n"
+        )
+        ready = standby.replace(b"620 Standby", b"200 OK")
+
+        class FakeSocket:
+            def __init__(self):
+                self.responses = [standby, standby, ready]
+                self.closed = False
+
+            def setsockopt(self, *args, **kwargs):
+                return None
+
+            def settimeout(self, *args, **kwargs):
+                return None
+
+            def bind(self, addr):
+                self.bound = addr
+
+            def getsockname(self):
+                return ("0.0.0.0", 9303)
+
+            def sendto(self, data, dest):
+                sent.append((data, dest))
+                return len(data)
+
+            def recvfrom(self, size):
+                return self.responses.pop(0), ("192.168.1.45", 987)
+
+            def close(self):
+                self.closed = True
+
+        fake_socket = FakeSocket()
+        with mock.patch.object(chiaki.socket, "socket", return_value=fake_socket):
+            host = chiaki._wake_ps4_until_ready(
+                "192.168.1.45", "a49d08ed", timeout=25.0,
+            )
+        self.assertIsNotNone(host)
+        self.assertEqual(host.state, "ready")
+        self.assertTrue(fake_socket.closed)
+        self.assertTrue(all(dest == ("192.168.1.45", 987) for _, dest in sent))
+        wake_packets = [packet for packet, _ in sent
+                        if packet.startswith(b"WAKEUP")]
+        self.assertEqual(len(wake_packets), 2)
+        self.assertTrue(all(packet.endswith(b"\n\x00") for packet in wake_packets))
 
     def test_wakeup_diagnostic_is_queued_without_blocking(self):
         with mock.patch.object(self.uploader, "start_pending_upload", return_value="thread") as start:
@@ -1493,6 +1543,20 @@ class LogUploaderTests(unittest.TestCase):
             screen._start_stream(host)
         prepare.assert_called_once_with(host)
         engine.quit.assert_called_once_with("stream_launch")
+
+    def test_home_standby_ps4_wakes_instead_of_starting_stream(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        home = importlib.import_module("rh.screens.home")
+        screen = home.HomeScreen(mock.Mock())
+        host = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", state="standby", target=900,
+        )
+        with mock.patch.object(screen, "_is_paired", return_value=True), \
+                mock.patch.object(screen, "_wake_host") as wake, \
+                mock.patch.object(chiaki, "prepare_stream_launch") as prepare:
+            screen._start_stream(host)
+        wake.assert_called_once_with(host)
+        prepare.assert_not_called()
 
     def test_legacy_1080p_profile_is_capped_at_720p(self):
         chiaki = importlib.import_module("rh.chiaki")

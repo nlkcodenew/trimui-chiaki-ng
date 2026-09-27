@@ -1,13 +1,14 @@
 {
-  "version": "0.3.21",
+  "version": "0.3.22-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-26T19:50:59+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.21/files",
-  "release_tag": "v0.3.21/files",
+  "built": "2026-09-27T09:14:08+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta1/files",
+  "release_tag": "v0.3.22-beta1/files",
+  "prerelease": true,
   "note": {
-    "vi": "v0.3.21: chỉ giữ máy thức khi đang stream và tự đóng menu sau 15 phút không thao tác để tránh hao pin khi bị bỏ quên.",
-    "en": "v0.3.21: only keep the device awake while streaming and close the idle menu after 15 minutes to prevent unattended battery drain."
+    "vi": "v0.3.22-beta1: beta PS4 Wake, gửi SRCH và WAKEUP unicast trên cùng socket khi console được nhận diện standby.",
+    "en": "v0.3.22-beta1: PS4 Wake beta using the same UDP socket for standby discovery and unicast WAKEUP."
   },
   "files": [
     {
@@ -132,8 +133,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "ee029b7ce282c91e883e63b67f1fdbe5b4212b18e5940642891ab3749b08cf92",
-      "size": 26519
+      "sha256": "89c8115d3f07e5b3c756686f67c3306fe3568614250eab40c9a8073a5a9580ba",
+      "size": 29407
     },
     {
       "path": "rh/device_identity.py",
@@ -197,8 +198,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "6d06635f35184bb3038540481f4eedfbc1ddeabc91e32d96275b5969ea95c1a0",
-      "size": 1178
+      "sha256": "699948b832311ec5e1d33e8f90f46a48adbe383db507cda681b772e7383e2669",
+      "size": 1184
     },
     {
       "path": "rh/modals/__init__.py",
@@ -237,8 +238,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "263362b040c41aa4ea912395693fd9e2e75f5ba108b8415ad6b9494647b37d97",
-      "size": 10589
+      "sha256": "da2139b9a42e9fe20f157e7b4d4a22b11298b5fa5aab994305fe624d91d77352",
+      "size": 12176
     },
     {
       "path": "rh/screens/pair.py",
@@ -643,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.21.zip",
-    "sha256": "dd24c2ea2a61ea06020d75babe9c5d66705a4288f0067499be818f25b90fac22",
-    "size": 10761175
+    "name": "trimui-chiaki-ng-v0.3.22-beta1.zip",
+    "sha256": "defff717b941ab6e478a1c95dadfdd874863fc25ea9fc34f14037b1aad0d79d1",
+    "size": 10762245
   }
 }

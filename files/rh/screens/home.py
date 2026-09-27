@@ -71,6 +71,8 @@ class HomeScreen(BaseScreen):
             host = self.hosts[self.host_selected]
             paired = self._is_paired(host) if self.hosts else False
             if paired:
+                if host.state == "standby" and not host.is_ps5:
+                    return [("A", tr("wake")), ("Y", tr("pair")), ("B", tr("back"))]
                 return [("A", tr("connect")), ("Y", tr("pair")), ("B", tr("back"))]
             return [("A", tr("pair")), ("B", tr("back"))]
         return [("A", tr("select"))]
@@ -142,12 +144,49 @@ class HomeScreen(BaseScreen):
             self.toast = tr("pair_required") if "pair_required" in tr("pair_required") else "Chưa ghép - bấm Y để nhập PIN"
             self._open_pair(host)
             return
+        if host.state == "standby" and not host.is_ps5:
+            self._wake_host(host)
+            return
         log.info("home: yeu cau stream toi %s (%s)", host.name or host.addr, host.addr)
         ok, message = chiaki.prepare_stream_launch(host)
         self.toast = message
         self.toast_until = time.time() + 4
         if ok:
             self.engine.quit("stream_launch")
+
+    def _wake_host(self, host):
+        if self.scanning:
+            return
+        self.scanning = True
+        self.toast = tr("wake_sent")
+        self.toast_until = time.time() + 26
+        threading.Thread(
+            target=self._wait_for_wakeup, args=(host,), daemon=True,
+        ).start()
+
+    def _wait_for_wakeup(self, host):
+        try:
+            ready = chiaki.wake_paired_ps4_until_ready(host, timeout=25.0)
+            if ready:
+                self.hosts = [ready if item.addr == host.addr else item
+                              for item in self.hosts]
+                self.host_selected = next(
+                    (index for index, item in enumerate(self.hosts)
+                     if item.addr == host.addr), 0,
+                )
+                self.toast = tr("wake_ready")
+                self.toast_until = time.time() + 8
+                return
+            self.toast = tr("wake_timeout")
+            self.toast_until = time.time() + 8
+            self._report_error("wakeup_timeout_same_socket")
+        except Exception as exc:
+            log.error("wakeup transaction exception: %s", exc)
+            self.toast = tr("wake_failed")
+            self.toast_until = time.time() + 6
+            self._report_error("wakeup_same_socket_exception")
+        finally:
+            self.scanning = False
 
     def handle_input(self, inputs):
         if not inputs:
