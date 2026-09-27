@@ -109,7 +109,7 @@ manifest. File staging được kiểm SHA-256, `fsync`, rồi thay atomically;
 
 ## Chạy stream PS4
 
-Beta `v0.3.22-beta6` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
+Beta `v0.3.22-beta7` gửi SRCH cả broadcast lẫn unicast tới IP PS4 đã pair. Nếu
 PS4 Rest Mode vẫn không phản hồi, app tự gửi diagnostic một lần mỗi phiên và
 hiện host đã pair ở trạng thái `offline`. Chọn host rồi bấm **A – ĐÁNH THỨC** để
 gửi WAKEUP unicast ngay tới IP đã lưu và chờ `ready` tối đa 25 giây trên cùng
@@ -124,7 +124,9 @@ lấy PIN mới rồi chỉ gửi một lần; không tiếp tục bấm lại P
 
 Log `#36` xác nhận pair thành công nhưng PS4 Rest Mode không trả cả SRCH
 broadcast lẫn unicast. Vì vậy beta6 không còn đợi PS4 trả `standby` trước khi gửi
-WAKEUP.
+WAKEUP. Issue `#41/#42` sau đó chỉ ra beta6 dừng ở lỗi gọi hàm credential sai số
+tham số, trước khi packet WAKEUP được gửi. Beta7 sửa lỗi này và có test đi qua
+file pair thật tới packet WAKEUP đầu tiên.
 
 1. Bật PS4 bằng nút nguồn hoặc tay cầm và chờ auto-login hoàn tất.
 2. Đặt PS4 và TrimUI cùng mạng LAN/Wi-Fi 5 GHz.
@@ -163,7 +165,7 @@ và machine-id trước khi gửi.
 Issue có dạng:
 
 ```text
-[device-log][HW-C3A2FEFAB3F5] v0.3.22-beta6 reason fingerprint
+[device-log][HW-C3A2FEFAB3F5] v0.3.22-beta7 reason fingerprint
 ```
 
 - `CHI-...`: ID ngẫu nhiên của bản cài/thẻ nhớ.

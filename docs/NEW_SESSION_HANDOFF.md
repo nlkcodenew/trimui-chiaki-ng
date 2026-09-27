@@ -302,7 +302,7 @@ Trước commit/release, xác nhận không stage:
 Tiếp tục repo E:\Trimiu Brick Pro\Project APPS\chiaki-ng.
 Đọc docs/NEW_SESSION_HANDOFF.md và docs/PROJECT_STATUS.md trước.
 Latest/release hiện tại là v0.3.21. Bản này khóa tối đa 720p, dùng HTTPS relay
-không token client, có hướng dẫn 8 bước. Beta6 hiện HW-xxxxxxxxxxxx cạnh version
+không token client, có hướng dẫn 8 bước. Beta7 hiện HW-xxxxxxxxxxxx cạnh version
 và dùng mã này trong title Issue; CHI-xxxx chỉ là ID cài đặt phụ. Brick
 sun50iw10 đã stream thật thành công; Issue #39 đạt 8968/0/0
 rendered/lost/FEC và exit 0. Spruce sun55iw3 vẫn dùng runtime system. Không tắt

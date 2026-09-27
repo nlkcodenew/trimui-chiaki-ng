@@ -1,14 +1,14 @@
 {
-  "version": "0.3.22-beta6",
+  "version": "0.3.22-beta7",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-27T11:08:30+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta6/files",
-  "release_tag": "v0.3.22-beta6/files",
+  "built": "2026-09-27T11:26:29+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22-beta7/files",
+  "release_tag": "v0.3.22-beta7/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.22-beta6: đánh thức PS4 paired dù Rest Mode không trả SRCH và dùng mã HW ổn định trong Issue.",
-    "en": "v0.3.22-beta6: wake paired PS4 hosts even without Rest Mode SRCH and use stable HW IDs in Issue titles."
+    "vi": "v0.3.22-beta7: sửa lỗi đọc credential khiến beta6 dừng trước khi gửi WAKEUP tới PS4 offline.",
+    "en": "v0.3.22-beta7: fix the credential lookup crash that stopped beta6 before sending WAKEUP to an offline PS4."
   },
   "files": [
     {
@@ -133,8 +133,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "d8c33fd3ef8b8a661f2c19d9c12d874b3bd9324ca9bbbb622d3192b1b2fdace1",
-      "size": 31430
+      "sha256": "dd7cc31abedb3aad831e08fee30cb92dba43f5f1941465c1adbb5183352b7af5",
+      "size": 31448
     },
     {
       "path": "rh/device_identity.py",
@@ -198,7 +198,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "7c05925b31c6c5499e0c145ff558af61574afdca278e09a5c848656509b33bf4",
+      "sha256": "8742ba4a93fd56def534be280796caf011dee19f7d9efc42eac09099a0106339",
       "size": 1184
     },
     {
@@ -644,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.22-beta6.zip",
-    "sha256": "b3f1415e3fd0733ba58cc1afb3e0dcd9d453182a0e4c02657cf864306243a500",
-    "size": 10762957
+    "name": "trimui-chiaki-ng-v0.3.22-beta7.zip",
+    "sha256": "1c2f9e3dfa2cc586f792434aa46f08d3b0b8ec749f38da2a8a88eeb2d8baadbe",
+    "size": 10762962
   }
 }

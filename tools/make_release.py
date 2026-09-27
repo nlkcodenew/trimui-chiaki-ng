@@ -160,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: đánh thức PS4 paired dù Rest Mode không trả SRCH và dùng mã HW ổn định trong Issue." % version,
-            "en": "v%s: wake paired PS4 hosts even without Rest Mode SRCH and use stable HW IDs in Issue titles." % version,
+            "vi": "v%s: sửa lỗi đọc credential khiến beta6 dừng trước khi gửi WAKEUP tới PS4 offline." % version,
+            "en": "v%s: fix the credential lookup crash that stopped beta6 before sending WAKEUP to an offline PS4." % version,
         },
         "files": files,
         "remove": [],

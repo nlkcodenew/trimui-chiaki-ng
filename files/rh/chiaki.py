@@ -203,8 +203,8 @@ def wake_paired_ps4_until_ready(host, timeout=25.0):
     addr = str(getattr(host, "addr", "") or "")
     if not addr or bool(getattr(host, "is_ps5", False)):
         return None
-    credentials = _paired_credentials(addr, False)
-    if not credentials:
+    credentials = _paired_credentials(addr)
+    if not credentials or credentials["is_ps5"]:
         log.error("wakeup transaction missing PS4 credentials: host=%s", addr)
         return None
     return _wake_ps4_until_ready(addr, credentials["regist_key"], timeout)

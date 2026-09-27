@@ -224,6 +224,12 @@ xác nhận Rest Mode trả `0 host` dù đã SRCH broadcast + unicast tới IP 
 Beta6 vì vậy khôi phục host paired `offline` trong UI và gửi WAKEUP trực tiếp
 trước khi có response `standby`, sau đó polling `ready` trên cùng socket.
 
+Issue beta6 `#41/#42` ghi nhận
+`_paired_credentials() takes 1 positional argument but 2 were given`. Đây là
+lỗi wrapper Python xảy ra trước khi gửi WAKEUP, không phải PS4 từ chối packet.
+Beta7 gọi đúng `_paired_credentials(addr)`, kiểm credential là PS4 và thêm test
+tích hợp đọc `paired_hosts.json` thật rồi xác nhận packet đầu tiên là WAKEUP.
+
 Không tiếp tục sửa packet nếu không có môi trường mạng/console khác chứng minh
 WAKEUP có thể hoạt động.
 
@@ -269,6 +275,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.20` | Giữ log launcher trong app và bắt lỗi bootstrap trước khi đọc settings |
 | `v0.3.21` | Chỉ giữ `stay_alive` khi stream; menu idle 15 phút tự đóng để tránh hao pin |
 | `v0.3.22-beta6` | Wake host PS4 paired `offline`; title app/Issue dùng mã `HW-...` ổn định |
+| `v0.3.22-beta7` | Sửa crash đọc credential khiến beta6 chưa gửi được packet WAKEUP |
 
 ## 10. Kiểm thử và build gate
 

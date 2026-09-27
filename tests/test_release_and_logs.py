@@ -1627,6 +1627,63 @@ class LogUploaderTests(unittest.TestCase):
             os.remove(paired_path)
         wake.assert_called_once_with("192.168.1.45", regist_key, False)
 
+    def test_wake_paired_ps4_uses_real_saved_credential_and_sends_wakeup(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        sent = []
+        ready = (
+            b"HTTP/1.1 200 OK\n"
+            b"host-name:PS4-896\n"
+            b"system-version:0900000\n"
+            b"device-discovery-protocol-version:00020020\n"
+        )
+
+        class FakeSocket:
+            def setsockopt(self, *args, **kwargs):
+                return None
+
+            def settimeout(self, *args, **kwargs):
+                return None
+
+            def bind(self, addr):
+                return None
+
+            def getsockname(self):
+                return ("0.0.0.0", 9303)
+
+            def sendto(self, data, destination):
+                sent.append((data, destination))
+                return len(data)
+
+            def recvfrom(self, size):
+                return ready, ("192.168.1.45", 987)
+
+            def close(self):
+                return None
+
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.45",
+                "name": "PS4-896",
+                "is_ps5": False,
+                "target": 900,
+                "regist_key": "a49d08ed",
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        host = chiaki.DiscoveredHost(
+            name="PS4-896", addr="192.168.1.45", state="offline", target=900,
+        )
+        try:
+            with mock.patch.object(
+                    chiaki.socket, "socket", return_value=FakeSocket()):
+                result = chiaki.wake_paired_ps4_until_ready(host, timeout=2.0)
+        finally:
+            os.remove(paired_path)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.state, "ready")
+        self.assertTrue(sent[0][0].startswith(b"WAKEUP * HTTP/1.1"))
+        self.assertEqual(sent[0][1], ("192.168.1.45", 987))
+
     def test_home_scan_without_pair_does_not_show_offline_host(self):
         chiaki = importlib.import_module("rh.chiaki")
         home = importlib.import_module("rh.screens.home")
