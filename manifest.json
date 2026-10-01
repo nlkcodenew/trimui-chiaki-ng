@@ -1,14 +1,14 @@
 {
-  "version": "0.3.22",
+  "version": "0.3.23",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-09-27T14:00:09+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.22/files",
-  "release_tag": "v0.3.22/files",
+  "built": "2026-10-01T12:51:38+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.23/files",
+  "release_tag": "v0.3.23/files",
   "prerelease": false,
   "note": {
-    "vi": "v0.3.22: chỉ hỗ trợ PS4, bỏ luồng PS5 và dùng mã thiết bị băm HW ổn định trong giao diện và báo cáo.",
-    "en": "v0.3.22: support PS4 only, remove PS5 flows, and use the stable HW device hash in the UI and reports."
+    "vi": "v0.3.23: giảm báo cáo giả dương tính; chỉ gửi chất lượng stream khi suy giảm rõ ràng và không báo lỗi khi thiết bị chỉ đang offline.",
+    "en": "v0.3.23: reduce false-positive diagnostics by reporting only clearly degraded streams and ignoring ordinary offline update checks."
   },
   "files": [
     {
@@ -163,8 +163,8 @@
     },
     {
       "path": "rh/log_uploader.py",
-      "sha256": "566c34b9466d8cd2f28de8a92aa727d271477907e2f7f54cd50cbaf24b261fcc",
-      "size": 12099
+      "sha256": "3f81a578317437c9c3bf68fc2c4fe75fab79495eb7a4147c0fe042d02afa255c",
+      "size": 14587
     },
     {
       "path": "rh/logger.py",
@@ -193,12 +193,12 @@
     },
     {
       "path": "rh/updater.py",
-      "sha256": "25fb6d67f6395b74670f3047b6a6fc6e336e972fc3f0b10fceaed8a33517faff",
-      "size": 16414
+      "sha256": "e65abf7da95b2f54f5e33916012e65980915300acf7385f6c45191b9e2960c57",
+      "size": 16955
     },
     {
       "path": "rh/version.py",
-      "sha256": "15db737d4ff69a2672de01b364367ae610230064fbb360ee6fbe24cfb81a9c2e",
+      "sha256": "a51dfbe7c3e8fff30e1d149666033395af01c98ef19bc412093e5d0b7f3e3846",
       "size": 1178
     },
     {
@@ -644,8 +644,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.22.zip",
-    "sha256": "e82b243d27601b04d1cd29295378be1ac9428d0453a27d40c5a6fbaac899ebb0",
-    "size": 10757116
+    "name": "trimui-chiaki-ng-v0.3.23.zip",
+    "sha256": "45201b0d1ef8e5e7f9ffc846ef8a634bc0e70be345c1a1c4fa60bd9f7634bbd2",
+    "size": 10758013
   }
 }

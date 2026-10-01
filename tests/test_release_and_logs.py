@@ -382,6 +382,26 @@ class LogUploaderTests(unittest.TestCase):
         report.assert_not_called()
         warning.assert_not_called()
 
+    def test_manifest_network_failure_does_not_report_offline_device(self):
+        with mock.patch.object(self.updater, "candidate_manifest_urls",
+                               return_value=["https://example.com/manifest.json"]), \
+                mock.patch.object(self.updater, "_get",
+                                  side_effect=urllib.error.URLError(
+                                      OSError(101, "Network is unreachable"))), \
+                mock.patch.object(self.updater, "_report_error") as report:
+            self.assertIsNone(self.updater.fetch_manifest())
+        self.assertEqual(self.updater.last_check_status(), "network_error")
+        report.assert_not_called()
+
+    def test_invalid_manifest_still_reports_diagnostic(self):
+        with mock.patch.object(self.updater, "candidate_manifest_urls",
+                               return_value=["https://example.com/manifest.json"]), \
+                mock.patch.object(self.updater, "_get", return_value=b'{"files":[]}'), \
+                mock.patch.object(self.updater, "_report_error") as report:
+            self.assertIsNone(self.updater.fetch_manifest())
+        self.assertEqual(self.updater.last_check_status(), "manifest_error")
+        report.assert_called_once_with("ota_manifest_invalid")
+
     def test_release_tools_exclude_misnamed_secrets_file(self):
         root = os.path.dirname(os.path.dirname(__file__))
         with open(os.path.join(root, "tools", "make_release.py"),
@@ -476,6 +496,67 @@ class LogUploaderTests(unittest.TestCase):
         )
         self.assertIn("Báo cáo chất lượng stream", body)
         self.assertNotIn("sau khi ứng dụng lỗi", body)
+
+    def test_stream_quality_gate_ignores_healthy_successful_session(self):
+        sections = [("Chiaki-debug.log", "\n".join([
+            "native stream preflight",
+            "[native] starting LAN stream host=x profile=1280x720@60 8000kbps",
+            "[native] quality: rendered=285 lost=2 fec=1 fps=57.0 suppressed=8 totals=285/2/1",
+            "[native] quality: rendered=290 lost=1 fec=2 fps=58.0 suppressed=5 totals=575/3/3",
+            "[native] stopping; connected=1 rendered=600 lost=3",
+        ]))]
+        self.assertFalse(self.uploader._stream_quality_needs_report(sections))
+
+    def test_stream_quality_gate_reports_significant_loss(self):
+        sections = [("Chiaki-debug.log", "\n".join([
+            "native stream preflight",
+            "[native] starting LAN stream host=x profile=1280x720@60 8000kbps",
+            "[native] quality: rendered=250 lost=8 fec=2 fps=50.0 suppressed=20 totals=250/8/2",
+            "[native] stopping; connected=1 rendered=500 lost=12",
+        ]))]
+        self.assertTrue(self.uploader._stream_quality_needs_report(sections))
+
+    def test_stream_quality_gate_reports_repeated_fec_failure(self):
+        sections = [("Chiaki-debug.log", "\n".join([
+            "native stream preflight",
+            "[native] starting LAN stream host=x profile=1280x720@30 5000kbps",
+            "[native] quality: rendered=148 lost=0 fec=10 fps=29.6 suppressed=30 totals=1480/5/10",
+            "[native] stopping; connected=1 rendered=1500 lost=5",
+        ]))]
+        self.assertTrue(self.uploader._stream_quality_needs_report(sections))
+
+    def test_healthy_stream_upload_is_skipped_and_pending_is_cleared(self):
+        self._pending_log()
+        sections = [("Chiaki-debug.log", "\n".join([
+            "native stream preflight",
+            "[native] starting LAN stream host=x profile=1280x720@60 8000kbps",
+            "[native] quality: rendered=295 lost=1 fec=0 fps=59.0 suppressed=2 totals=590/2/0",
+            "[native] stopping; connected=1 rendered=600 lost=2",
+        ]))]
+        with mock.patch.object(self.uploader, "_collect", return_value=sections), \
+                mock.patch.object(self.uploader, "_post_relay") as relay:
+            self.assertTrue(self.uploader.upload_pending("native_stream_quality"))
+        relay.assert_not_called()
+        self.assertFalse(os.path.exists(self.uploader.PENDING_FILE))
+
+    def test_stream_quality_reason_survives_offline_retry(self):
+        self._pending_log()
+        sections = [("Chiaki-debug.log", "\n".join([
+            "native stream preflight",
+            "[native] starting LAN stream host=x profile=1280x720@60 8000kbps",
+            "[native] quality: rendered=250 lost=8 fec=2 fps=50.0 suppressed=20 totals=250/8/2",
+            "[native] stopping; connected=1 rendered=500 lost=12",
+        ]))]
+        with mock.patch.object(self.uploader, "_collect", return_value=sections), \
+                mock.patch.object(self.uploader, "_post_relay",
+                                  side_effect=OSError("offline")):
+            self.assertFalse(self.uploader.upload_pending("native_stream_quality"))
+        self.assertEqual(self.uploader._pending_reasons(), ["native_stream_quality"])
+        with mock.patch.object(self.uploader, "_collect", return_value=sections), \
+                mock.patch.object(self.uploader, "_post_relay", return_value="") as relay:
+            self.assertTrue(self.uploader.upload_pending("startup_retry"))
+        relay.assert_called_once()
+        self.assertFalse(os.path.exists(self.uploader.PENDING_FILE))
 
     def test_exit_retry_is_described_as_pending_report(self):
         body = self.uploader._issue_body(

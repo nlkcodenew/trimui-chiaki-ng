@@ -4,7 +4,7 @@
 
 ## Phiên bản ổn định
 
-**Latest: `v0.3.22`**
+**Latest: `v0.3.23`**
 
 Phạm vi hiện tại:
 
@@ -15,14 +15,16 @@ Phạm vi hiện tại:
 - Chỉ kết nối console đang bật và phản hồi discovery trong cùng LAN.
 - Chưa hỗ trợ đánh thức PS4 từ Rest Mode trong bản ổn định.
 
-`v0.3.22` dùng một socket UDP cho discovery PS4, loại bỏ các luồng console
-không còn thuộc phạm vi dự án, và hiển thị mã thiết bị băm ổn định
-`HW-xxxxxxxxxxxx` trong tiêu đề app cũng như Issue chẩn đoán.
+`v0.3.23` giữ đường PS4-only ổn định của `v0.3.22` và giảm báo cáo giả
+dương tính: phiên stream thành công chỉ tạo Issue khi mất frame từ 1%, có ít
+nhất 10 lỗi FEC hoặc FPS thấp kéo dài. Kiểm tra OTA khi thiết bị chỉ đang
+offline vẫn hiển thị lỗi trong app nhưng không tạo Issue; lỗi TLS và manifest
+không hợp lệ vẫn được báo cáo.
 
 ## Cài đặt
 
 1. Mở trang [Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
-2. Tải `trimui-chiaki-ng-v0.3.22.zip`, không tải gói **Source code**.
+2. Tải `trimui-chiaki-ng-v0.3.23.zip`, không tải gói **Source code**.
 3. Giải nén vào gốc thẻ nhớ để có `Apps/Chiaki/`.
 4. Tháo thẻ an toàn, lắp vào TrimUI rồi mở **Chiaki-ng**.
 
@@ -72,13 +74,13 @@ quét, pair PIN, stream, thoát an toàn, cài đè và trường hợp phải p
 Tiêu đề app có dạng:
 
 ```text
-CHIAKI-NG v0.3.22 | HW-xxxxxxxxxxxx
+CHIAKI-NG v0.3.23 | HW-xxxxxxxxxxxx
 ```
 
 Tiêu đề Issue chẩn đoán có dạng:
 
 ```text
-[device-log][HW-xxxxxxxxxxxx] v0.3.22 reason fingerprint
+[device-log][HW-xxxxxxxxxxxx] v0.3.23 reason fingerprint
 ```
 
 - `HW-...` là pseudonym SHA-256 ổn định từ nguồn phần cứng khả dụng; dùng mã
@@ -86,6 +88,8 @@ Tiêu đề Issue chẩn đoán có dạng:
 - `CHI-...` là ID ngẫu nhiên của lần cài/thẻ nhớ, có thể đổi khi mất settings và
   chỉ còn là dữ liệu phụ trong body.
 - App lọc token, khóa pair, PSN ID, IP, MAC, serial và chip ID thô trước khi gửi.
+- Phiên stream thoát bình thường không tạo Issue nếu chất lượng vẫn trong ngưỡng;
+  mất mạng OTA thông thường cũng chỉ được ghi log cục bộ.
 - App không sửa `/etc/wifi/wpa_supplicant.conf` hay `wowlan_triggers`.
 
 File log cục bộ:

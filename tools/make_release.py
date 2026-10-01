@@ -160,8 +160,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: chỉ hỗ trợ PS4, bỏ luồng PS5 và dùng mã thiết bị băm HW ổn định trong giao diện và báo cáo." % version,
-            "en": "v%s: support PS4 only, remove PS5 flows, and use the stable HW device hash in the UI and reports." % version,
+            "vi": "v%s: giảm báo cáo giả dương tính; chỉ gửi chất lượng stream khi suy giảm rõ ràng và không báo lỗi khi thiết bị chỉ đang offline." % version,
+            "en": "v%s: reduce false-positive diagnostics by reporting only clearly degraded streams and ignoring ordinary offline update checks." % version,
         },
         "files": files,
         "remove": [],

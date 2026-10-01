@@ -1,4 +1,4 @@
-# Cài đặt trimui-chiaki-ng v0.3.22
+# Cài đặt trimui-chiaki-ng v0.3.23
 
 Hướng dẫn này dành cho bản ổn định PS4-only trên TrimUI Smart Pro S/Spruce OS
 và TrimUI Brick Pro Stock OS.
@@ -6,7 +6,7 @@ và TrimUI Brick Pro Stock OS.
 ## 1. Tải đúng gói
 
 1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.22.zip`.
+2. Tải `trimui-chiaki-ng-v0.3.23.zip`.
 3. Không tải **Source code (zip/tar.gz)** vì các gói đó không phải bộ cài.
 4. Có thể kiểm SHA-256 bằng file `.zip.sha256` đi kèm release.
 
@@ -55,7 +55,7 @@ thử một lần. PIN cũ không nên được gửi lại liên tục.
 
 ## 5. Kết nối
 
-1. Bật PS4 trước khi quét; `v0.3.22` chưa hỗ trợ đánh thức Rest Mode.
+1. Bật PS4 trước khi quét; `v0.3.23` chưa hỗ trợ đánh thức Rest Mode.
 2. Chọn **QUÉT MÁY PS4**.
 3. Chọn PS4 đã pair và bấm **A**.
 4. Khi chơi, giữ **START + SELECT** khoảng 1,2 giây để trở lại app.
@@ -70,12 +70,15 @@ Nếu phiên cũ chưa được PS4 nhả, chờ khoảng hai phút rồi kết 
 
 ## 7. Mã thiết bị và log
 
-Tiêu đề app hiển thị `CHIAKI-NG v0.3.22 | HW-xxxxxxxxxxxx`. Khi cần đối chiếu
+Tiêu đề app hiển thị `CHIAKI-NG v0.3.23 | HW-xxxxxxxxxxxx`. Khi cần đối chiếu
 Issue chẩn đoán, cung cấp mã `HW-...`; không dùng `CHI-...` làm mã chính vì ID
 cài đặt có thể đổi sau khi mất settings.
 
 Không đăng PIN, `regist_key`, `rp_key`, PSN Account ID, IP hoặc MAC lên Issue.
 Uploader tự lọc các trường nhạy cảm trước khi gửi qua HTTPS relay.
+Phiên stream thành công chỉ gửi báo cáo nếu mất frame từ 1%, có ít nhất 10 lỗi
+FEC hoặc FPS thấp kéo dài. Trạng thái thiết bị offline khi kiểm tra OTA không tạo
+Issue; lỗi TLS và manifest không hợp lệ vẫn được báo cáo.
 
 Log cục bộ:
 

@@ -28,6 +28,10 @@ MAX_LOG_BYTES = 24000
 MAX_BODY_CHARS = 60000
 TIMEOUT = 15
 MAX_PENDING_REASONS = 8
+STREAM_LOSS_REPORT_RATIO = 0.01
+STREAM_FEC_REPORT_COUNT = 10
+STREAM_LOW_FPS_RATIO = 0.75
+STREAM_LOW_FPS_MIN_SAMPLES = 2
 
 _SECRET_LINE = re.compile(
     r"(?im)^([^\n]*(?:token|password|passwd|secret|regist_key|rp_key|"
@@ -43,6 +47,14 @@ _PRIVATE_IP = re.compile(
     r"172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})\b"
 )
 _MAC_ADDRESS = re.compile(r"(?i)\b(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}\b")
+_STREAM_START = re.compile(r"\[native\] starting LAN stream .* profile=\d+x\d+@(\d+)")
+_STREAM_QUALITY = re.compile(
+    r"\[native\] quality: rendered=(\d+) lost=(\d+) fec=(\d+) "
+    r"fps=([0-9.]+) suppressed=(\d+) totals=(\d+)/(\d+)/(\d+)"
+)
+_STREAM_STOP = re.compile(
+    r"\[native\] stopping; connected=\d+ rendered=(\d+) lost=(\d+)"
+)
 _pending_lock = threading.Lock()
 _upload_lock = threading.Lock()
 
@@ -163,6 +175,46 @@ def _collect():
             sections.append((os.path.basename(path), text))
     return sections
 
+def _last_stream_text(sections):
+    text = "\n".join(value for _, value in sections)
+    marker = text.rfind("native stream preflight")
+    return text[marker:] if marker >= 0 else text
+
+def _stream_quality_needs_report(sections):
+    text = _last_stream_text(sections)
+    samples = []
+    target_fps = None
+    for match in _STREAM_START.finditer(text):
+        target_fps = int(match.group(1))
+    for match in _STREAM_QUALITY.finditer(text):
+        samples.append({
+            "fps": float(match.group(4)),
+            "total_rendered": int(match.group(6)),
+            "total_lost": int(match.group(7)),
+            "total_fec": int(match.group(8)),
+        })
+    if not samples:
+        return False
+
+    rendered = samples[-1]["total_rendered"]
+    lost = samples[-1]["total_lost"]
+    fec = samples[-1]["total_fec"]
+    stop_matches = list(_STREAM_STOP.finditer(text))
+    if stop_matches:
+        rendered = int(stop_matches[-1].group(1))
+        lost = int(stop_matches[-1].group(2))
+    total = rendered + lost
+    if total and lost / float(total) >= STREAM_LOSS_REPORT_RATIO:
+        return True
+    if fec >= STREAM_FEC_REPORT_COUNT:
+        return True
+    if target_fps:
+        low_limit = target_fps * STREAM_LOW_FPS_RATIO
+        low_samples = sum(1 for sample in samples if sample["fps"] < low_limit)
+        if low_samples >= STREAM_LOW_FPS_MIN_SAMPLES:
+            return True
+    return False
+
 
 def _fingerprint(sections, reason=None):
     payload = "%s\n%s\n%s" % (
@@ -254,15 +306,21 @@ def _upload_pending(reason="crash", force=False):
     if not force and not os.path.exists(PENDING_FILE):
         return False
     pending_reasons = _pending_reasons()
-    uploaded_reasons = list(pending_reasons)
     caller_reason = _clean_reason(reason)
+    generic_reasons = ("startup", "startup_retry", "user_exit_retry", "crash")
+    if (not pending_reasons and caller_reason not in generic_reasons
+            and os.path.exists(PENDING_FILE)):
+        _remember_pending_reason(caller_reason)
+        pending_reasons = _pending_reasons()
+    uploaded_reasons = list(pending_reasons)
     if pending_reasons:
         report_reasons = list(pending_reasons)
-        if (caller_reason not in ("startup", "startup_retry", "user_exit_retry", "crash")
+        if (caller_reason not in generic_reasons
                 and caller_reason not in report_reasons):
             report_reasons.append(caller_reason)
         reason = "+".join(report_reasons)
     else:
+        report_reasons = [caller_reason]
         reason = caller_reason
     if not relay_url:
         log.warning("log upload pending: no HTTPS issue relay configured")
@@ -272,6 +330,13 @@ def _upload_pending(reason="crash", force=False):
     if not sections:
         log.warning("log upload pending but no readable logs")
         return False
+    quality_only = all(
+        value == "native_stream_quality" for value in report_reasons
+    )
+    if quality_only and not _stream_quality_needs_report(sections):
+        _clear_uploaded_reasons(uploaded_reasons)
+        log.info("stream quality within report thresholds; diagnostic skipped")
+        return True
     fingerprint = _fingerprint(sections, reason)
     content_fingerprint = _content_fingerprint(sections)
     history = _read_json(STATE_FILE)

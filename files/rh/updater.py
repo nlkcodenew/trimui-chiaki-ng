@@ -234,6 +234,7 @@ def fetch_manifest():
     global _last_check_status
     _last_check_status = "checking"
     failures = []
+    invalid_manifest = False
     manifest_urls = candidate_manifest_urls()
     for manifest_url in manifest_urls:
         try:
@@ -243,9 +244,11 @@ def fetch_manifest():
             raw = _get(url, MAX_MANIFEST_BYTES)
             parsed = json.loads(raw.decode("utf-8"))
             if not isinstance(parsed, dict) or not parsed.get("version"):
+                invalid_manifest = True
                 continue
             files = parsed.get("files", [])
             if not isinstance(files, list):
+                invalid_manifest = True
                 continue
             ok = True
             for f in files:
@@ -260,7 +263,14 @@ def fetch_manifest():
                 log.info("OTA manifest ready: version=%s files=%d source=%s",
                          parsed.get("version"), len(files), manifest_url)
                 return parsed
-        except (urllib.error.URLError, OSError, ValueError, UnicodeDecodeError) as exc:
+            invalid_manifest = True
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            invalid_manifest = True
+            failures.append(exc)
+            log.info("OTA manifest source returned invalid data; trying fallback: source=%s error=%s",
+                     manifest_url, exc)
+            continue
+        except (urllib.error.URLError, OSError, ValueError) as exc:
             failures.append(exc)
             log.info("OTA manifest source unavailable; trying fallback: source=%s error=%s",
                      manifest_url, exc)
@@ -268,13 +278,16 @@ def fetch_manifest():
     if failures and all(_is_tls_verification_error(exc) for exc in failures):
         _last_check_status = "tls_error"
         reason = "ota_manifest_tls_error"
+    elif invalid_manifest:
+        _last_check_status = "manifest_error"
+        reason = "ota_manifest_invalid"
     else:
         _last_check_status = "network_error"
-        reason = "ota_manifest_network_error"
     last_error = failures[-1] if failures else "invalid manifest"
     log.warning("OTA manifest unavailable after %d source(s): status=%s last_error=%s",
                 len(manifest_urls), _last_check_status, last_error)
-    _report_error(reason)
+    if _last_check_status != "network_error":
+        _report_error(reason)
     return None
 
 
