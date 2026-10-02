@@ -5,12 +5,20 @@ Van de: firmware Stock OS day ma phim Linux cua mot so nut o vung 304..320 nhung
 khong dung thu tu chuan, nen L3/R3 va cac nut phia duoi vo may co the khong
 bao toi dien thoai. Man hinh nay hien thi ma phim that moi khi ban, nguoi dung
 an nut theo thu tu, va luu ket qua vao bluetooth-map.json.
+
+Hai nguyen tac lam man hinh nay dung:
+
+1. Mot lan ban chi gan MOT nut. Sau khi gan xong phai tha het nut truoc khi
+   nhan buoc sau, va ma phim da gan cho nut nao thi khong bao gio cho nut khac.
+2. A va B cung la nut can thu, nen khong dung chung lam phim dieu huong khi
+   dang o giua phien thu. Dieu huong dung D-pad, thu A/B chi dung o man hinh
+   tom tat sau khi thu xong.
 """
 
 import time
-
 from ..gamepad_map import (BUTTON_LABELS, DEFAULT_BUTTONS, EV_KEY, PadReader,
-                           find_gamepad, is_gamepad_key, load_map, save_map)
+                           duplicate_buttons, find_gamepad, is_gamepad_key,
+                           load_map, save_map)
 from ..i18n import tr
 from ..logger import get_logger
 from ..paths import APP_DIR
@@ -27,8 +35,11 @@ COLORS = {
     "r3": (240, 120, 200), "select": (150, 160, 190), "start": (200, 200, 210),
 }
 
-# Mot ma phim chi duoc gan mot lan. Do la ly do bo qua ma da thuoc ve nut khac.
-ASSIGNED_ON_START = set(DEFAULT_BUTTONS.values())
+# Giu D-pad trai hoac phai de thoat khong luu.
+HOLD_EXIT = 1.5
+
+HAT_X = "abs16"
+HAT_Y = "abs17"
 
 
 class ButtonTestScreen(BaseScreen):
@@ -40,13 +51,18 @@ class ButtonTestScreen(BaseScreen):
         self.buttons = dict(DEFAULT_BUTTONS)
         self.axes = {}
         self.step = 0
-        self.down = {}
+        self.keys = {}
+        self.hat = {HAT_X: 0, HAT_Y: 0}
         self.consumed = set()
+        self.wait_release = False
+        self.hat_prev = 0
+        self.hat_exit_since = 0.0
         self.flash = ""
         self.flash_until = 0.0
         self.finished = False
         self.error = ""
-        self.hold_b_since = None
+        # Thay cho phep test dieu khong phai vao time.time().
+        self.clock = time.time
 
     # ---- vong doi ----
 
@@ -64,11 +80,20 @@ class ButtonTestScreen(BaseScreen):
         if not self.reader.open():
             self.error = tr("button_test_open_failed") % path
             return
+        self._restart()
+        log.info("button test: bat dau tren %s (%s)", path, name)
+
+    def _restart(self):
         self.step = 0
         self.finished = False
-        self.down = {}
-        self.consumed = set(ASSIGNED_ON_START)
-        log.info("button test: bat dau tren %s (%s)", path, name)
+        self.keys = {}
+        self.hat = {HAT_X: 0, HAT_Y: 0}
+        self.consumed = set()
+        self.wait_release = False
+        self.hat_prev = 0
+        self.hat_exit_since = 0.0
+        self.flash = ""
+        self.flash_until = 0.0
 
     def on_exit(self):
         if self.reader:
@@ -81,49 +106,99 @@ class ButtonTestScreen(BaseScreen):
     def get_footer_actions(self):
         if self.finished:
             return [("A", tr("button_test_save")), ("B", tr("button_test_restart"))]
-        return [("A", tr("button_test_skip")), ("B", tr("button_test_back"))]
+        return [("D-PAD", tr("button_test_nav"))]
 
-    # ---- input tu SDL ----
+    # ---- input ----
 
     def handle_input(self, inputs):
-        if not inputs:
-            return False
-        edges = inputs.get("edges", [])
-        now = time.time()
-
-        # B vua duoc gan o buoc 2 nen phai phan biet "bam" voi "giu". Giu B
-        # huy hanh dong; bam B lui mot buoc.
-        if inputs.get("btn_b"):
-            if self.hold_b_since is None:
-                self.hold_b_since = now
-            elif now - self.hold_b_since >= 1.5 and self.hold_b_since is not None:
-                started = self.hold_b_since
-                self.hold_b_since = None
-                if now - started >= 1.5:
-                    log.info("button test: huy do giu B")
-                    self.engine.pop_screen()
-                    return True
-        else:
-            self.hold_b_since = None
-
-        if "btn_b" in edges:
-            if self.finished:
-                self.step = 0
-                self.finished = False
-                self.consumed = set(ASSIGNED_ON_START)
-                return True
-            self._back()
-            return True
-
-        if "btn_a" in edges:
-            if self.finished:
+        # A va B la nut can thu, nen khi dang thu chi dung D-pad dieu huong.
+        # Neu A/B bi dung o day, nguoi dung an nut duoc yeu cau lai bi hieu
+        # nham la bo qua hoac lui lai.
+        if self.finished and inputs:
+            edges = inputs.get("edges", [])
+            if "btn_a" in edges:
                 self._save()
-            else:
+                return True
+            if "btn_b" in edges:
+                self._restart()
+                return True
+        return False
+
+    # ---- doc input that ----
+
+    def update(self, dt):
+        if not self.reader:
+            return
+        for kind, code, value in self.reader.poll():
+            if kind == EV_KEY:
+                if value == 0:
+                    self.keys.pop(code, None)
+                else:
+                    self.keys[code] = value
+            elif kind == 3:
+                # ABS: chi giu lai hat switch, phan con lai khong can o day.
+                if code in (16, 17):
+                    self.hat[HAT_X if code == 16 else HAT_Y] = value
+
+        if not self.keys:
+            self.wait_release = False
+
+        if self.finished:
+            self._check_hat_exit()
+            return
+
+        self._check_hat_exit()
+        self._check_hat_nav()
+        if self.wait_release:
+            return
+        self._accept_press()
+
+    def _check_hat_exit(self):
+        """Giu D-pad sang ben de thoat khong luu.
+
+        ABS_HAT0X la trai/phai, ABS_HAT0Y la len/xuong, nen phai dung truc X.
+        """
+        if abs(self.hat.get(HAT_X, 0)) != 1:
+            self.hat_exit_since = 0.0
+            return
+        now = self.clock()
+        if not self.hat_exit_since:
+            self.hat_exit_since = now
+            return
+        if now - self.hat_exit_since >= HOLD_EXIT:
+            self.hat_exit_since = 0.0
+            log.info("button test: thoat khong luu do giu D-pad")
+            self.engine.pop_screen()
+
+    def _check_hat_nav(self):
+        """D-pad len bo qua buoc, D-pad xuong lui mot buoc.
+
+        Canh le trai nen khong dung A/B: A va B cung la nut dang duoc thu.
+        """
+        now = self.hat.get(HAT_Y, 0)
+        if now != self.hat_prev:
+            self.hat_exit_since = 0.0
+            previous, self.hat_prev = self.hat_prev, now
+            if now < 0 and previous >= 0:
                 log.info("button test: bo qua %s", self._current())
                 self.step += 1
                 self._maybe_finish()
-            return True
-        return False
+            elif now > 0 and previous <= 0 and self.step > 0:
+                self.step -= 1
+                self.flash = tr("button_test_back_step")
+                self.flash_until = self.clock() + 2
+                log.info("button test: lui ve buoc %s", self._current())
+
+    def _accept_press(self):
+        for code in sorted(self.keys):
+            if not is_gamepad_key(code):
+                continue
+            if code in self.consumed:
+                # Ma nay da thuoc ve nut khac. Gan lai se lam nhieu nut sang
+                # len cung luc tren dien thoai, nen bo qua.
+                continue
+            self._accept(code)
+            return
 
     # ---- logic ----
 
@@ -132,11 +207,6 @@ class ButtonTestScreen(BaseScreen):
             return ""
         return ASK_ORDER[self.step]
 
-    def _back(self):
-        if self.step > 0:
-            self.step -= 1
-        self._maybe_finish()
-
     def _accept(self, code):
         name = self._current()
         if not name:
@@ -144,8 +214,9 @@ class ButtonTestScreen(BaseScreen):
         previous = self.buttons.get(name)
         self.buttons[name] = code
         self.consumed.add(code)
+        self.wait_release = True
         self.flash = tr("button_test_got") % (BUTTON_LABELS.get(name, name), code)
-        self.flash_until = time.time() + 2.5
+        self.flash_until = self.clock() + 2.5
         log.info("button test: %s -> %d (truoc %s)", name, code, previous)
         self.step += 1
         self._maybe_finish()
@@ -154,9 +225,20 @@ class ButtonTestScreen(BaseScreen):
         if self.step < len(ASK_ORDER):
             return
         self.finished = True
+        duplicates = duplicate_buttons(self.buttons, ASK_ORDER)
+        if duplicates:
+            names = ", ".join("%s=%s=%d" % pair for pair in duplicates)
+            log.warning("button test: van con ma trung: %s", names)
         log.info("button test: het cac buoc. A de luu, B de lam lai.")
 
     def _save(self):
+        duplicates = duplicate_buttons(self.buttons, ASK_ORDER)
+        if duplicates:
+            names = ", ".join("%s=%s=%d" % pair for pair in duplicates)
+            self.flash = tr("button_test_duplicate") % names
+            self.flash_until = self.clock() + 8
+            log.error("button test: khong luu vi co ma trung: %s", names)
+            return
         try:
             path = save_map(APP_DIR, self.buttons, self.axes)
         except OSError as exc:
@@ -166,34 +248,9 @@ class ButtonTestScreen(BaseScreen):
         changed = [name for name in ASK_ORDER
                    if self.buttons.get(name) != DEFAULT_BUTTONS.get(name)]
         self.flash = tr("button_test_saved") % (len(changed), path)
-        self.flash_until = time.time() + 6
+        self.flash_until = self.clock() + 6
         log.info("button test: da luu, %d nut khac mac dinh: %s", len(changed), changed)
         self.engine.pop_screen()
-
-    # ---- doc input that ----
-
-    def update(self, dt):
-        if not self.reader:
-            return
-        for kind, code, value in self.reader.poll():
-            if kind != EV_KEY:
-                continue
-            key = "key%d" % code
-            if value == 0:
-                self.down.pop(key, None)
-            else:
-                self.down[key] = value
-
-        if self.finished:
-            return
-
-        # Gan nut moi nhat. Bo qua ma da gan cho nut khac de khong ghi de.
-        for key in sorted(self.down):
-            code = int(key[3:])
-            if key in self.consumed or not is_gamepad_key(code):
-                continue
-            self._accept(code)
-            break
 
     # ---- render ----
 
@@ -214,9 +271,10 @@ class ButtonTestScreen(BaseScreen):
             self._render_summary(engine)
         else:
             self._render_prompt(engine)
+        self._render_live(engine)
         self._render_pad(engine)
 
-        if self.flash and time.time() < self.flash_until:
+        if self.flash and self.clock() < self.flash_until:
             engine.draw_text(self.flash, engine.font_sub, 40,
                              engine.screen_h - 190, 240, 220, 120)
         if self.error:
@@ -229,9 +287,13 @@ class ButtonTestScreen(BaseScreen):
         engine.draw_text(tr("button_test_press") % label, engine.font_title,
                          40, 130, 0, 230, 150)
         engine.draw_text(tr("button_test_progress") % (self.step + 1, len(ASK_ORDER)),
-                         engine.font_sub, 40, 185, 180, 195, 215)
-        engine.draw_text(tr("button_test_hint"), engine.font_sub,
-                         40, 235, 150, 165, 185)
+                         engine.font_sub, 40, 182, 180, 195, 215)
+        if self.wait_release:
+            engine.draw_text(tr("button_test_release"), engine.font_sub,
+                             40, 224, 240, 210, 120)
+        else:
+            engine.draw_text(tr("button_test_hint"), engine.font_sub,
+                             40, 224, 150, 165, 185)
 
     def _render_summary(self, engine):
         engine.draw_text(tr("button_test_done"), engine.font_title,
@@ -241,7 +303,7 @@ class ButtonTestScreen(BaseScreen):
             column = 0 if index < half else 1
             row = index if column == 0 else index - half
             x = 40 + column * 470
-            y = 200 + row * 46
+            y = 196 + row * 46
             changed = self.buttons.get(name, 0) != DEFAULT_BUTTONS.get(name)
             engine.draw_text(BUTTON_LABELS.get(name, name), engine.font_sub,
                              x, y, 235, 238, 245)
@@ -251,8 +313,15 @@ class ButtonTestScreen(BaseScreen):
             if changed:
                 engine.draw_text(tr("button_test_new"), engine.font_sub,
                                  x + 215, y, 240, 200, 90)
-        engine.draw_text(tr("button_test_star_note"), engine.font_sub,
-                         40, engine.screen_h - 150, 150, 165, 185)
+
+    def _render_live(self, engine):
+        """Ma phim dang giu. Day la thong tin de doc truc tiep tren may."""
+        codes = sorted(code for code in self.keys if is_gamepad_key(code))
+        text = tr("button_test_live") % (", ".join(str(c) for c in codes) or "-")
+        color = (0, 230, 150) if codes else (120, 132, 150)
+        engine.draw_text(text, engine.font_sub, 40, 250, color[0], color[1], color[2])
+        axis = "hat %d,%d" % (self.hat.get(HAT_X, 0), self.hat.get(HAT_Y, 0))
+        engine.draw_text(axis, engine.font_sub, 520, 250, 120, 132, 150)
 
     def _render_pad(self, engine):
         base_y = engine.screen_h - 128
@@ -261,7 +330,8 @@ class ButtonTestScreen(BaseScreen):
             x = 40 + index * 94
             if x + 84 > engine.screen_w:
                 break
-            active = ("key%d" % self.buttons.get(name, 0)) in self.down
+            code = self.buttons.get(name, 0)
+            active = code in self.keys
             color = COLORS.get(name, (150, 160, 190))
             if active:
                 fill, text = color, (20, 24, 32)
@@ -270,3 +340,5 @@ class ButtonTestScreen(BaseScreen):
             engine.fill_rect(x, base_y, 84, 58, fill[0], fill[1], fill[2], 235)
             engine.draw_text(BUTTON_LABELS.get(name, name), engine.font_sub,
                              x + 8, base_y + 4, text[0], text[1], text[2])
+            engine.draw_text(str(code), engine.font_sub, x + 8, base_y + 30,
+                             text[0], text[1], text[2])

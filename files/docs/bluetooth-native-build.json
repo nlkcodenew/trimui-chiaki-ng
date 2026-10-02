@@ -1,10 +1,10 @@
 {
-  "version": "0.3.1-stock",
+  "version": "0.3.2-stock",
   "target": "linux/arm64",
   "GOARM64": "v8.0",
   "CGO_ENABLED": "0",
   "toolchain": "go1.23.0 linux/amd64 via GOTOOLCHAIN=auto",
-  "binary_sha256": "9fc52970bc64488cb454132f29fd023781ee21a8e56efbb251ab37e8214eac74",
+  "binary_sha256": "194f41786223dafe1c02ba330797b60450f62abe71f24a80ff442f71e10e39d3",
   "binary_size": 3932312,
   "source_directory": "bluetooth-native",
   "dependencies": {
@@ -20,6 +20,8 @@
   "notes": [
     "Button and axis map can be overridden by bluetooth-map.json next to the app.",
     "HIDP control transactions follow net/bluetooth/hidp/hidp.h; no reply is a bare stall.",
-    "Radio power saving is lowered for the session and the adapter is powered back on during restore."
+    "SDP record is well-formed XML so BlueZ can publish the HID service.",
+    "Duplicated button codes in a map are reported and never sent silently.",
+    "The adapter is powered back on when the Stock OS service is restored."
   ]
 }

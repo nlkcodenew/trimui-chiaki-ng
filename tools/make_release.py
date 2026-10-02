@@ -156,8 +156,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: man hinh THU BUT de an truc tiep tung nut tren may va luu ban do; sua HIDP dung dac ta, bao loi khi dung nut B va bat lai adapter Bluetooth sau khi dung." % version,
-            "en": "v%s: on-device button test screen that saves a per-button map, HIDP control transactions fixed to the specification, B no longer reports a false backend error and Bluetooth is powered back on after stopping." % version,
+            "vi": "v%s: sua man hinh THU BUT de mot lan ban chi gan mot nut va chan ban do co ma trung; them thong bao ma phim dang giu; sua SDP record va bo lenh hciconfig khong ho tro." % version,
+            "en": "v%s: button test now assigns one button per press and refuses maps with duplicate codes, shows the live key code, fixes the SDP record and drops unsupported hciconfig calls." % version,
         },
         "files": files,
         "remove": [],

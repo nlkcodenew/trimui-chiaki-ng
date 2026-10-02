@@ -161,6 +161,35 @@ class ButtonMapTests(unittest.TestCase):
         self.assertEqual(buttons["a"], 304)
         self.assertEqual(axes["hat_x"], 16)
 
+    def test_map_with_duplicate_codes_is_refused(self):
+        """A mis-recorded map made three buttons light up at once.
+
+        Loading it would keep sending that broken map to the phone, so the
+        duplicates must be rejected and the built-in table used instead.
+        """
+        path = os.path.join(self.dir, self.manager.MAP_NAME)
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write('{"version":1,"buttons":{"x":305,"y":305,"l3":310,'
+                         '"r3":310},"axes":{}}')
+        buttons, _axes, error = self.manager.load_map(self.dir)
+        self.assertIn("duplicate codes", error)
+        self.assertEqual(buttons["x"], 307)
+        self.assertEqual(buttons["y"], 308)
+        self.assertEqual(buttons["l3"], 317)
+        self.assertEqual(buttons["r3"], 318)
+
+    def test_duplicate_buttons_reports_each_pair_once(self):
+        buttons = dict(self.manager.DEFAULT_BUTTONS)
+        buttons["r3"] = buttons["l3"]
+        found = self.manager.duplicate_buttons(buttons, ["l3", "r3"])
+        self.assertEqual(found, [("l3", "r3", buttons["l3"])])
+
+    def test_duplicate_buttons_is_empty_for_a_good_map(self):
+        self.assertEqual(
+            self.manager.duplicate_buttons(self.manager.DEFAULT_BUTTONS,
+                                          list(self.manager.DEFAULT_BUTTONS)),
+            [])
+
     def test_saved_map_round_trips(self):
         buttons, axes, _ = self.manager.load_map(self.dir)
         buttons["l3"] = 318
@@ -183,12 +212,12 @@ class ButtonMapTests(unittest.TestCase):
     def test_out_of_range_codes_are_ignored(self):
         path = os.path.join(self.dir, self.manager.MAP_NAME)
         with open(path, "w", encoding="utf-8") as handle:
-            handle.write('{"version":1,"buttons":{"a":9999,"l3":318},'
+            handle.write('{"version":1,"buttons":{"a":9999,"l3":330},'
                          '"axes":{"hat_x":99}}')
         buttons, axes, error = self.manager.load_map(self.dir)
         self.assertEqual(error, "")
         self.assertEqual(buttons["a"], 304)
-        self.assertEqual(buttons["l3"], 318)
+        self.assertEqual(buttons["l3"], 330)
         self.assertEqual(axes["hat_x"], 16)
 
     def test_event_struct_is_24_bytes_on_this_abi(self):
@@ -215,64 +244,140 @@ class ButtonTestScreenTests(unittest.TestCase):
         screen = self.module.ButtonTestScreen(mock.Mock())
         screen.device_path = "/dev/input/event3"
         screen.device_name = "TRIMUI Player1"
-        # A real session fills this in on_enter; the tests drive the steps
-        # directly, so start from the same state the screen would set up.
-        screen.consumed = set(self.module.ASSIGNED_ON_START)
+        screen.reader = mock.Mock()
+        screen.reader.poll.return_value = []
         return screen
+
+    def _feed(self, screen, code, value):
+        screen.reader.poll.return_value = [(1, code, value)]
+        screen.update(0)
+
+    def _press(self, screen, code, held_frames=1, released_frames=1):
+        """Feed one physical press: held for N frames, then released."""
+        for _ in range(held_frames):
+            self._feed(screen, code, 1)
+        for _ in range(released_frames):
+            self._feed(screen, code, 0)
 
     def test_pressing_a_key_assigns_it_to_the_current_button(self):
         screen = self._screen()
-        screen.step = self.module.ASK_ORDER.index("l3")
+        step = self.module.ASK_ORDER.index("l3")
+        screen.step = step
         self.assertEqual(screen._current(), "l3")
-        screen._accept(318)
+        self._press(screen, 318)
         self.assertEqual(screen.buttons["l3"], 318)
-        self.assertEqual(screen._current(), "r3")
+        self.assertEqual(screen.step, step + 1)
 
-    def test_the_same_key_is_not_offered_twice(self):
+    def test_one_press_assigns_exactly_one_button(self):
+        """Regression: one press used to fill every following step.
+
+        A held key was offered to each step in turn, so a single press wrote the
+        same code into three buttons and the phone lit all three at once.
+        """
         screen = self._screen()
-        # 304 is A in the default table, so it must not be offered for L3.
-        self.assertIn(304, screen.consumed)
-        screen.down = {"key304": 1}
-        screen.step = self.module.ASK_ORDER.index("l3")
+        screen.step = self.module.ASK_ORDER.index("b")
+        start = screen.step
+        for _ in range(30):
+            self._feed(screen, 305, 1)
+        self.assertEqual(screen.step, start + 1)
+        self.assertEqual(screen.buttons["b"], 305)
+        for name in ("x", "y", "l1", "r1", "l3"):
+            self.assertNotEqual(screen.buttons.get(name), 305,
+                                "%s took a code that already belonged to b" % name)
+
+    def test_a_press_that_is_still_held_needs_a_release_first(self):
+        screen = self._screen()
+        screen.step = self.module.ASK_ORDER.index("b")
+        self._feed(screen, 305, 1)
+        self.assertTrue(screen.wait_release)
+        screen.step = self.module.ASK_ORDER.index("x")
+        self._feed(screen, 307, 1)
+        self.assertEqual(screen.buttons["x"], self.module.DEFAULT_BUTTONS["x"])
+        # Nothing is accepted while a button from a previous step is held.
+        for _ in range(10):
+            self._feed(screen, 307, 1)
+        self.assertEqual(screen.buttons["x"], self.module.DEFAULT_BUTTONS["x"])
+        self._feed(screen, 305, 0)
+        self._feed(screen, 307, 0)
+        self.assertFalse(screen.wait_release)
+        self._feed(screen, 307, 1)
+        self.assertEqual(screen.buttons["x"], 307)
+
+    def test_button_a_is_not_a_skip_key_while_it_is_being_tested(self):
+        """Regression: pressing the asked-for A button skipped its own step."""
+        screen = self._screen()
+        self.assertEqual(screen.step, 0)
+        self.assertEqual(screen._current(), "a")
+        handled = screen.handle_input({"edges": ["btn_a"], "btn_a": True})
+        self.assertFalse(handled)
+        self.assertEqual(screen.step, 0)
+
+    def test_dpad_up_skips_and_dpad_down_steps_back(self):
+        screen = self._screen()
+        screen.step = 2
+        screen.hat[self.module.HAT_Y] = -1
         screen.update(0)
-        self.assertEqual(screen._current(), "l3")
+        self.assertEqual(screen.step, 3)
+        screen.hat[self.module.HAT_Y] = 1
+        screen.update(0)
+        self.assertEqual(screen.step, 2)
 
     def test_all_steps_finish_and_offer_a_save(self):
         screen = self._screen()
-        for index, name in enumerate(self.module.ASK_ORDER):
+        for index in range(len(self.module.ASK_ORDER)):
             screen.step = index
             screen._accept(1000 + index)
         self.assertTrue(screen.finished)
         self.assertEqual(self.module.tr("button_test_save"), "LUU")
 
-    def test_saving_writes_the_map_and_returns(self):
+    def test_saving_is_refused_while_two_buttons_share_a_code(self):
         screen = self._screen()
         screen.step = self.module.ASK_ORDER.index("l3")
         screen._accept(318)
+        screen.step = self.module.ASK_ORDER.index("r3")
+        screen._accept(318)
+        with mock.patch.object(self.module, "save_map") as saver:
+            screen._save()
+        saver.assert_not_called()
+        self.assertIn("dung mot ma phim", screen.flash)
+
+    def test_saving_writes_the_map_and_returns(self):
+        screen = self._screen()
+        screen.step = self.module.ASK_ORDER.index("l3")
+        screen._accept(330)
+        screen.step = self.module.ASK_ORDER.index("r3")
+        screen._accept(331)
+        screen.finished = True
         with mock.patch.object(self.module, "save_map",
                                return_value="/tmp/map.json") as saver:
             screen._save()
         saver.assert_called_once()
         screen.engine.pop_screen.assert_called_once()
 
-    def test_holding_b_cancels_instead_of_stepping_back(self):
+    def test_a_and_b_are_used_only_on_the_summary_screen(self):
         screen = self._screen()
-        screen.step = 4
-        screen.hold_b_since = 100.0
-        with mock.patch.object(self.module.time, "time", return_value=102.0):
-            handled = screen.handle_input({"edges": [], "btn_b": True})
-        self.assertTrue(handled)
-        screen.engine.pop_screen.assert_called_once()
-        self.assertEqual(screen.step, 4)
+        screen.finished = True
+        screen.step = self.module.ASK_ORDER.index("l3")
+        screen._accept(330)
+        screen.step = self.module.ASK_ORDER.index("r3")
+        screen._accept(331)
+        screen.finished = True
+        with mock.patch.object(self.module, "save_map",
+                               return_value="/tmp/map.json"):
+            self.assertTrue(screen.handle_input({"edges": ["btn_a"], "btn_a": True}))
+        screen.finished = True
+        self.assertTrue(screen.handle_input({"edges": ["btn_b"], "btn_b": True}))
+        self.assertFalse(screen.finished)
 
-    def test_tapping_b_steps_back(self):
+    def test_holding_a_sideways_dpad_exits_without_saving(self):
         screen = self._screen()
-        screen.step = 4
-        screen.hold_b_since = None
-        handled = screen.handle_input({"edges": ["btn_b"], "btn_b": False})
-        self.assertTrue(handled)
-        self.assertEqual(screen.step, 3)
-        screen.engine.pop_screen.assert_not_called()
+        clock = [50.0]
+        screen.clock = lambda: clock[0]
+        screen.hat[self.module.HAT_X] = 1
+        screen.update(0)
+        clock[0] = 50.0 + self.module.HOLD_EXIT + 0.1
+        screen.update(0)
+        screen.engine.pop_screen.assert_called_once()
 
 
 if __name__ == "__main__":

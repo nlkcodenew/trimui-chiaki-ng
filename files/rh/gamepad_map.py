@@ -66,6 +66,25 @@ def map_path(app_dir):
     return os.path.join(app_dir, MAP_NAME)
 
 
+def duplicate_buttons(buttons, names):
+    """Nut nao cung mot ma phim.
+
+    Ban do sai lam nhieu nut sang len cung luc tren dien thoai, nen phai loai
+    bo thay vi dung.
+    """
+    seen = {}
+    duplicates = []
+    for name in names:
+        code = buttons.get(name)
+        if not code:
+            continue
+        if code in seen:
+            duplicates.append((seen[code], name, code))
+            continue
+        seen[code] = name
+    return duplicates
+
+
 def load_map(app_dir):
     """Tra ve (buttons, axes, error). Khong co file thi dung mac dinh."""
     path = map_path(app_dir)
@@ -90,6 +109,13 @@ def load_map(app_dir):
         for name, code in raw_axes.items():
             if name in axes and isinstance(code, int) and 0 <= code < 64:
                 axes[name] = code
+    duplicates = duplicate_buttons(buttons, list(buttons))
+    if duplicates:
+        # Mot ban do bi ghi sai lam vai nut sang len cung luc. Bo qua ban do do
+        # thay vi gui report sai cho dien thoai.
+        names = ", ".join("%s=%s=%d" % pair for pair in duplicates)
+        log.warning("ban do nut %s co ma trung (%s); dung mac dinh", path, names)
+        return dict(DEFAULT_BUTTONS), dict(DEFAULT_AXES), "duplicate codes: " + names
     return buttons, axes, ""
 
 

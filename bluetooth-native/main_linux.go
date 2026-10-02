@@ -14,7 +14,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const version = "0.3.1-stock"
+const version = "0.3.2-stock"
 
 func writeFileAtomic(path, value string) error {
 	if path == "" {

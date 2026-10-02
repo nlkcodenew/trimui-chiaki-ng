@@ -1,14 +1,14 @@
 {
-  "version": "0.3.26-beta1",
+  "version": "0.3.27-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-02T19:40:45+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.26-beta1/files",
-  "release_tag": "v0.3.26-beta1/files",
+  "built": "2026-10-02T21:25:00+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.27-beta1/files",
+  "release_tag": "v0.3.27-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.26-beta1: man hinh THU BUT de an truc tiep tung nut tren may va luu ban do; sua HIDP dung dac ta, bao loi khi dung nut B va bat lai adapter Bluetooth sau khi dung.",
-    "en": "v0.3.26-beta1: on-device button test screen that saves a per-button map, HIDP control transactions fixed to the specification, B no longer reports a false backend error and Bluetooth is powered back on after stopping."
+    "vi": "v0.3.27-beta1: sua man hinh THU BUT de mot lan ban chi gan mot nut va chan ban do co ma trung; them thong bao ma phim dang giu; sua SDP record va bo lenh hciconfig khong ho tro.",
+    "en": "v0.3.27-beta1: button test now assigns one button per press and refuses maps with duplicate codes, shows the live key code, fixes the SDP record and drops unsupported hciconfig calls."
   },
   "files": [
     {
@@ -48,7 +48,7 @@
     },
     {
       "path": "bin/brick-pro-bt",
-      "sha256": "9fc52970bc64488cb454132f29fd023781ee21a8e56efbb251ab37e8214eac74",
+      "sha256": "194f41786223dafe1c02ba330797b60450f62abe71f24a80ff442f71e10e39d3",
       "size": 3932312
     },
     {
@@ -78,8 +78,8 @@
     },
     {
       "path": "docs/bluetooth-native-build.json",
-      "sha256": "1b98daa98e6fa37c9c111951eb84a1393a8bbf14af52203918e0e3b2ffe169f0",
-      "size": 828
+      "sha256": "14f06a083e6c7e94ea3fc92b7e5fa9342fda9a5d4e6077460a594561d70e5be5",
+      "size": 954
     },
     {
       "path": "libs/brick-stock/THIRD_PARTY_NOTICES.txt",
@@ -183,13 +183,13 @@
     },
     {
       "path": "rh/gamepad_map.py",
-      "sha256": "becf0608afb9caa0336ef679d9e51fe8ad030b124c54dd608ff46a2508a51b8b",
-      "size": 7529
+      "sha256": "16f6e3740edd72cf33eba77730c5a0c8dc9a50f01c7894518426dabf62db12d0",
+      "size": 8436
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "be4aa065eee768872e5bdc36acaecdf3fc58cfccb44fa54d72be0729351cc625",
-      "size": 25003
+      "sha256": "d55624be8870da68ee5591304be993eaca5693465bb2ce18d5207fb6041fd657",
+      "size": 25616
     },
     {
       "path": "rh/inputs.py",
@@ -238,7 +238,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "5476855289c5fe5686c493f3c7341f586b84adb94fe1efce2dd56d2f17d6345b",
+      "sha256": "fd95533106272c179fff3836627aadc1d9b6d0e05111d4f79bd7bd2b40dc13d2",
       "size": 1184
     },
     {
@@ -278,8 +278,8 @@
     },
     {
       "path": "rh/screens/button_test.py",
-      "sha256": "d323593ea9087c9d10ee31f099e90ceb0a12b9d8283edab1e22e5b2c5493d6cd",
-      "size": 10161
+      "sha256": "d5f0fdcfd2432a06abec9d83a0bc923ac830f59ee2e192a388735fb822d4b13a",
+      "size": 13315
     },
     {
       "path": "rh/screens/guide.py",
@@ -694,8 +694,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.26-beta1.zip",
-    "sha256": "0df44f77dfe792fbb41f0c5d33b40d604693157b77826226bde5435d89ac0fc6",
-    "size": 12845493
+    "name": "trimui-chiaki-ng-v0.3.27-beta1.zip",
+    "sha256": "993f1e5d421ad6f1791a4fccf31a0e41aa08c0ff03d061dd3214d3b6d9f48f38",
+    "size": 12847459
   }
 }

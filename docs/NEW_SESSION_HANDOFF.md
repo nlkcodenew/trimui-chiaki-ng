@@ -1,4 +1,4 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.26-beta1
+# Bàn giao session mới — trimui-chiaki-ng v0.3.27-beta1
 
 > Cập nhật: 2026-10-02. Đọc file này trước khi tiếp tục dự án.
 
@@ -11,11 +11,19 @@
 
 ## 0. Việc đang chờ người dùng
 
-`v0.3.26-beta1` đã đẩy lên GitHub Release dưới dạng **pre-release, không phải
-latest**. Người dùng sẽ tự tải ZIP, cài đè, rồi chạy màn hình THỬ NÚT.
+Beta đã đẩy lên GitHub Release dưới dạng **pre-release, không phải latest**.
 
-Cần chờ: kết quả THỬ NÚT (mã phím thật của L3/R3 và 8 nút còn lại) và phản hồi
-sau khi thử trong game. Nếu có lỗi, yêu cầu gửi `Apps/Chiaki/BrickBluetooth.log`.
+`v0.3.26-beta1` đã hỏng màn hình THỬ NÚT: một lần bấm điền dần bước sau vì
+`consumed` so sánh string với int, nên bản đồ lưu ra có nhiều nút chung mã và
+điện thoại sáng đồng loạt. `v0.3.27-beta1` sửa cả hai nguyên nhân, thêm chặn bản
+đồ trùng mã, và sửa SDP record thiếu `</sequence>`.
+
+Cần chờ: người dùng chạy lại THỬ NÚT và cho biết mã phím thật của L3/R3, cùng
+kết quả thử trong game. Nếu có lỗi, yêu cầu gửi `Apps/Chiaki/BrickBluetooth.log`
+và `Apps/Chiaki/Chiaki-debug.log`.
+
+Bản đồ cũ đã ghi sai trên thẻ nhớ cần xóa trước khi thử lại; bản mới tự từ chối
+nạp bản đồ có mã trùng.
 
 ## 1. Trạng thái ngắn gọn
 
@@ -24,22 +32,25 @@ sau khi thử trong game. Nếu có lỗi, yêu cầu gửi `Apps/Chiaki/BrickBl
   giả định `bit = key - 304` trong khi thiết bị báo mã phím không đều.
 - Bluetooth đã kết nối thật với iPhone (`D8:DE:3A:21:25:E6`); phiên thứ hai 9.2s vì
   tự kết nối lại. Phiên đầu 42.7s là thời gian người dùng tìm thiết bị trong Cài đặt.
-- 121/121 unittest và `go test` đều đạt; release verifier đạt.
+- `v0.3.27-beta1` sửa màn hình THỬ NÚT: một lần bấm chỉ gán một nút, A/B không
+  còn là phím điều hướng khi đang thử, bản đồ có mã trùng bị từ chối lưu và
+  từ chối nạp. Đồng thời sửa SDP record thiếu `</sequence>` khiến BlueZ báo
+  `Unable to parse record`, và bỏ các lệnh `hciconfig` mà Stock OS không hỗ trợ.
+- 128/128 unittest, `go vet` và `go test` đều đạt; release verifier đạt.
 
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`.
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
 - Release khuyến nghị: `v0.3.20` (không đổi).
-- Beta đang thử: `v0.3.26-beta1` — cố ý **không** phải latest để OTA không tự đẩy.
-- SHA-256 ZIP `v0.3.26-beta1`:
-  `0df44f77dfe792fbb41f0c5d33b40d604693157b77826226bde5435d89ac0fc6`.
+- Beta đang thử: `v0.3.27-beta1` — cố ý **không** phải latest để OTA không tự đẩy.
+- SHA-256 ZIP: xem `dist/trimui-chiaki-ng-v0.3.27-beta1.zip.sha256` sau khi build.
 - Số file OTA/ZIP: 136/139; không có settings/secrets/log.
 - Native `brick-pro-bt` SHA-256:
-  `9fc52970bc64488cb454132f29fd023781ee21a8e56efbb251ab37e8214eac74`.
+  `194f41786223dafe1c02ba330797b60450f62abe71f24a80ff442f71e10e39d3`.
 
 ### Cách tạo và kiểm tra beta (không phải latest)
 
-Beta được đẩy bằng tag có dấu `-`, ví dụ `v0.3.26-beta1`. Workflow
+Beta được đẩy bằng tag có dấu `-`, ví dụ `v0.3.27-beta1`. Workflow
 `.github/workflows/release.yml` tự đặt `prerelease: true` khi tag chứa `-`, nên
 GitHub không tính nó là latest và OTA không tự tải về.
 

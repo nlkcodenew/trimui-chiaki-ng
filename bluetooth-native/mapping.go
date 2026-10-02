@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 // The Stock OS exposes the Brick Pro pad as one evdev node whose Linux key
@@ -89,6 +90,24 @@ func (m *padMapping) axis(name string) uint16 {
 func (m *padMapping) pressed(keys *[768]bool, name string) bool {
 	code := m.code(name)
 	return code > 0 && code < 768 && keys[code]
+}
+
+// duplicateButtons lists HID buttons that share one Linux key code. A map like
+// that makes the phone see several buttons at once, so it is reported loudly
+// instead of being used quietly.
+func (m *padMapping) duplicateButtons() [][2]string {
+	seen := map[uint16]string{}
+	dupes := [][2]string{}
+	for _, button := range hidButtons {
+		code := m.code(button.name)
+		if other, taken := seen[code]; taken {
+			dupes = append(dupes, [2]string{other, button.name})
+			continue
+		}
+		seen[code] = button.name
+	}
+	sort.Slice(dupes, func(i, j int) bool { return dupes[i][0] < dupes[j][0] })
+	return dupes
 }
 
 func (m *padMapping) usedKeys() map[uint16]bool {
@@ -182,5 +201,16 @@ func loadMapping(path string) *padMapping {
 	mapping.Source = path
 	fmt.Printf("Button map: %s (version %d, %d override(s), %d rejected)\n",
 		path, file.Version, applied, rejected)
+	if duplicates := mapping.duplicateButtons(); len(duplicates) > 0 {
+		// Two HID buttons sharing one key code is exactly what makes several
+		// buttons light up on the phone at once. Name them loudly instead of
+		// sending a report that cannot be right.
+		names := make([]string, 0, len(duplicates))
+		for _, pair := range duplicates {
+			names = append(names, fmt.Sprintf("%s=%s", pair[0], pair[1]))
+		}
+		fmt.Printf("WARNING: several buttons share one key code: %s\n", strings.Join(names, ", "))
+		fmt.Println("Re-run THU BUT and press only the button that is asked for.")
+	}
 	return mapping
 }

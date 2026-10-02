@@ -1,6 +1,6 @@
 # Brick Pro Bluetooth Gamepad — hồ sơ kỹ thuật
 
-> Cập nhật: 2026-10-02. Áp dụng cho `v0.3.26-beta1`.
+> Cập nhật: 2026-10-02. Áp dụng cho `v0.3.27-beta1`.
 
 Tài liệu này ghi lại kết quả rà soát app sau khi người dùng chạy thử `v0.3.25-beta1`
 trên Brick Pro Stock OS và ghép với **iPhone** (`D8:DE:3A:21:25:E6`).
@@ -138,19 +138,84 @@ dự án, không sao chép mã nguồn.
 | Màn hình bấm từng nút ngay trên máy | Màn hình THỬ NÚT |
 | Chọn profile máy chủ (PC/Xbox/PS4) | **Chưa làm** — cần descriptor DS4/Xbox đúng, xem mục 6 |
 
+## 4b. Lỗi màn hình THỬ NÚT (phát hiện 2026-10-02)
+
+Người dùng chạy `v0.3.26-beta1` và báo: ấn nút A theo hướng dẫn thì **3 nút sáng
+đồng loạt**. Log `Chiaki-debug.log` cho thấy:
+
+```
+20:01:12.423 button test: bo qua a
+20:01:12.423 button test: b -> 305 (truoc 305)
+20:01:12.460 button test: x -> 305 (truoc 307)
+20:01:12.497 button test: y -> 305 (truoc 308)
+```
+
+Ba bước liên tiếp trong 74 ms, cùng một mã `305`. Bản đồ lưu được
+`x=305, y=305, r1=310, l3=310, select=318, start=318` — nhiều nút dùng chung mã.
+
+### Hai nguyên nhân
+
+**1. Chặn trùng không bao giờ chạy.** `consumed` được khởi tạo bằng
+`set(DEFAULT_BUTTONS.values())` nên chứa **int**, nhưng phép kiểm tra lại là
+`if key in self.consumed` với `key = "key305"` — **string**. Một string không bao
+giờ nằm trong tập int, nên điều kiện luôn đúng và `_accept` chạy mọi khung hình
+mà phím còn giữ. Một lần bấm vậy điền dần bước sau, bước sau nữa.
+
+**2. A và B vừa là nút cần thử vừa là phím điều hướng.** `handle_input` dùng SDL
+edge `btn_a` để "bỏ qua". Người dùng ấn A đúng theo yêu cầu thì bị hiểu thành bỏ
+qua chính bước đó — dòng `bo qua a` ngay trước khi `b -> 305`.
+
+Ngoài ra bản đồ sai đã lưu vẫn được backend dùng tiếp: `loadMapping` chỉ bỏ mã
+ngoài phạm vi, không kiểm tra trùng.
+
+### Cách sửa
+
+- `consumed` so sánh bằng **int** (`if code in self.consumed`).
+- Thêm cổng `wait_release`: sau khi gán phải thả hết phím mới gán tiếp.
+- A/B **không** dùng làm phím điều hướng khi đang thử. Điều hướng dùng D-pad:
+  `ABS_HAT0Y` lên = bỏ qua, xuống = lùi; giữ `ABS_HAT0X` 1.5 s = thoát không lưu.
+- Bỏ cơ chế "giữ phím để bỏ qua": lần bấm đầu tiên đã bị gán nên không bao giờ
+  kịp chạy ngưỡng giữ. Xóa hẳn thay vì giữ mã chết.
+- `duplicate_buttons()` trong Python và Go: từ chối lưu và từ chối nạp bản đồ
+  có hai nút chung mã, kèm cảnh báo tên rõ các nút bị trùng.
+- Màn hình hiện dòng `Đang giữ: <mã>` và mã phím dưới từng nút, để đọc trực
+  tiếp trên máy mà không cần app ngoài.
+
+### Thêm lỗi phát hiện cùng lúc
+
+`BrickBluetooth.log` cho thấy BlueZ báo:
+
+```
+bluetoothd[25089]: Unable to parse record for TrimUI Brick Pro Gamepad
+```
+
+Nguyên nhân: attribute `0x000d` trong SDP record thiếu một `</sequence>`.
+Test `TestServiceRecordIsWellFormedXML` bắt được ngay.
+
+`disablePowerSaving()` cũng phải bỏ: `hciconfig` của Stock OS không có
+`pkt_type`, `power_save`, `sc_only`, và mỗi lần gọi đều in ra `hci0 ... DOWN`.
+Chỉ giữ lại `rfkill unblock`.
+
 ## 5. Cách dùng màn hình THỬ NÚT
+
+Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng
+cờ `--map-file`. Xóa file để trở về mặc định.
 
 1. Cài ZIP beta đè lên bản cũ.
 2. `TAY CẦM BLUETOOTH` → bấm **X**.
 3. App lần lượt hỏi: A, B, X, Y, L1, R1, L3, R3, SELECT, START.
-4. Ấn đúng nút được hỏi trên máy. Mã phím hiện ra và bước sau tự mở.
-5. **A** lưu vào `bluetooth-map.json`. **B** lùi một bước. **Giữ B 2s** hủy.
+4. **Ấn đúng một nút rồi thả hẳn.** Dòng `Đang giữ: <mã>` cho biết kernel
+   báo gì; đợi mất chữ "Nha het nut roi moi an buoc sau" mới sang bước kế.
+5. D-pad lên = bỏ qua, D-pad xuống = lùi, giữ D-pad trái/phải 1.5 s = thoát.
+6. Xong 10 bước thì **A** lưu, **B** làm lại.
 
-Ma phim đã thuộc về nút khác không bao giờ được gán trùng. Mã ngoài vùng
-`0x130..0x140` bị bỏ qua, vì đó không phải mã nút gamepad.
+Mã phim đã thuộc về nút khác không bao giờ được gán trùng; mã ngoài
+`0x130..0x140` bị bỏ qua, vì đó không phải mã nút gamepad. Nếu còn trùng, app
+**không lưu** và báo rõ tên các nút bị trùng.
 
 Sau khi lưu, quay lại và bấm **A** để bắt đầu phiên Bluetooth. Backend in ra
-`Button map: <path> (version 1, N override(s))` và danh sách mã chưa được gán nếu còn.
+`Button map: <path> (version 1, N override(s))` và
+`WARNING: several buttons share one key code: ...` nếu bản đồ còn trùng.
 
 ## 6. Việc chưa làm
 

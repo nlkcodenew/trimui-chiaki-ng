@@ -188,26 +188,15 @@ type radioLease struct {
 	restoreNeeded bool
 }
 
-// disablePowerSaving lowers the controller's power saving while a session runs.
-// The Stock OS leaves the chip in a reduced state, which adds seconds to
-// discovery and can drop a link that is already up. Both calls are optional:
-// a radio that refuses them still works, only less responsively.
-func disablePowerSaving(ctx context.Context) {
+// unblockRadio makes sure the controller is not held in rfkill. On this Stock
+// OS hciconfig has no pkt_type/power_save/sc_only subcommands, and merely
+// calling it leaves hci0 reported DOWN, so only the rfkill part is attempted.
+func unblockRadio(ctx context.Context) {
 	if rfkill := commandPath("rfkill"); rfkill != "" {
-		_ = runCommand(ctx, 2*time.Second, rfkill, "unblock", "bluetooth")
-	}
-	if hciconfig := commandPath("hciconfig"); hciconfig != "" {
-		if err := runCommand(ctx, 2*time.Second, hciconfig, "hci0", "pkt_type", "DM1"); err != nil {
-			fmt.Println("Optional packet type:", err)
-		}
-		if err := runCommand(ctx, 2*time.Second, hciconfig, "hci0", "power_save", "off"); err != nil {
-			fmt.Println("Optional power_save off:", err)
-		}
-		if err := runCommand(ctx, 2*time.Second, hciconfig, "hci0", "sc_only", "off"); err != nil {
-			fmt.Println("Optional sniff off:", err)
+		if err := runCommand(ctx, 2*time.Second, rfkill, "unblock", "bluetooth"); err != nil {
+			fmt.Println("rfkill unblock:", err)
 		}
 	}
-	fmt.Println("Radio power saving disabled for this session")
 }
 
 func (lease *radioLease) switchToHID(ctx context.Context, bluezBus *bluez, status func(string)) error {
@@ -255,7 +244,7 @@ func (lease *radioLease) switchToHID(ctx context.Context, bluezBus *bluez, statu
 	if err := waitAdapter(ctx, bluezBus, 5*time.Second); err != nil {
 		return err
 	}
-	disablePowerSaving(ctx)
+	unblockRadio(ctx)
 	return nil
 }
 

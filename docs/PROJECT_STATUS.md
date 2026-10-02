@@ -1,4 +1,4 @@
-# trimui-chiaki-ng — trạng thái dự án v0.3.26-beta1
+# trimui-chiaki-ng — trạng thái dự án v0.3.27-beta1
 
 > Cập nhật: 2026-10-02. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
@@ -7,22 +7,22 @@
 > `v0.4.0-beta2`; không phát triển thêm pair, stream, PSN login/Account-ID,
 > H265 hoặc giao thức PS5. Beta PS5 chỉ được giữ làm lịch sử thử nghiệm.
 
-> **Bluetooth gamepad (2026-10-02):** `v0.3.26-beta1` là beta thử nghiệm, **không
+> **Bluetooth gamepad (2026-10-02):** `v0.3.27-beta1` là beta thử nghiệm, **không
 > phải latest**. Chi tiết kỹ thuật ở `docs/BLUETOOTH_GAMEPAD.md`.
 
 ## 1. Release hiện tại
 
 | Mục | Giá trị |
 |---|---|
-| Bluetooth beta | `v0.3.26-beta1` (pre-release, không phải latest) |
+| Bluetooth beta | `v0.3.27-beta1` (pre-release, không phải latest) |
 | PS4 recommended | `v0.3.20` |
 | Archived PS5 beta | `v0.4.0-beta2` |
 | OTA files | 136 |
 | ZIP entries | 139 |
 | ZIP SHA-256 | `0df44f77dfe792fbb41f0c5d33b40d604693157b77826226bde5435d89ac0fc6` |
-| Unittest | 121/121 đạt |
+| Unittest | 128/128 đạt |
 | Go test | đạt |
-| Native SHA-256 | `9fc52970bc64488cb454132f29fd023781ee21a8e56efbb251ab37e8214eac74` |
+| Native SHA-256 | `194f41786223dafe1c02ba330797b60450f62abe71f24a80ff442f71e10e39d3` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
 `v0.3.26-beta1` sửa chế độ tay cầm Bluetooth trên Brick Pro Stock OS: bảng điều
@@ -261,6 +261,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.20` | Giữ log launcher trong app và bắt lỗi bootstrap trước khi đọc settings |
 | `v0.3.25-beta1` | Tay cầm Bluetooth Classic HID cho Brick Pro Stock OS (hướng A) |
 | `v0.3.26-beta1` | HIDP đúng đặc tả; bảng ánh xạ nút + màn hình THỬ NÚT; bỏ 4 lỗi dùng hằng ngày |
+| `v0.3.27-beta1` | Một lần bấm chỉ gán một nút; chặn bản đồ trùng mã; sửa SDP record; bỏ hciconfig không hỗ trợ |
 
 ## 10. Kiểm thử và build gate
 
@@ -274,7 +275,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-121 unittest của source hiện tại bao phủ:
+128 unittest của source hiện tại bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.
@@ -285,8 +286,9 @@ git diff --check
 - Input mapping, settings/modal edges và home flow.
 - Native launcher không đưa khóa vào script.
 - Brick `sun50iw10` chọn runtime riêng; Spruce `sun55iw3` giữ runtime hệ thống.
-- Màn hình THỬ NÚT: gán nút, không gán trùng, giữ B để hủy, lưu bản đồ.
-- Bảng ánh xạ nút: mặc định khi thiếu file, bỏ mã sai, round-trip.
+- Màn hình THỬ NÚT: một lần bấm chỉ gán một nút, A/B không còn là phím điều
+  hướng khi đang thử chúng, giữ phím không nuốt bước sau, từ chối lưu bản đồ trùng mã.
+- Bản đồ nạp vào cũng bị từ chối nếu có hai nút chung mã phím.
 - Dừng chủ động không báo lỗi backend, mã lỗi thật vẫn báo.
 
 Ngoài ra `bluetooth-native` có `go test` riêng, gồm:
@@ -295,7 +297,8 @@ Ngoài ra `bluetooth-native` có `go test` riêng, gồm:
 - Bảng điều khiển ghi đè được (đổi cả nút lẫn axis).
 - Quét cả 256 header HIDP: không giao dịch nào trả stall trần.
 - Session control: suspend, resume, unplug, reset.
-- Nạp bản đồ bỏ tên lạ và mã ngoài phạm vi.
+- SDP record phải là XML đúng; test parse bằng `encoding/xml`.
+- Bản đồ có hai nút chung mã thì bị báo tên, không dùng.
 
 > Test Python **không được** để `files/` thật trên `sys.path`. `rh.paths` suy ra
 > `APP_DIR` từ vị trí module, nên import `rh` từ thư mục nguồn sẽ ghi `device_id`
@@ -322,7 +325,7 @@ Verifier kiểm:
    lúc khởi động và server shutdown khi kết thúc phiên vẫn là cảnh báo vô hại.
 6. `v0.4.0-beta2` là bản PS5 cuối để lưu lịch sử thử nghiệm. PS4/native giữ
    nguyên từ binary đã được xác nhận hoạt động; không mở thêm roadmap PS5.
-7. `v0.3.26-beta1` là beta tay cầm Bluetooth, cố ý **không** đánh dấu latest để OTA
+7. `v0.3.27-beta1` là beta tay cầm Bluetooth, cố ý **không** đánh dấu latest để OTA
    không tự đẩy lên thiết bị đang dùng ổn định.
 8. Chưa có bằng chứng nút nào hoạt động trên máy thật. Mọi khẳng định về nút đến từ
    bitmap `B: KEY=`; cần chạy màn hình THỬ NÚT rồi thử trong game trước khi kết luận.
