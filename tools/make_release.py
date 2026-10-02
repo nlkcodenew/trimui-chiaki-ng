@@ -155,8 +155,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: nhập PSN Account-ID trực tiếp khi nhận diện PS5, hiện mã lỗi an toàn để chụp; đường PS4 giữ nguyên." % version,
-            "en": "v%s: enter PSN Account-ID in-app only for detected PS5 hosts, with safe photographable error codes; PS4 path unchanged." % version,
+            "vi": "v%s: logo khoi dong NLK kieu Netflix (2.2s, bam phim bat ky de bo qua, tat duoc trong Cai dat); duong PS4 giu nguyen." % version,
+            "en": "v%s: Netflix-style NLK boot logo (2.2s, any key skips, toggle in Settings); PS4 path unchanged." % version,
         },
         "files": files,
         "remove": [],

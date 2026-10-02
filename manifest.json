@@ -1,20 +1,20 @@
 {
-  "version": "0.3.23",
+  "version": "0.3.24",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-01T12:51:38+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.23/files",
-  "release_tag": "v0.3.23/files",
+  "built": "2026-10-02T11:28:01+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.24/files",
+  "release_tag": "v0.3.24/files",
   "prerelease": false,
   "note": {
-    "vi": "v0.3.23: giảm báo cáo giả dương tính; chỉ gửi chất lượng stream khi suy giảm rõ ràng và không báo lỗi khi thiết bị chỉ đang offline.",
-    "en": "v0.3.23: reduce false-positive diagnostics by reporting only clearly degraded streams and ignoring ordinary offline update checks."
+    "vi": "v0.3.24: logo khoi dong NLK kieu Netflix (2.2s, bam phim bat ky de bo qua, tat duoc trong Cai dat); duong PS4 giu nguyen.",
+    "en": "v0.3.24: Netflix-style NLK boot logo (2.2s, any key skips, toggle in Settings); PS4 path unchanged."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "441cedafc39c6833116b639763dab03fcb38ab4a26211a673c5e08da37ce7a12",
-      "size": 4914
+      "sha256": "d0989033c6c9bda96a374da47ff8fa12988ffb299429f2d6d71bba94bc98054b",
+      "size": 4913
     },
     {
       "path": "config.json",
@@ -28,8 +28,8 @@
     },
     {
       "path": "launch.sh",
-      "sha256": "acd300350a608cd923f352473f4d502e48a6ce8b8bbb2252ce602840eed55157",
-      "size": 4827
+      "sha256": "b864d5ab19ca655fe98bd86ebb18236ac9ee162bb6241fdeec9b5be29ada29b1",
+      "size": 4400
     },
     {
       "path": "reporting.json",
@@ -42,9 +42,14 @@
       "size": 757076
     },
     {
+      "path": "bin/chiaki-regist",
+      "sha256": "0cb684bb58e4731cafc88742889c66400661c862b4f55beee8899fe1e3a9ca08",
+      "size": 1229368
+    },
+    {
       "path": "bin/chiaki-stream",
-      "sha256": "a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d",
-      "size": 1253944
+      "sha256": "98e6888de05e4354dbf8c2fede805850dc8ad1a8dce5e9dbf05414394450b611",
+      "size": 1245752
     },
     {
       "path": "certs/README.txt",
@@ -133,8 +138,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "083c4927f81f7b6d43badc26fc548cd16aa76e09bdfc3e7adc38726c541e2d15",
-      "size": 20400
+      "sha256": "dd85f66230f36c6da87bf42f69a0b7e411cac4a80c8264983b0c2fcc78a46310",
+      "size": 28463
     },
     {
       "path": "rh/device_identity.py",
@@ -143,8 +148,8 @@
     },
     {
       "path": "rh/engine.py",
-      "sha256": "a84f3689ce805e38584560f8c5f68df59bf8edace6e53398be1550ad7a9daad1",
-      "size": 12196
+      "sha256": "180ab75ee4b3b3b85f5ab0b19bcc9f6408f116d1b6b1ed005378c8093570116d",
+      "size": 22287
     },
     {
       "path": "rh/fonts.py",
@@ -153,8 +158,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "2722e572ab02b977b3ee5f9ff256bf3d258d5930e43fe7bb329418f9f805bb13",
-      "size": 11751
+      "sha256": "ea0b14f6cba2be21f6596c775fbdbc769f218674a84562b9a7937b1468147f38",
+      "size": 15458
     },
     {
       "path": "rh/inputs.py",
@@ -163,8 +168,8 @@
     },
     {
       "path": "rh/log_uploader.py",
-      "sha256": "3f81a578317437c9c3bf68fc2c4fe75fab79495eb7a4147c0fe042d02afa255c",
-      "size": 14587
+      "sha256": "69a4479100bbdd801935fa5f0ca1dd6ea04af5feaa35ab344f62ef976cabe5c6",
+      "size": 12157
     },
     {
       "path": "rh/logger.py",
@@ -178,8 +183,13 @@
     },
     {
       "path": "rh/ps4_regist.py",
-      "sha256": "acb535beab9cb7cef26676dd2a180c2b29f46747d95b9e0bce2d576f828c197d",
-      "size": 13687
+      "sha256": "00c24dc2c2406d93e0207b6a631a46d1524dc3c026326caac51fa399bc9784f2",
+      "size": 13660
+    },
+    {
+      "path": "rh/ps5_regist.py",
+      "sha256": "417c8e6d4a94e30d28e1bc322c1b4b1836e6726914f15caf67c5f3a598dc943b",
+      "size": 7060
     },
     {
       "path": "rh/ssl_context.py",
@@ -188,17 +198,17 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "6687a179ff2953c18f85c0197748a372aff3683492795d0f8d47563ac83a58ee",
-      "size": 5335
+      "sha256": "4ad3141fa6c0ef72809d02f429b8c914faffed1c866f74defc566c92b21a2647",
+      "size": 5430
     },
     {
       "path": "rh/updater.py",
-      "sha256": "e65abf7da95b2f54f5e33916012e65980915300acf7385f6c45191b9e2960c57",
-      "size": 16955
+      "sha256": "2791bbb78a6b7f810751d1e5c72c0f5751c9c6942dc4aee55a18436389a23d1f",
+      "size": 16597
     },
     {
       "path": "rh/version.py",
-      "sha256": "a51dfbe7c3e8fff30e1d149666033395af01c98ef19bc412093e5d0b7f3e3846",
+      "sha256": "6b4102c7549e41848df5d80165cb27761925ed1463354ef8a466e11a4a6b167c",
       "size": 1178
     },
     {
@@ -238,18 +248,18 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "c4e62d6977636e3341ec09edea9e0755600c35fd9233536c1bb5ff0fd0fb1e75",
-      "size": 10647
+      "sha256": "05925f4eedfd1b71f64fc717b3b6a92eb9d8961483eb0e868b432aa565bfff6d",
+      "size": 10853
     },
     {
       "path": "rh/screens/pair.py",
-      "sha256": "939552e7b02225ae3ba2c9683af5143d312abb3ea141a94ebeed70465db9433a",
-      "size": 6409
+      "sha256": "9c8694fbf872ec686c2b9a91a6d311f8e6381c4e1a8f872f937dae5413c3003c",
+      "size": 15075
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "4c4d3346415932cef1c8d2887fb3b96f6411e483883ef8623108219e60ef2383",
-      "size": 7523
+      "sha256": "65613c7f0fe5e907c8cb7ddd7c27a4c5bd96f3e213fa6b2edb7b42d51b46115f",
+      "size": 7567
     },
     {
       "path": "rh/ui/__init__.py",
@@ -644,8 +654,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.23.zip",
-    "sha256": "45201b0d1ef8e5e7f9ffc846ef8a634bc0e70be345c1a1c4fa60bd9f7634bbd2",
-    "size": 10758013
+    "name": "trimui-chiaki-ng-v0.3.24.zip",
+    "sha256": "049cabfad195799f35097418dfa010adc04ac3c3c3afc15e070caa2398cf0adf",
+    "size": 11347566
   }
 }

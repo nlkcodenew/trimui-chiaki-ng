@@ -30,6 +30,7 @@ class SettingsScreen(BaseScreen):
             ("audio_volume", [0, 25, 50, 75, 100], None),
             ("auto_update", [True, False], None),
             ("enable_logging", [True, False], self._set_logging),
+            ("intro", [True, False], None),
             ("current_lang", ["VI", "EN"], self._set_lang),
             ("clear_logs", None, None),
             ("back", None, None),

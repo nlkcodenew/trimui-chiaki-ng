@@ -12,6 +12,7 @@ cung codec H264 / H265 (ffpyplayer hoac Native FFmpeg subprocess).
 import os
 import sys
 import time
+import math
 import ctypes
 
 import sdl2
@@ -25,6 +26,15 @@ from .inputs import InputManager
 from .logger import get_logger
 
 log = get_logger()
+
+# Logo khoi dong NLK kieu Netflix (port tu Music-Player docs/NLK_INTRO_LOGO.md).
+INTRO_BG = (8, 8, 12, 255)      # nen gan den
+INTRO_RED = (229, 9, 20, 255)   # do Netflix
+INTRO_DARK = (60, 5, 8, 255)    # do sam (glyph toi / glow)
+INTRO_WHITE = (255, 255, 255, 255)
+INTRO_LETTERS = "NLK"
+INTRO_DURATION = 2.2
+INTRO_FONT_SIZE = 168  # font_big (56) x 3, nhu "giant" = hero x 3 ben Music-Player
 
 
 class ChiakiEngine:
@@ -45,6 +55,7 @@ class ChiakiEngine:
         self.font_sub = None
         self.font_item = None
         self.font_big = None
+        self.font_intro = None
         self.controllers = []
         self.joysticks = []
         self.exit_reason = "not_started"
@@ -110,6 +121,7 @@ class ChiakiEngine:
             self.font_title = sdlttf.TTF_OpenFont(path_b, 36)
             self.font_sub = sdlttf.TTF_OpenFont(path_b, 26)
             self.font_item = sdlttf.TTF_OpenFont(path_b, 32)
+            self.font_intro = sdlttf.TTF_OpenFont(path_b, INTRO_FONT_SIZE)
         except Exception:
             return False
         return True
@@ -210,6 +222,246 @@ class ChiakiEngine:
         w = self.measure_text(text, font)
         self.draw_text(text, font, int(x - w), int(y), r, g, b, a)
 
+    # ----- NLK boot logo (intro 2.2s, port tu Music-Player) -------------------
+
+    def play_intro(self, duration=INTRO_DURATION):
+        """Chay intro NLK ngay sau init SDL/fonts, truoc main loop.
+
+        Tra ve "quit" neu nhan SDL_QUIT giua intro, None trong moi truong
+        hop con lai (het gio / skip / intro off / thieu renderer).
+        Trong vong lap chi lam toan vi tri + dan texture + Present;
+        tuyet doi khong TTF_Render*, khong file/IO/network.
+        """
+        try:
+            enabled = bool(getattr(state, "intro", True))
+        except Exception:
+            enabled = True
+        if not enabled:
+            return None
+        if not self.renderer:
+            return None
+        glyphs = self._build_intro_glyphs()
+        try:
+            start = time.monotonic()
+            evt = sdl2.SDL_Event()
+            while True:
+                elapsed = time.monotonic() - start
+                if elapsed >= duration:
+                    break
+                while sdl2.SDL_PollEvent(evt):
+                    if evt.type == sdl2.SDL_QUIT:
+                        self.exit_reason = "sdl_quit"
+                        self.running = False
+                        return "quit"
+                    try:
+                        self.input_mgr.feed_event(evt)
+                    except Exception:
+                        pass
+                try:
+                    inputs = self.input_mgr.poll()
+                except Exception:
+                    inputs = {}
+                # Bat ky phim/nut nao cung skip ngay lap tuc.
+                if inputs.get("edges") or inputs.get("any"):
+                    break
+                self._render_intro_frame(min(1.0, elapsed / duration), glyphs)
+                try:
+                    sdl2.SDL_Delay(16)
+                except Exception:
+                    try:
+                        time.sleep(0.016)
+                    except Exception:
+                        break
+        finally:
+            self._free_intro_glyphs(glyphs)
+        return None
+
+    def _render_intro_glyph(self, letter, color):
+        """Pre-render 1 chu x 1 mau thanh texture (goi 1 lan truoc loop)."""
+        if not self.font_intro or not self.renderer:
+            return (None, 0, 0)
+        try:
+            rgba = sdl2.SDL_Color(int(color[0]), int(color[1]),
+                                  int(color[2]), int(color[3]))
+            surf = sdlttf.TTF_RenderUTF8_Blended(
+                self.font_intro, letter.encode("utf-8"), rgba)
+            if not surf:
+                return (None, 0, 0)
+            tex = sdl2.SDL_CreateTextureFromSurface(self.renderer, surf)
+            try:
+                width, height = surf.contents.w, surf.contents.h
+            except Exception:
+                width, height = (0, 0)
+            try:
+                sdl2.SDL_FreeSurface(surf)
+            except Exception:
+                pass
+            if not tex:
+                return (None, 0, 0)
+            return (tex, width, height)
+        except Exception:
+            return (None, 0, 0)
+
+    def _build_intro_glyphs(self):
+        """Ve truoc moi chu NLK x 3 mau (sam/tuoi/trang), giu trong dict."""
+        cache = {}
+        if not self.font_intro or not self.renderer:
+            return cache
+        colors = {
+            "dark": INTRO_DARK,
+            "bright": INTRO_RED,
+            "white": INTRO_WHITE,
+        }
+        for letter in INTRO_LETTERS:
+            for name, color in colors.items():
+                try:
+                    texture, width, height = self._render_intro_glyph(letter, color)
+                except Exception:
+                    texture, width, height = (None, 0, 0)
+                if texture:
+                    cache[(letter, name)] = (texture, width, height)
+        return cache
+
+    def _free_intro_glyphs(self, glyphs):
+        for texture, _width, _height in (glyphs or {}).values():
+            try:
+                if texture:
+                    sdl2.SDL_DestroyTexture(texture)
+            except Exception:
+                pass
+
+    def _blit_intro_texture(self, texture, x, y, width, height):
+        if not texture or not self.renderer or width <= 0 or height <= 0:
+            return False
+        try:
+            dst = sdl2.SDL_Rect(int(x), int(y), int(width), int(height))
+            sdl2.SDL_RenderCopy(self.renderer, texture, None, dst)
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def _intro_spread(progress):
+        ease = min(1.0, max(0.0, progress / 0.55))
+        return 4 + (30 - 4) * (1 - (1 - ease) * (1 - ease))
+
+    def _render_intro_frame(self, progress, glyphs=None):
+        progress = max(0.0, min(1.0, float(progress)))
+        if not self.renderer:
+            return
+        self.fill_rect(0, 0, self.screen_w, self.screen_h,
+                       INTRO_BG[0], INTRO_BG[1], INTRO_BG[2], INTRO_BG[3])
+        center_y = self.screen_h // 2
+        if glyphs:
+            self._render_intro_glyphs(progress, glyphs, center_y)
+        else:
+            # Fallback khi thieu font_intro: ve chu thuong, khong crash.
+            spacing = 18
+            try:
+                widths = [self.measure_text(letter, self.font_big)
+                          for letter in INTRO_LETTERS]
+            except Exception:
+                widths = [60, 60, 60]
+            total = sum(widths) + spacing * (len(INTRO_LETTERS) - 1)
+            cursor = (self.screen_w - total) // 2
+            layout = []
+            for letter, width in zip(INTRO_LETTERS, widths):
+                layout.append((letter, cursor, width))
+                cursor += width + spacing
+            for index, (letter, x, _width) in enumerate(layout):
+                enter_at = 0.05 + index * 0.16
+                local = (progress - enter_at) / 0.30
+                if local <= 0.0:
+                    continue
+                local = min(1.0, local)
+                rise = int((1.0 - local) * 60)
+                blend = min(1.0, local * 1.5)
+                color = tuple(
+                    int(INTRO_DARK[c] + (INTRO_RED[c] - INTRO_DARK[c]) * blend)
+                    for c in range(3)
+                ) + (255,)
+                self.draw_text(letter, self.font_big or self.font_title,
+                               x, center_y - 30 + rise,
+                               color[0], color[1], color[2])
+            if progress > 0.72:
+                sweep = (progress - 0.72) / 0.28
+                for index, (letter, x, _width) in enumerate(layout):
+                    center = index / 2.0
+                    if abs(sweep - center * 0.9) < 0.18:
+                        self.draw_text(letter, self.font_big or self.font_title,
+                                       x, center_y - 30, 255, 255, 255)
+        try:
+            sdl2.SDL_RenderPresent(self.renderer)
+        except Exception:
+            pass
+
+    def _render_intro_glyphs(self, progress, glyphs, center_y):
+        spacing = self._intro_spread(progress)
+        try:
+            widths = [glyphs[(letter, "bright")][1] for letter in INTRO_LETTERS]
+        except (KeyError, TypeError):
+            try:
+                widths = [self.measure_text(letter, self.font_intro)
+                          for letter in INTRO_LETTERS]
+            except Exception:
+                widths = [180, 180, 180]
+        total = sum(widths) + spacing * 2
+        fit = min(1.0, (self.screen_w - 80) / total) if total > 0 else 1.0
+        cursor = (self.screen_w - total * fit) // 2
+        for index, letter in enumerate(INTRO_LETTERS):
+            width = widths[index]
+            try:
+                _texture, tex_w, tex_h = glyphs[(letter, "bright")]
+            except (KeyError, TypeError):
+                cursor += (width + spacing) * fit
+                continue
+            if tex_w <= 0 or tex_h <= 0:
+                cursor += (width + spacing) * fit
+                continue
+            dest_w, dest_h = tex_w * fit, tex_h * fit
+            x = cursor + (width * fit - dest_w) // 2
+            enter_at = 0.05 + index * 0.16
+            local = (progress - enter_at) / 0.30
+            if local > 0.0:
+                local = min(1.0, local)
+                rise = int((1.0 - local) * 90)
+                if local > 0.65:
+                    rise += int(-14 * math.sin((local - 0.65) / 0.35 * math.pi))
+                y = center_y - dest_h // 2 + rise
+                bright = local * 1.5 >= 0.75
+                if bright:
+                    try:
+                        glow, _gw, _gh = glyphs[(letter, "dark")]
+                        self._blit_intro_texture(glow, x + 4 * fit, y + 6 * fit,
+                                                 dest_w, dest_h)
+                    except (KeyError, TypeError):
+                        pass
+                    key = "bright"
+                else:
+                    key = "dark"
+                try:
+                    texture, _tw, _th = glyphs[(letter, key)]
+                except (KeyError, TypeError):
+                    texture = None
+                self._blit_intro_texture(texture, x, y, dest_w, dest_h)
+            cursor += (width + spacing) * fit
+        if progress > 0.72:
+            sweep = (progress - 0.72) / 0.28
+            cursor = (self.screen_w - total * fit) // 2
+            for index, letter in enumerate(INTRO_LETTERS):
+                width = widths[index]
+                try:
+                    texture, tex_w, tex_h = glyphs[(letter, "white")]
+                except (KeyError, TypeError):
+                    cursor += (width + spacing) * fit
+                    continue
+                center = index / 2.0
+                if abs(sweep - center * 0.9) < 0.18:
+                    self._blit_intro_texture(
+                        texture, cursor + (width * fit - tex_w * fit) // 2,
+                        center_y - tex_h * fit // 2, tex_w * fit, tex_h * fit)
+                cursor += (width + spacing) * fit
+
     # ----- main loop ------------------------------------------------------
 
     def quit(self, reason="user_exit"):
@@ -219,6 +471,9 @@ class ChiakiEngine:
     def run(self):
         self.running = True
         self.exit_reason = "running"
+        if self.play_intro() == "quit":
+            log.info("engine stopped during intro: reason=%s", self.exit_reason)
+            return self.exit_reason
         footer_h = 56
         header_h = 64
         last = time.time()
@@ -307,6 +562,8 @@ class ChiakiEngine:
                 sdlttf.TTF_CloseFont(self.font_item)
             if self.font_big:
                 sdlttf.TTF_CloseFont(self.font_big)
+            if self.font_intro:
+                sdlttf.TTF_CloseFont(self.font_intro)
             sdlttf.TTF_Quit()
             sdl2.SDL_Quit()
         except Exception:

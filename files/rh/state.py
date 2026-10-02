@@ -19,6 +19,7 @@ audio_volume = 80
 wifi_awake = True
 auto_update = True
 enable_logging = False
+intro = True
 device_id = ""
 skipped_versions = []
 update_url = ""
@@ -47,7 +48,7 @@ def _load():
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
     global psn_account_id, psn_online_id, regist_key, rp_key, rp_key_type, server_mac
     global host_target
-    global auto_upload_logs
+    global auto_upload_logs, intro
     if not os.path.exists(SETTINGS_FILE):
         return
     try:
@@ -66,6 +67,7 @@ def _load():
     wifi_awake = bool(cfg.get("wifi_awake", wifi_awake))
     auto_update = bool(cfg.get("auto_update", auto_update))
     enable_logging = bool(cfg.get("enable_logging", enable_logging))
+    intro = bool(cfg.get("intro", intro))
     device_id = cfg.get("device_id", device_id)
     skipped_versions = cfg.get("skipped_versions", []) or []
     update_url = cfg.get("update_url", update_url)
@@ -102,6 +104,7 @@ def save_settings():
                 "wifi_awake": wifi_awake,
                 "auto_update": auto_update,
                 "enable_logging": enable_logging,
+                "intro": intro,
                 "device_id": device_id,
                 "skipped_versions": skipped_versions,
                 "update_url": update_url,

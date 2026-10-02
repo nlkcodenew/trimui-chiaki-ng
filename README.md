@@ -4,7 +4,7 @@
 
 ## Phiên bản ổn định
 
-**Latest: `v0.3.23`**
+**Latest: `v0.3.24`**
 
 Phạm vi hiện tại:
 
@@ -18,7 +18,9 @@ Phạm vi hiện tại:
 > **PS5 không được hỗ trợ.** Các tag beta cũ chỉ được giữ để tham khảo kỹ thuật;
 > không tải Source code của chúng như một gói cài đặt.
 
-`v0.3.23` giữ đường PS4-only ổn định của `v0.3.22` và giảm báo cáo giả
+`v0.3.24` thêm logo khởi động NLK kiểu Netflix (2.2 giây, bấm phím
+bất kỳ để bỏ qua, tắt được trong Cài đặt) và giữ đường PS4-only ổn định
+của `v0.3.23`, bao gồm giảm báo cáo giả
 dương tính: phiên stream thành công chỉ tạo Issue khi mất frame từ 1%, có ít
 nhất 10 lỗi FEC hoặc FPS thấp kéo dài. Kiểm tra OTA khi thiết bị chỉ đang
 offline vẫn hiển thị lỗi trong app nhưng không tạo Issue; lỗi TLS và manifest
@@ -27,7 +29,7 @@ không hợp lệ vẫn được báo cáo.
 ## Cài đặt
 
 1. Mở trang [Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
-2. Tải `trimui-chiaki-ng-v0.3.23.zip`, không tải gói **Source code**.
+2. Tải `trimui-chiaki-ng-v0.3.24.zip`, không tải gói **Source code**.
 3. Giải nén vào gốc thẻ nhớ để có `Apps/Chiaki/`.
 4. Tháo thẻ an toàn, lắp vào TrimUI rồi mở **Chiaki-ng**.
 
@@ -77,13 +79,13 @@ quét, pair PIN, stream, thoát an toàn, cài đè và trường hợp phải p
 Tiêu đề app có dạng:
 
 ```text
-CHIAKI-NG v0.3.23 | HW-xxxxxxxxxxxx
+CHIAKI-NG v0.3.24 | HW-xxxxxxxxxxxx
 ```
 
 Tiêu đề Issue chẩn đoán có dạng:
 
 ```text
-[device-log][HW-xxxxxxxxxxxx] v0.3.23 reason fingerprint
+[device-log][HW-xxxxxxxxxxxx] v0.3.24 reason fingerprint
 ```
 
 - `HW-...` là pseudonym SHA-256 ổn định từ nguồn phần cứng khả dụng; dùng mã

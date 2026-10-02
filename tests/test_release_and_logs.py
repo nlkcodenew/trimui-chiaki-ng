@@ -1675,5 +1675,172 @@ class LogUploaderTests(unittest.TestCase):
             state.auto_upload_logs = original_auto_upload
 
 
+class IntroLogoTests(unittest.TestCase):
+    """Boot logo NLK kieu Netflix (port tu Music-Player docs/NLK_INTRO_LOGO.md).
+
+    Engine import SDL that su nen stub sdl2/sdlttf: chi assert logic
+    pre-render + blit + Present + free, khong can may that.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.temp_dir = tempfile.mkdtemp(prefix="chiaki-intro-tests-")
+        source = os.path.join(os.path.dirname(os.path.dirname(__file__)), "files")
+        cls.app_dir = os.path.join(cls.temp_dir, "files")
+        shutil.copytree(source, cls.app_dir)
+        sys.path.insert(0, cls.app_dir)
+        cls._saved_modules = {}
+        for name in ("sdl2", "sdl2.ext", "sdl2.sdlttf"):
+            cls._saved_modules[name] = sys.modules.get(name)
+            stub = mock.MagicMock(name="stub-%s" % name)
+            sys.modules[name] = stub
+        sys.modules["sdl2"].SDL_QUIT = 0x100
+        sys.modules["sdl2"].ext = sys.modules["sdl2.ext"]
+        sys.modules["sdl2"].sdlttf = sys.modules["sdl2.sdlttf"]
+        cls.engine_module = importlib.import_module("rh.engine")
+        cls.state = importlib.import_module("rh.state")
+
+    @classmethod
+    def tearDownClass(cls):
+        sys.path.remove(cls.app_dir)
+        for name in list(sys.modules):
+            if name == "rh" or name.startswith("rh."):
+                sys.modules.pop(name, None)
+        for name, module in cls._saved_modules.items():
+            if module is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = module
+        shutil.rmtree(cls.temp_dir, ignore_errors=True)
+
+    def _make_engine(self):
+        engine = self.engine_module.ChiakiEngine.__new__(
+            self.engine_module.ChiakiEngine)
+        engine.__init__()
+        engine.screen_w = 1280
+        engine.screen_h = 720
+        engine.renderer = mock.Mock()
+        engine.font_intro = mock.Mock()
+        engine.font_big = mock.Mock()
+        engine.font_title = mock.Mock()
+        return engine
+
+    def _fake_glyphs(self):
+        glyphs = {}
+        for letter in "NLK":
+            for name in ("dark", "bright", "white"):
+                glyphs[(letter, name)] = (mock.Mock(), 90, 120)
+        return glyphs
+
+    def test_intro_giant_glyphs_blits_scaled_letters(self):
+        engine = self._make_engine()
+        glyphs = self._fake_glyphs()
+        with mock.patch.object(self.engine_module, "sdl2") as fake_sdl2, \
+                mock.patch.object(engine, "draw_text") as draw_text:
+            engine._render_intro_frame(1.0, glyphs)
+        # Chi dan texture co san, khong roi ve draw_text khi du glyphs.
+        self.assertTrue(fake_sdl2.SDL_RenderCopy.called)
+        draw_text.assert_not_called()
+        # Quy tac v1.8.1: thieu Present la man hinh den thui.
+        fake_sdl2.SDL_RenderPresent.assert_called_once_with(engine.renderer)
+
+    def test_intro_frame_never_overflows_small_screen(self):
+        engine = self._make_engine()
+        engine.screen_w = 400
+        glyphs = self._fake_glyphs()
+        with mock.patch.object(self.engine_module, "sdl2") as fake_sdl2, \
+                mock.patch.object(engine, "draw_text"):
+            fake_sdl2.SDL_Rect.side_effect = lambda x, y, w, h: (x, y, w, h)
+            engine._render_intro_frame(1.0, glyphs)
+        self.assertTrue(fake_sdl2.SDL_RenderCopy.called)
+        fake_sdl2.SDL_RenderPresent.assert_called_once_with(engine.renderer)
+        for call in fake_sdl2.SDL_RenderCopy.call_args_list:
+            dst = call.args[3]
+            self.assertGreaterEqual(dst[0], 0)
+            self.assertLessEqual(dst[0] + dst[2], engine.screen_w)
+
+    def test_intro_glyph_cache_builds_and_frees(self):
+        engine = self._make_engine()
+        surface = mock.Mock()
+        surface.contents.w = 90
+        surface.contents.h = 120
+        with mock.patch.object(self.engine_module, "sdl2") as fake_sdl2, \
+                mock.patch.object(self.engine_module, "sdlttf") as fake_sdlttf:
+            fake_sdlttf.TTF_RenderUTF8_Blended.return_value = surface
+            fake_sdl2.SDL_CreateTextureFromSurface.side_effect = [
+                mock.Mock() for _ in range(9)]
+            glyphs = engine._build_intro_glyphs()
+            self.assertEqual(len(glyphs), 9)
+            # Trong loop chi dan texture, khong render TTF lai.
+            self.assertEqual(
+                fake_sdlttf.TTF_RenderUTF8_Blended.call_count, 9)
+            engine._free_intro_glyphs(glyphs)
+            self.assertEqual(fake_sdl2.SDL_DestroyTexture.call_count, 9)
+
+    def test_intro_spread_expands_letter_spacing(self):
+        spread = self.engine_module.ChiakiEngine._intro_spread
+        tight = spread(0.0)
+        wide = spread(1.0)
+        self.assertLess(tight, wide)
+        self.assertGreaterEqual(tight, 4.0)
+        self.assertLessEqual(wide, 30.0)
+
+    def test_intro_skips_on_any_key_and_frees_textures(self):
+        engine = self._make_engine()
+        glyphs = self._fake_glyphs()
+        engine.input_mgr.set_state("btn_a", True)
+        with mock.patch.object(self.engine_module, "sdl2") as fake_sdl2, \
+                mock.patch.object(engine, "_build_intro_glyphs",
+                                  return_value=glyphs) as build, \
+                mock.patch.object(engine, "_free_intro_glyphs",
+                                  wraps=engine._free_intro_glyphs) as free:
+            fake_sdl2.SDL_PollEvent.return_value = 0
+            self.assertIsNone(engine.play_intro())
+            build.assert_called_once_with()
+            free.assert_called_once_with(glyphs)
+            # Skip tuc thi: khong ve frame nao, khong delay.
+            fake_sdl2.SDL_RenderPresent.assert_not_called()
+            fake_sdl2.SDL_Delay.assert_not_called()
+            self.assertEqual(fake_sdl2.SDL_DestroyTexture.call_count, 9)
+
+    def test_intro_off_skips_without_touching_renderer(self):
+        engine = self._make_engine()
+        original = self.state.intro
+        try:
+            self.state.intro = False
+            with mock.patch.object(self.engine_module, "sdl2") as fake_sdl2, \
+                    mock.patch.object(engine, "_build_intro_glyphs") as build:
+                self.assertIsNone(engine.play_intro())
+                build.assert_not_called()
+                fake_sdl2.SDL_RenderPresent.assert_not_called()
+        finally:
+            self.state.intro = original
+
+    def test_intro_fallback_without_font_still_presents(self):
+        engine = self._make_engine()
+        engine.font_intro = None
+        with mock.patch.object(self.engine_module, "sdl2") as fake_sdl2:
+            engine._render_intro_frame(1.0, {})
+            fake_sdl2.SDL_RenderPresent.assert_called_once_with(
+                engine.renderer)
+
+    def test_intro_setting_defaults_on_persists_and_has_settings_row(self):
+        from rh.screens.settings import SettingsScreen
+        rows = {key: values for key, values, _ in SettingsScreen().rows}
+        self.assertIn("intro", rows)
+        self.assertEqual(rows["intro"], [True, False])
+        original = self.state.intro
+        try:
+            self.assertTrue(original)
+            self.state.intro = False
+            self.assertTrue(self.state.save_settings())
+            self.state.intro = True
+            self.state._load()
+            self.assertFalse(self.state.intro)
+        finally:
+            self.state.intro = original
+            self.state.save_settings()
+
+
 if __name__ == "__main__":
     unittest.main()
