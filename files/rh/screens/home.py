@@ -18,14 +18,16 @@ class HomeScreen(BaseScreen):
     """Man hinh chinh cua app. Cac muc menu:
 
         1. QUET MAY PS4/PS5  (scan)
-        2. HUONG DAN         (guide)
-        3. CAI DAT           (settings)
-        4. CAP NHAT          (update)
-        5. THOAT             (exit)
+        2. TAY CAM BLUETOOTH (bluetooth)
+        3. HUONG DAN         (guide)
+        4. CAI DAT           (settings)
+        5. CAP NHAT          (update)
+        6. THOAT             (exit)
     """
 
     ITEMS = [
         ("scan", "discover"),
+        ("bluetooth", "bluetooth"),
         ("guide", "guide"),
         ("settings", "settings"),
         ("update", "update"),
@@ -197,6 +199,8 @@ class HomeScreen(BaseScreen):
         key = self.ITEMS[self.selected][0]
         if key == "scan":
             self._start_scan()
+        elif key == "bluetooth":
+            self.engine.push_screen("bluetooth")
         elif key == "guide":
             self.engine.push_screen("guide")
         elif key == "settings":
@@ -257,18 +261,20 @@ class HomeScreen(BaseScreen):
                              engine.screen_h - 100, 180, 195, 215)
 
     def _render_menu(self, engine):
-        y = 155
+        y = 145
+        item_height = 72 if len(self.ITEMS) > 5 else 82
+        item_step = 80 if len(self.ITEMS) > 5 else 90
         for i, (key, label) in enumerate(self.ITEMS):
             col = (0, 230, 150) if i == self.selected else (40, 60, 90)
-            engine.fill_rect(40, y, engine.screen_w - 80, 82,
+            engine.fill_rect(40, y, engine.screen_w - 80, item_height,
                              col[0], col[1], col[2], 240)
-            engine.draw_text(tr(label), engine.font_title, 70, y + 8,
+            engine.draw_text(tr(label), engine.font_title, 70, y + 4,
                              255, 255, 255)
             sub = tr(label + "_hint")
             if sub != label + "_hint":
-                engine.draw_text(sub, engine.font_sub, 70, y + 48,
+                engine.draw_text(sub, engine.font_sub, 70, y + 40,
                                  220, 225, 235)
-            y += 90
+            y += item_step
 
     def _render_hosts(self, engine):
         engine.draw_text(tr("host"), engine.font_title, 40, 160, 255, 255, 255)

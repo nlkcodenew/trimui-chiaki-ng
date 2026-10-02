@@ -88,6 +88,8 @@ def main():
     from rh.screens.guide import GuideScreen
     from rh.screens.settings import SettingsScreen
     from rh.screens.pair import PairScreen
+    from rh.screens.bluetooth import BluetoothScreen
+    from rh.screens.button_test import ButtonTestScreen
     from rh.modals.update import UpdateModal
     from rh.modals.common import InfoModal, ConfirmModal
 
@@ -102,10 +104,13 @@ def main():
         return 1
     log.info("SDL + fonts ok, screen=%dx%d", engine.screen_w, engine.screen_h)
 
+    bluetooth_screen = BluetoothScreen(engine)
     engine.register_screen("home", HomeScreen(engine))
     engine.register_screen("guide", GuideScreen(engine))
     engine.register_screen("settings", SettingsScreen(engine))
     engine.register_screen("pair", PairScreen(engine))
+    engine.register_screen("bluetooth", bluetooth_screen)
+    engine.register_screen("button_test", ButtonTestScreen(engine))
     engine.register_modal("update", UpdateModal(engine))
     engine.register_modal("info", InfoModal(engine))
     engine.register_modal("confirm", ConfirmModal(engine))
@@ -120,6 +125,7 @@ def main():
         sys.stderr.write("\ntrimui-chiaki-ng crash:\n%s\n" % err)
         return 1
     finally:
+        bluetooth_screen.on_exit()
         engine.cleanup()
         log.info("== app thoat ==")
     if exit_reason not in ("user_exit", "update_restart", "stream_launch"):

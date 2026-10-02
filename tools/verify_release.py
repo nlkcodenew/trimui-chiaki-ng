@@ -53,6 +53,10 @@ REQUIRED_ARCHIVE = {
     "App/Chiaki/assets/fallback.ttf",
     "App/Chiaki/bin/chiaki-stream",
     "App/Chiaki/bin/chiaki-regist",
+    "App/Chiaki/bin/brick-pro-bt",
+    "App/Chiaki/bluetooth-session.sh",
+    "App/Chiaki/rh/bluetooth_gamepad.py",
+    "App/Chiaki/rh/screens/bluetooth.py",
     "App/Chiaki/certs/README.txt",
     "App/Chiaki/certs/cacert.pem",
     "App/Chiaki/vendor/sdl2/__init__.py",
@@ -133,6 +137,10 @@ def main():
     regist_path = os.path.join(FILES_DIR, "bin", "chiaki-regist")
     verify_aarch64_elf(regist_path, "chiaki-regist")
     verify_symbol_version(regist_path, "OPENSSL_1_1_1", "chiaki-regist")
+    verify_aarch64_elf(
+        os.path.join(FILES_DIR, "bin", "brick-pro-bt"),
+        "brick-pro-bt",
+    )
 
     runtime_dir = os.path.join(FILES_DIR, "libs", "brick-stock")
     for name, expected_hash in sorted(BRICK_RUNTIME.items()):
@@ -150,7 +158,9 @@ def main():
         if rel in FORBIDDEN_MANIFEST:
             fail("private/user file appears in manifest: %s" % rel)
         base = os.path.basename(rel)
-        if base.startswith("Chiaki-loi.txt") or base.startswith("Chiaki-debug.log"):
+        if (base.startswith("Chiaki-loi.txt")
+                or base.startswith("Chiaki-debug.log")
+                or base.startswith("BrickBluetooth.log")):
             fail("log file appears in manifest: %s" % rel)
         source = os.path.join(FILES_DIR, *rel.split("/"))
         if not os.path.isfile(source):
@@ -203,7 +213,9 @@ def main():
         base = os.path.basename(name)
         if base in ("secrets.json", "secrets..json") or base.startswith(".log_upload_state"):
             fail("secret/runtime file appears in ZIP: %s" % name)
-        if base.startswith(".pending_crash") or base.startswith("Chiaki-loi.txt"):
+        if (base.startswith(".pending_crash")
+                or base.startswith("Chiaki-loi.txt")
+                or base.startswith("BrickBluetooth.log")):
             fail("log/runtime file appears in ZIP: %s" % name)
         if base.startswith("Chiaki-debug.log"):
             fail("log/runtime file appears in ZIP: %s" % name)

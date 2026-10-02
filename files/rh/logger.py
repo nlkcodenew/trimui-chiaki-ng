@@ -259,7 +259,12 @@ def _file_size(path):
 
 def _log_candidates():
     err_path, dbg_path = _detect_log_paths()
-    paths = [(err_path, _ERR_BACKUPS), (dbg_path, _DBG_BACKUPS)]
+    bluetooth_path = os.path.join(APP_DIR, "BrickBluetooth.log")
+    paths = [
+        (err_path, _ERR_BACKUPS),
+        (dbg_path, _DBG_BACKUPS),
+        (bluetooth_path, 0),
+    ]
     stderr_path = os.environ.get("CHIAKI_STDERR_LOG", "")
     known = {os.path.abspath(err_path), os.path.abspath(dbg_path)}
     if stderr_path and os.path.abspath(stderr_path) not in known:
@@ -350,6 +355,7 @@ def cap_runtime_logs():
     limits = {
         os.path.abspath(err_path): _ERR_MAX_BYTES,
         os.path.abspath(dbg_path): _DBG_MAX_BYTES,
+        os.path.abspath(os.path.join(APP_DIR, "BrickBluetooth.log")): _DBG_MAX_BYTES,
     }
     changed = False
     for path, _ in _log_candidates():

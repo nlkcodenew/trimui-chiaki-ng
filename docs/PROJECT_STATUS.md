@@ -1,38 +1,34 @@
-# trimui-chiaki-ng — trạng thái dự án v0.4.0-beta2
+# trimui-chiaki-ng — trạng thái dự án v0.3.26-beta1
 
-> Cập nhật: 2026-09-26. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
+> Cập nhật: 2026-10-02. Đây là hồ sơ kỹ thuật tổng hợp; trạng thái thao tác cho
 > session tiếp theo nằm trong `docs/NEW_SESSION_HANDOFF.md`.
 
 > **Quyết định phạm vi:** PS4 là nền tảng duy trì chính thức. PS5 đã đóng sau
 > `v0.4.0-beta2`; không phát triển thêm pair, stream, PSN login/Account-ID,
 > H265 hoặc giao thức PS5. Beta PS5 chỉ được giữ làm lịch sử thử nghiệm.
 
-## 1. Release hiện tại
+> **Bluetooth gamepad (2026-10-02):** `v0.3.26-beta1` là beta thử nghiệm, **không
+> phải latest**. Chi tiết kỹ thuật ở `docs/BLUETOOTH_GAMEPAD.md`.
 
-`v0.4.0-beta2` là bản PS5 thử nghiệm cuối cùng và được lưu trữ. Bản khuyến nghị
-cho người dùng PS4 là `v0.3.20`; nhánh duy trì chính thức tập trung vào PS4.
+## 1. Release hiện tại
 
 | Mục | Giá trị |
 |---|---|
+| Bluetooth beta | `v0.3.26-beta1` (pre-release, không phải latest) |
 | PS4 recommended | `v0.3.20` |
 | Archived PS5 beta | `v0.4.0-beta2` |
-| Feature commit | `21b696d` |
-| OTA files | 128 |
-| ZIP entries | 131 |
-| ZIP SHA-256 | `2e47e752944bdd7dfff26f9cb6dd6ba731ff309fa90a53ad3813b6ac5bde3ad3` |
-| Unittest | 92/92 đạt |
-| Native SHA-256 | `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d` |
+| OTA files | 136 |
+| ZIP entries | 139 |
+| ZIP SHA-256 | `0df44f77dfe792fbb41f0c5d33b40d604693157b77826226bde5435d89ac0fc6` |
+| Unittest | 121/121 đạt |
+| Go test | đạt |
+| Native SHA-256 | `9fc52970bc64488cb454132f29fd023781ee21a8e56efbb251ab37e8214eac74` |
 | CA SHA-256 | `f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9` |
 
-GitHub Release có ba asset:
-
-- `manifest.json`.
-- `trimui-chiaki-ng-v0.4.0-beta2.zip`.
-- `trimui-chiaki-ng-v0.4.0-beta2.zip.sha256`.
-
-GitHub Actions đã hoàn tất thành công. Ba asset công khai tải qua
-Release lưu trữ `v0.4.0-beta2` có 128 file OTA, 131 entry ZIP và SHA-256 ở bảng
-trên. Người dùng chỉ cần PS4 nên ưu tiên release ổn định `v0.3.20`.
+`v0.3.26-beta1` sửa chế độ tay cầm Bluetooth trên Brick Pro Stock OS: bảng điều
+khiển HIDP viết lại đúng đặc tả, bảng ánh xạ nút tách khỏi giả định `key - 304`,
+thêm màn hình THỬ NÚT, và bốn lỗi dùng hằng ngày đã sửa. Người dùng PS4 không bị
+ảnh hưởng nếu không dùng tay cầm.
 
 Manifest không chứa `settings.json`, secrets, log hoặc marker runtime. ZIP cài
 mới có `settings.json` mặc định với `device_id` rỗng nhưng không có
@@ -62,7 +58,21 @@ tục dùng library hệ thống. Không cần tách release ở trạng thái h
 - `files/rh/screens/guide.py`: hướng dẫn 8 bước, điều hướng D-pad/A/B.
 - `files/rh/screens/pair.py`: nhập PIN, registration và lưu khóa.
 - `files/rh/screens/settings.py`: cấu hình, xóa log và lưu settings.
+- `files/rh/screens/bluetooth.py`: màn hình tay cầm Bluetooth của Brick Pro.
+- `files/rh/screens/button_test.py`: màn hình THỬ NÚT, ghi `bluetooth-map.json`.
+- `files/rh/gamepad_map.py`: đọc/ghi bảng ánh xạ nút và đọc evdev node.
+- `files/rh/bluetooth_gamepad.py`: quản lý tiến trình backend, không chặn SDL.
 - `files/rh/state.py`: state runtime và lưu `settings.json` atomically.
+
+### Bluetooth gamepad (Brick Pro Stock OS)
+
+- `bluetooth-native/` → `files/bin/brick-pro-bt`: backend Go tĩnh AArch64, không cần
+  dbus-python/GLib. Chạy `--check` (tiền kiểm) hoặc `--run` (phiên).
+- `files/bluetooth-session.sh`: supervisor, giữ nút START+SELECT và bảo vệ app cha.
+- Backend tự thay bluetoothd khi PSM 17/19 bị chiếm, ghi marker trong run dir và
+  trả lại dịch vụ Stock OS khi thoát bất kể đường nào.
+- Bảng ánh xạ nút đọc từ `bluetooth-map.json` nếu có, không thì dùng mặc định.
+- Chi tiết: `docs/BLUETOOTH_GAMEPAD.md`.
 
 ### Remote Play
 
@@ -249,6 +259,8 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.18` | Hướng dẫn trong app; hiện `CHI-xxxx` cạnh version để tra Issue |
 | `v0.3.19` | Luôn bật diagnostics; report cả lần thử pair PS5 chưa hỗ trợ |
 | `v0.3.20` | Giữ log launcher trong app và bắt lỗi bootstrap trước khi đọc settings |
+| `v0.3.25-beta1` | Tay cầm Bluetooth Classic HID cho Brick Pro Stock OS (hướng A) |
+| `v0.3.26-beta1` | HIDP đúng đặc tả; bảng ánh xạ nút + màn hình THỬ NÚT; bỏ 4 lỗi dùng hằng ngày |
 
 ## 10. Kiểm thử và build gate
 
@@ -262,7 +274,7 @@ python tools/verify_release.py
 git diff --check
 ```
 
-92 unittest của source hiện tại bao phủ:
+121 unittest của source hiện tại bao phủ:
 
 - TLS context và CA fallback.
 - OTA version/fallback/hash/settings exclusion.
@@ -273,6 +285,22 @@ git diff --check
 - Input mapping, settings/modal edges và home flow.
 - Native launcher không đưa khóa vào script.
 - Brick `sun50iw10` chọn runtime riêng; Spruce `sun55iw3` giữ runtime hệ thống.
+- Màn hình THỬ NÚT: gán nút, không gán trùng, giữ B để hủy, lưu bản đồ.
+- Bảng ánh xạ nút: mặc định khi thiếu file, bỏ mã sai, round-trip.
+- Dừng chủ động không báo lỗi backend, mã lỗi thật vẫn báo.
+
+Ngoài ra `bluetooth-native` có `go test` riêng, gồm:
+
+- Report trung tính, hai joystick độc lập, trigger analog, deadzone.
+- Bảng điều khiển ghi đè được (đổi cả nút lẫn axis).
+- Quét cả 256 header HIDP: không giao dịch nào trả stall trần.
+- Session control: suspend, resume, unplug, reset.
+- Nạp bản đồ bỏ tên lạ và mã ngoài phạm vi.
+
+> Test Python **không được** để `files/` thật trên `sys.path`. `rh.paths` suy ra
+> `APP_DIR` từ vị trí module, nên import `rh` từ thư mục nguồn sẽ ghi `device_id`
+> thật vào `files/settings.json`. Mọi lớp test phải copy `files/` sang thư mục tạm
+> rồi import từ đó.
 
 Verifier kiểm:
 
@@ -290,7 +318,13 @@ Verifier kiểm:
 2. Giữ một release chung với runtime Brick cô lập theo model; chưa cần tách OS.
 3. Giữ baseline Smart Pro S `720p30/4000`; Brick đã ổn ở `540p30/3000`.
 4. Không sửa pair/native/input nếu không có Issue mới chứng minh regression.
-5. `setterm: not found`, H264 `no frame!` lúc khởi động và server shutdown khi
-   kết thúc phiên hiện là cảnh báo vô hại, không phải lỗi stream.
+5. `setterm: not found` đã được chặn bằng shim trong `launch.sh`; H264 `no frame!`
+   lúc khởi động và server shutdown khi kết thúc phiên vẫn là cảnh báo vô hại.
 6. `v0.4.0-beta2` là bản PS5 cuối để lưu lịch sử thử nghiệm. PS4/native giữ
    nguyên từ binary đã được xác nhận hoạt động; không mở thêm roadmap PS5.
+7. `v0.3.26-beta1` là beta tay cầm Bluetooth, cố ý **không** đánh dấu latest để OTA
+   không tự đẩy lên thiết bị đang dùng ổn định.
+8. Chưa có bằng chứng nút nào hoạt động trên máy thật. Mọi khẳng định về nút đến từ
+   bitmap `B: KEY=`; cần chạy màn hình THỬ NÚT rồi thử trong game trước khi kết luận.
+9. Profile máy chủ PC/Xbox/PS4 (như Padpod) chưa làm: cần descriptor DS4 và Xbox
+   Wireless chính xác, không được đoán.

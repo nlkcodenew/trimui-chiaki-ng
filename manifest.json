@@ -1,20 +1,25 @@
 {
-  "version": "0.3.24",
+  "version": "0.3.26-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-02T11:28:01+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.24/files",
-  "release_tag": "v0.3.24/files",
-  "prerelease": false,
+  "built": "2026-10-02T19:40:45+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.26-beta1/files",
+  "release_tag": "v0.3.26-beta1/files",
+  "prerelease": true,
   "note": {
-    "vi": "v0.3.24: logo khoi dong NLK kieu Netflix (2.2s, bam phim bat ky de bo qua, tat duoc trong Cai dat); duong PS4 giu nguyen.",
-    "en": "v0.3.24: Netflix-style NLK boot logo (2.2s, any key skips, toggle in Settings); PS4 path unchanged."
+    "vi": "v0.3.26-beta1: man hinh THU BUT de an truc tiep tung nut tren may va luu ban do; sua HIDP dung dac ta, bao loi khi dung nut B va bat lai adapter Bluetooth sau khi dung.",
+    "en": "v0.3.26-beta1: on-device button test screen that saves a per-button map, HIDP control transactions fixed to the specification, B no longer reports a false backend error and Bluetooth is powered back on after stopping."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "d0989033c6c9bda96a374da47ff8fa12988ffb299429f2d6d71bba94bc98054b",
-      "size": 4913
+      "sha256": "08d1cbcafc6f8b93cd07eda658dbd0146959d86e5945a184c31807d8dce0ac45",
+      "size": 5230
+    },
+    {
+      "path": "bluetooth-session.sh",
+      "sha256": "831191bcf6a643afbd7f16b675c96f50ddfd8c08d53bf2fd53107bdac54d99f7",
+      "size": 4969
     },
     {
       "path": "config.json",
@@ -28,8 +33,8 @@
     },
     {
       "path": "launch.sh",
-      "sha256": "b864d5ab19ca655fe98bd86ebb18236ac9ee162bb6241fdeec9b5be29ada29b1",
-      "size": 4400
+      "sha256": "f80b2db9fd8b97fa9b1df5e9e3d714fbe9898c9849cdce032162fb4ddbdf71f3",
+      "size": 5312
     },
     {
       "path": "reporting.json",
@@ -40,6 +45,11 @@
       "path": "assets/fallback.ttf",
       "sha256": "7da195a74c55bef988d0d48f9508bd5d849425c1770dba5d7bfc6ce9ed848954",
       "size": 757076
+    },
+    {
+      "path": "bin/brick-pro-bt",
+      "sha256": "9fc52970bc64488cb454132f29fd023781ee21a8e56efbb251ab37e8214eac74",
+      "size": 3932312
     },
     {
       "path": "bin/chiaki-regist",
@@ -60,6 +70,16 @@
       "path": "certs/cacert.pem",
       "sha256": "f66dff1bdf8f96060b8177976f8b7d9254bc89bc4db933d769f7384d28480bc9",
       "size": 188900
+    },
+    {
+      "path": "docs/BLUETOOTH_THIRD_PARTY_NOTICES.txt",
+      "sha256": "9c11ef3b08601fddacd8ac4b66f1ad5eb30e6147d6bb6ea690b66d52077bc8b4",
+      "size": 5807
+    },
+    {
+      "path": "docs/bluetooth-native-build.json",
+      "sha256": "1b98daa98e6fa37c9c111951eb84a1393a8bbf14af52203918e0e3b2ffe169f0",
+      "size": 828
     },
     {
       "path": "libs/brick-stock/THIRD_PARTY_NOTICES.txt",
@@ -137,6 +157,11 @@
       "size": 87656
     },
     {
+      "path": "rh/bluetooth_gamepad.py",
+      "sha256": "59f667c17f6e5b6f49c893d3ee023eadee46928e23cdbd1a11a4e4764bc09c28",
+      "size": 7119
+    },
+    {
       "path": "rh/chiaki.py",
       "sha256": "dd85f66230f36c6da87bf42f69a0b7e411cac4a80c8264983b0c2fcc78a46310",
       "size": 28463
@@ -157,9 +182,14 @@
       "size": 767
     },
     {
+      "path": "rh/gamepad_map.py",
+      "sha256": "becf0608afb9caa0336ef679d9e51fe8ad030b124c54dd608ff46a2508a51b8b",
+      "size": 7529
+    },
+    {
       "path": "rh/i18n.py",
-      "sha256": "ea0b14f6cba2be21f6596c775fbdbc769f218674a84562b9a7937b1468147f38",
-      "size": 15458
+      "sha256": "be4aa065eee768872e5bdc36acaecdf3fc58cfccb44fa54d72be0729351cc625",
+      "size": 25003
     },
     {
       "path": "rh/inputs.py",
@@ -168,13 +198,13 @@
     },
     {
       "path": "rh/log_uploader.py",
-      "sha256": "69a4479100bbdd801935fa5f0ca1dd6ea04af5feaa35ab344f62ef976cabe5c6",
-      "size": 12157
+      "sha256": "93c22e00ab79f242e6a2156941e7722e8b5550d164ef6a053dc39da25c90f58a",
+      "size": 12210
     },
     {
       "path": "rh/logger.py",
-      "sha256": "3f9ffe42f379d02ba147aec83e54b8df4a0009cf4356e0a39dea638ee8bbf67c",
-      "size": 11732
+      "sha256": "eb0eaca8e4feadd4710de4e3b822683f1ede75972f4bd8a9c93314a40c453313",
+      "size": 11935
     },
     {
       "path": "rh/paths.py",
@@ -208,8 +238,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "6b4102c7549e41848df5d80165cb27761925ed1463354ef8a466e11a4a6b167c",
-      "size": 1178
+      "sha256": "5476855289c5fe5686c493f3c7341f586b84adb94fe1efce2dd56d2f17d6345b",
+      "size": 1184
     },
     {
       "path": "rh/modals/__init__.py",
@@ -242,14 +272,24 @@
       "size": 475
     },
     {
+      "path": "rh/screens/bluetooth.py",
+      "sha256": "c1f126783cdf7ff8aa72a28f5b5d37ec8b931eff858d158161d9fdab4cce2852",
+      "size": 3897
+    },
+    {
+      "path": "rh/screens/button_test.py",
+      "sha256": "d323593ea9087c9d10ee31f099e90ceb0a12b9d8283edab1e22e5b2c5493d6cd",
+      "size": 10161
+    },
+    {
       "path": "rh/screens/guide.py",
       "sha256": "aea529280b3a178ea6cd8b13e1ab5a1b253c865684b95b393a7f5ffbee6094d1",
       "size": 2605
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "05925f4eedfd1b71f64fc717b3b6a92eb9d8961483eb0e868b432aa565bfff6d",
-      "size": 10853
+      "sha256": "0376bc946dc192c45cf82089497afaf38574511bae28912e93f4f189e1320215",
+      "size": 11138
     },
     {
       "path": "rh/screens/pair.py",
@@ -654,8 +694,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.24.zip",
-    "sha256": "049cabfad195799f35097418dfa010adc04ac3c3c3afc15e070caa2398cf0adf",
-    "size": 11347566
+    "name": "trimui-chiaki-ng-v0.3.26-beta1.zip",
+    "sha256": "0df44f77dfe792fbb41f0c5d33b40d604693157b77826226bde5435d89ac0fc6",
+    "size": 12845493
   }
 }

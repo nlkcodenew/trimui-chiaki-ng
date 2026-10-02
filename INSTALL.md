@@ -1,4 +1,4 @@
-# Cài đặt trimui-chiaki-ng v0.3.24
+# Cài đặt trimui-chiaki-ng v0.3.25-beta1
 
 Hướng dẫn này dành cho bản ổn định PS4-only trên TrimUI Smart Pro S/Spruce OS
 và TrimUI Brick Pro Stock OS.
@@ -6,7 +6,7 @@ và TrimUI Brick Pro Stock OS.
 ## 1. Tải đúng gói
 
 1. Mở `https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest`.
-2. Tải `trimui-chiaki-ng-v0.3.24.zip`.
+2. Tải `trimui-chiaki-ng-v0.3.25-beta1.zip`.
 3. Không tải **Source code (zip/tar.gz)** vì các gói đó không phải bộ cài.
 4. Có thể kiểm SHA-256 bằng file `.zip.sha256` đi kèm release.
 
@@ -55,7 +55,7 @@ thử một lần. PIN cũ không nên được gửi lại liên tục.
 
 ## 5. Kết nối
 
-1. Bật PS4 trước khi quét; `v0.3.24` chưa hỗ trợ đánh thức Rest Mode.
+1. Bật PS4 trước khi quét; `v0.3.25-beta1` chưa hỗ trợ đánh thức Rest Mode.
 2. Chọn **QUÉT MÁY PS4**.
 3. Chọn PS4 đã pair và bấm **A**.
 4. Khi chơi, giữ **START + SELECT** khoảng 1,2 giây để trở lại app.
@@ -68,9 +68,21 @@ Nếu phiên cũ chưa được PS4 nhả, chờ khoảng hai phút rồi kết 
 - Brick Pro Stock OS: `540p30/3000` hoặc `720p30/4000` nếu mạng ổn định.
 - App khóa tối đa 720p; cấu hình 1080p cũ tự được chuẩn hóa về 720p.
 
+## 6a. Tay cầm Bluetooth trên Brick Pro Stock OS
+
+1. Trong menu Chiaki-ng chọn **TAY CẦM BLUETOOTH**.
+2. Chờ app kiểm tra input và Bluetooth, sau đó bấm **A**.
+3. Trên điện thoại Android, chọn `TrimUI Brick Pro Gamepad` để ghép nối.
+4. Dùng controller tester để kiểm tra D-pad và cả hai joystick analog.
+5. Giữ **START + SELECT** 2 giây hoặc bấm **B** để dừng an toàn.
+
+Nếu thất bại, lấy `Apps/Chiaki/BrickBluetooth.log`. Không tắt nguồn giữa bước
+"Đang khôi phục Bluetooth"; launcher có recovery marker để thử khởi động lại
+dịch vụ stock ở lần chạy tiếp theo.
+
 ## 7. Mã thiết bị và log
 
-Tiêu đề app hiển thị `CHIAKI-NG v0.3.24 | HW-xxxxxxxxxxxx`. Khi cần đối chiếu
+Tiêu đề app hiển thị `CHIAKI-NG v0.3.25-beta1 | HW-xxxxxxxxxxxx`. Khi cần đối chiếu
 Issue chẩn đoán, cung cấp mã `HW-...`; không dùng `CHI-...` làm mã chính vì ID
 cài đặt có thể đổi sau khi mất settings.
 

@@ -42,6 +42,7 @@ ARCHIVE_EXCLUDE_FILES = {
 ARCHIVE_EXCLUDE_PREFIXES = (
     "Chiaki-loi.txt",
     "Chiaki-debug.log",
+    "BrickBluetooth.log",
 )
 LF_NORMALIZED_EXTENSIONS = {
     ".json", ".md", ".py", ".sh", ".txt", ".yaml", ".yml",
@@ -155,8 +156,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: logo khoi dong NLK kieu Netflix (2.2s, bam phim bat ky de bo qua, tat duoc trong Cai dat); duong PS4 giu nguyen." % version,
-            "en": "v%s: Netflix-style NLK boot logo (2.2s, any key skips, toggle in Settings); PS4 path unchanged." % version,
+            "vi": "v%s: man hinh THU BUT de an truc tiep tung nut tren may va luu ban do; sua HIDP dung dac ta, bao loi khi dung nut B va bat lai adapter Bluetooth sau khi dung." % version,
+            "en": "v%s: on-device button test screen that saves a per-button map, HIDP control transactions fixed to the specification, B no longer reports a false backend error and Bluetooth is powered back on after stopping." % version,
         },
         "files": files,
         "remove": [],

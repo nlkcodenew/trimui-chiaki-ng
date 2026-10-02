@@ -1,32 +1,59 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.20
+# Bàn giao session mới — trimui-chiaki-ng v0.3.26-beta1
 
-> Cập nhật: 2026-09-25. Đọc file này trước khi tiếp tục dự án.
+> Cập nhật: 2026-10-02. Đọc file này trước khi tiếp tục dự án.
 
 > **Ghi chú thay thế 2026-09-26:** phần PS5 đã dừng phát triển sau
 > `v0.4.0-beta2`. Nội dung PS5 cũ trong handoff này chỉ là lịch sử. PS4 là nền
 > tảng duy trì chính thức; xem `docs/PS5_STATUS.md` và `docs/PROJECT_STATUS.md`.
 
+> **Ghi chú 2026-10-02:** việc hiện tại là tay cầm Bluetooth của Brick Pro. Đọc
+> `docs/BLUETOOTH_GAMEPAD.md` trước — mục 2 và 3 chứa hai lỗi gốc đã tìm ra.
+
+## 0. Việc đang chờ người dùng
+
+`v0.3.26-beta1` đã đẩy lên GitHub Release dưới dạng **pre-release, không phải
+latest**. Người dùng sẽ tự tải ZIP, cài đè, rồi chạy màn hình THỬ NÚT.
+
+Cần chờ: kết quả THỬ NÚT (mã phím thật của L3/R3 và 8 nút còn lại) và phản hồi
+sau khi thử trong game. Nếu có lỗi, yêu cầu gửi `Apps/Chiaki/BrickBluetooth.log`.
+
 ## 1. Trạng thái ngắn gọn
 
-- `v0.3.20` sửa đường log launcher và khởi tạo logger trước khi đọc settings để
-  crash bootstrap trên Stock OS vẫn tạo file chẩn đoán trong thư mục app.
-- Relay production đã nhận self-test `v0.3.19` với phản hồi `accepted: true`.
-- 84/84 unittest, compileall và release verifier của `v0.3.20` đều đạt.
+- `v0.3.26-beta1` là beta tay cầm Bluetooth cho Brick Pro Stock OS. Đã tìm và sửa
+  hai lỗi gốc: bảng điều khiển HIDP sai toàn bộ so với đặc tả, và bảng ánh xạ nút
+  giả định `bit = key - 304` trong khi thiết bị báo mã phím không đều.
+- Bluetooth đã kết nối thật với iPhone (`D8:DE:3A:21:25:E6`); phiên thứ hai 9.2s vì
+  tự kết nối lại. Phiên đầu 42.7s là thời gian người dùng tìm thiết bị trong Cài đặt.
+- 121/121 unittest và `go test` đều đạt; release verifier đạt.
 
 - Repo: `https://github.com/nlkcodenew/trimui-chiaki-ng`.
 - Workspace: `E:\Trimiu Brick Pro\Project APPS\chiaki-ng`.
 - Nhánh: `main`.
-- Release mới nhất: `v0.3.20`.
-- Nội dung: hotfix crash/log bootstrap; không đổi native và chưa bật pair PS5.
-- GitHub Release có đủ `manifest.json`, ZIP và `.sha256`.
-- SHA-256 ZIP `v0.3.20`:
-  `b6e7d2c7e8e7c2fb0dcd30c3549a8bee37e0431dc8232734e393d401829aa2dc`.
-- Số file OTA/ZIP: 126/129; không có settings/secrets/log.
-- 84/84 unittest đạt; `compileall`, build release và verifier đều đạt.
-- GitHub Actions và ba asset tải lại qua `releases/latest` đều đã xác minh;
-  `main` đồng bộ `origin/main` trước commit tổng kết docs.
-- Native SHA-256 vẫn là
-  `a8d6bfdb846a501ed9525c378a4f2f9c0c4d64a88aadeb098e1093d4b0378d7d`.
+- Release khuyến nghị: `v0.3.20` (không đổi).
+- Beta đang thử: `v0.3.26-beta1` — cố ý **không** phải latest để OTA không tự đẩy.
+- SHA-256 ZIP `v0.3.26-beta1`:
+  `0df44f77dfe792fbb41f0c5d33b40d604693157b77826226bde5435d89ac0fc6`.
+- Số file OTA/ZIP: 136/139; không có settings/secrets/log.
+- Native `brick-pro-bt` SHA-256:
+  `9fc52970bc64488cb454132f29fd023781ee21a8e56efbb251ab37e8214eac74`.
+
+### Cách tạo và kiểm tra beta (không phải latest)
+
+Beta được đẩy bằng tag có dấu `-`, ví dụ `v0.3.26-beta1`. Workflow
+`.github/workflows/release.yml` tự đặt `prerelease: true` khi tag chứa `-`, nên
+GitHub không tính nó là latest và OTA không tự tải về.
+
+Lệnh build cục bộ:
+
+```powershell
+wsl -d Ubuntu -- bash -lc "cd '/mnt/e/Trimiu Brick Pro/Project APPS/chiaki-ng/bluetooth-native' && gofmt -l . && go vet ./... && go test ./... && CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GOARM64=v8.0 go build -buildvcs=false -trimpath -ldflags='-s -w' -o ../files/bin/brick-pro-bt ."
+python -m unittest discover -s tests
+python tools\make_release.py
+python tools\verify_release.py
+```
+
+Sau khi build native, phải cập nhật `files/docs/bluetooth-native-build.json`
+(hash, size, version) trước khi đóng gói.
 
 ## 2. Mục tiêu và ràng buộc
 

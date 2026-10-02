@@ -142,6 +142,7 @@ def _log_paths():
         os.environ.get("CHIAKI_STDERR_LOG", ""),
         os.path.join(APP_DIR, "Chiaki-loi.txt"),
         os.path.join(APP_DIR, "Chiaki-debug.log"),
+        os.path.join(APP_DIR, "BrickBluetooth.log"),
     ]
     out = []
     seen = set()

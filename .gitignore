@@ -14,5 +14,9 @@ files/.log_upload_state.json
 files/.pending_crash
 files/Chiaki-loi.txt*
 files/Chiaki-debug.log*
+files/BrickBluetooth.log*
+# Ban do nut do nguoi dung tao qua man hinh THU BUT. Khong commit: moi may mot
+# ban do va ban mac dinh trong backend da la du de chay.
+files/bluetooth-map.json
 deploy/issue-relay/wrangler.toml
 deploy/issue-relay/.wrangler/

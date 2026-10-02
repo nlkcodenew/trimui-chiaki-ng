@@ -4,12 +4,14 @@
 
 ## Phiên bản ổn định
 
-**Latest: `v0.3.24`**
+**Bản đang phát triển: `v0.3.25-beta1`**
 
 Phạm vi hiện tại:
 
 - TrimUI Smart Pro S/TG5050 và Spruce OS.
 - TrimUI Brick Pro Stock OS (`sun50iw10`).
+- Chế độ biến Brick Pro thành tay cầm Bluetooth Classic HID cho Android, gồm
+  D-pad, hai joystick analog, L2/R2 analog và L3/R3.
 - PS4 firmware 9.00/GoldHEN qua LAN, không cần đăng nhập PSN.
 - H264 tối đa 720p, âm thanh Opus và input SDL GameController.
 - Chỉ kết nối console đang bật và phản hồi discovery trong cùng LAN.
@@ -17,6 +19,12 @@ Phạm vi hiện tại:
 
 > **PS5 không được hỗ trợ.** Các tag beta cũ chỉ được giữ để tham khảo kỹ thuật;
 > không tải Source code của chúng như một gói cài đặt.
+
+`v0.3.25-beta1` thêm mục **TAY CẦM BLUETOOTH** dành riêng cho Brick Pro Stock
+OS. Backend ARM64 static được viết lại từ prototype NextUI: giữ D-pad độc lập,
+truyền đủ hai joystick thật của Brick Pro, tự dò dịch vụ BlueZ stock và khôi
+phục dịch vụ khi thoát. Radio và ghép nối thật vẫn cần xác nhận trực tiếp trên
+Brick Pro.
 
 `v0.3.24` thêm logo khởi động NLK kiểu Netflix (2.2 giây, bấm phím
 bất kỳ để bỏ qua, tắt được trong Cài đặt) và giữ đường PS4-only ổn định
@@ -29,7 +37,7 @@ không hợp lệ vẫn được báo cáo.
 ## Cài đặt
 
 1. Mở trang [Releases](https://github.com/nlkcodenew/trimui-chiaki-ng/releases/latest).
-2. Tải `trimui-chiaki-ng-v0.3.24.zip`, không tải gói **Source code**.
+2. Với bản thử này, tải `trimui-chiaki-ng-v0.3.25-beta1.zip`, không tải gói **Source code**.
 3. Giải nén vào gốc thẻ nhớ để có `Apps/Chiaki/`.
 4. Tháo thẻ an toàn, lắp vào TrimUI rồi mở **Chiaki-ng**.
 
@@ -74,18 +82,30 @@ mới rồi pair một lần; không tiếp tục gửi lại PIN cũ.
 Menu **HƯỚNG DẪN SỬ DỤNG** trong app có 8 bước về chuẩn bị mạng, bật PS4,
 quét, pair PIN, stream, thoát an toàn, cài đè và trường hợp phải pair lại.
 
+### Dùng Brick Pro làm tay cầm Bluetooth
+
+1. Chọn **TAY CẦM BLUETOOTH** trong menu Chiaki-ng.
+2. Chờ kiểm tra input/BlueZ, sau đó bấm **A**.
+3. Trên Android, ghép với `TrimUI Brick Pro Gamepad`.
+4. Thử D-pad, ABXY, L/R, L2/R2, L3/R3 và cả hai joystick.
+5. Giữ **START + SELECT** 2 giây hoặc bấm **B** để dừng và khôi phục Bluetooth.
+
+Log chẩn đoán được ghi ở `Apps/Chiaki/BrickBluetooth.log`. Chế độ này yêu cầu
+Stock OS có BlueZ, system D-Bus và quyền đọc `/dev/input/event*`; chưa hỗ trợ
+iPhone và không giả lập XInput/Microsoft Xbox protocol.
+
 ## Dữ liệu và chẩn đoán
 
 Tiêu đề app có dạng:
 
 ```text
-CHIAKI-NG v0.3.24 | HW-xxxxxxxxxxxx
+CHIAKI-NG v0.3.25-beta1 | HW-xxxxxxxxxxxx
 ```
 
 Tiêu đề Issue chẩn đoán có dạng:
 
 ```text
-[device-log][HW-xxxxxxxxxxxx] v0.3.24 reason fingerprint
+[device-log][HW-xxxxxxxxxxxx] v0.3.25-beta1 reason fingerprint
 ```
 
 - `HW-...` là pseudonym SHA-256 ổn định từ nguồn phần cứng khả dụng; dùng mã

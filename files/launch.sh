@@ -88,7 +88,27 @@ fi
 } >> "$ERRLOG" 2>/dev/null
 
 # TrimUI Smart Pro S hay bi Kernel Panic khi deep suspend giet app dang chay.
-touch /tmp/stay_alive 2>/dev/null
+# Firmware khong phai moi ban deu co /tmp/stay_alive; chi tao khi co the.
+if [ ! -e /tmp/stay_alive ]; then
+    touch /tmp/stay_alive 2>/dev/null
+fi
+
+# Firmware goi setterm de chinh terminal truoc khi chay app. Ban nao khong co
+# lenh nay thi "sh: setterm: not found" in ra stderr, lam nhieu log launcher.
+# Chan bang mot shim giong het, dung thu vien cua he thong.
+if ! command -v setterm >/dev/null 2>&1; then
+    cat > /tmp/setterm 2>/dev/null <<'SETTERM'
+#!/bin/sh
+# Shim giong cho lenh setterm: firmware goi de chinh terminal truoc khi chay app.
+# Thiet bi nay khong can thay doi terminal, nen bo qua cac tham so.
+exit 0
+SETTERM
+    chmod +x /tmp/setterm 2>/dev/null
+    case ":$PATH:" in
+        *:/tmp:*) : ;;
+        *) PATH="/tmp:$PATH"; export PATH ;;
+    esac
+fi
 
 while true; do
     rm -f /tmp/launch_game.sh
@@ -128,3 +148,8 @@ while true; do
 done
 
 rm -f /tmp/stay_alive 2>/dev/null
+
+# Xoa shim setterm de khong bo lai tren he thong.
+if [ -f /tmp/setterm ] && grep -q "Shim giong cho lenh setterm" /tmp/setterm 2>/dev/null; then
+    rm -f /tmp/setterm
+fi
