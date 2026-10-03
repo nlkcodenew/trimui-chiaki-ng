@@ -52,6 +52,41 @@ class BluetoothGamepadIntegrationTests(unittest.TestCase):
     def tearDownClass(cls):
         _drop_app_copy(cls.temp_dir, cls.app_dir)
 
+    def test_b_while_session_running_is_ignored(self):
+        """B la nut test tren dien thoai, nen dang chay ma bam B phai bo qua."""
+        screen = self.screen_module.BluetoothScreen(mock.Mock())
+        screen.session = mock.Mock()
+        screen.session.running.return_value = True
+        handled = screen.handle_input({"edges": ["btn_b"], "btn_b": True})
+        self.assertFalse(handled)
+        screen.session.stop.assert_not_called()
+        screen.engine.pop_screen.assert_not_called()
+
+    def test_b_while_idle_still_goes_back(self):
+        screen = self.screen_module.BluetoothScreen(mock.Mock())
+        screen.session = mock.Mock()
+        screen.session.running.return_value = False
+        handled = screen.handle_input({"edges": ["btn_b"], "btn_b": True})
+        self.assertTrue(handled)
+        screen.engine.pop_screen.assert_called_once_with()
+
+    def test_quit_while_running_still_stops_as_emergency_exit(self):
+        """Quit chi tu phim Q/SDL_QUIT, khong phai nut tay cam."""
+        screen = self.screen_module.BluetoothScreen(mock.Mock())
+        screen.session = mock.Mock()
+        screen.session.running.return_value = True
+        handled = screen.handle_input({"edges": ["quit"], "quit": True})
+        self.assertTrue(handled)
+        screen.session.stop.assert_called_once_with()
+
+    def test_running_footer_offers_menu_hold_instead_of_b(self):
+        screen = self.screen_module.BluetoothScreen(mock.Mock())
+        screen.session = mock.Mock()
+        screen.session.running.return_value = True
+        actions = screen.get_footer_actions()
+        self.assertEqual([key for key, _label in actions], ["MENU"])
+        self.assertIn("2", actions[0][1])
+
     def test_home_menu_opens_bluetooth_screen(self):
         engine = mock.Mock()
         screen = self.home_module.HomeScreen(engine)

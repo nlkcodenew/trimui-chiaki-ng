@@ -88,7 +88,7 @@ quét, pair PIN, stream, thoát an toàn, cài đè và trường hợp phải p
 2. Chờ kiểm tra input/BlueZ, sau đó bấm **A**.
 3. Trên Android, ghép với `TrimUI Brick Pro Gamepad`.
 4. Thử D-pad, ABXY, L/R, L2/R2, L3/R3 và cả hai joystick.
-5. Giữ **START + SELECT** 2 giây hoặc bấm **B** để dừng và khôi phục Bluetooth.
+5. Giữ **MENU** 2 giây để dừng (START + SELECT 2 giây là dự phòng). B là nút test.
 
 Log chẩn đoán được ghi ở `Apps/Chiaki/BrickBluetooth.log`. Chế độ này yêu cầu
 Stock OS có BlueZ, system D-Bus và quyền đọc `/dev/input/event*`; chưa hỗ trợ

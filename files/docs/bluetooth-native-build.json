@@ -4,7 +4,7 @@
   "GOARM64": "v8.0",
   "CGO_ENABLED": "0",
   "toolchain": "go1.23.0 linux/amd64 via GOTOOLCHAIN=auto",
-  "binary_sha256": "7fda176628e424ca577ed5f0d5a13b8f9dd0e2961b80f2ccb81bfa70b53b6007",
+  "binary_sha256": "1d0bc257f145686a7e3c16b7e5bd94178b3fe8a291435cdf15499478b934933e",
   "binary_size": 3932312,
   "source_directory": "bluetooth-native",
   "dependencies": {

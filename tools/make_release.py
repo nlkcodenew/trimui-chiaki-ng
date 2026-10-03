@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: man hinh GHI NUT giu lai SELECT/START, moi lan bam chi hien mot dong, giu MENU 2 giay de luu log va thoat; them kenh cap nhat beta rieng trong Cai dat." % version,
-            "en": "v%s: the button probe keeps SELECT/START, draws each press once, and saves plus exits after holding MENU for 2 seconds; separate beta update channel in Settings." % version,
+            "vi": "v%s: nut mat theo vi tri (B/A/Y/X); MENU gui nut PS; dung phien bang giu MENU 2s thay cho phim B; kenh OTA beta rieng." % version,
+            "en": "v%s: face buttons follow physical position (B/A/Y/X); MENU sends the PS button; stop the session with MENU hold instead of B; separate beta OTA channel." % version,
         },
         "files": files,
         "remove": [],

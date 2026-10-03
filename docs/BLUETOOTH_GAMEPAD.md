@@ -305,6 +305,31 @@ Log thứ hai vẫn ghi đúng từng nút riêng, nhưng có hai lỗi do app:
 {316}`), và `START+SELECT` khi đúng hai phim đó. Có test cho trường hợp MENU
 đi kèm nút khác: bấm A kèm mã 316 phải **không** thoát.
 
+## 4f. May that Android (Oppo Reno5, 2026-10-03) và ba sửa `v0.3.33-beta1`
+
+Nối Android thành công, tester PS mode type 1 nhận đủ nút. Đây là bằng chứng
+quyết định: **đường truyền + report HID của mình đúng**, iPhone không nhận chỉ
+vì nó kén chuẩn (xem mục 6: cần profile DS4/Xbox riêng).
+
+Ba lỗi ánh xạ lộ ra trên Android, đều do bit HID đi theo **tên** nút trong khi
+tester đặt tên theo **vị trí** chuẩn (bit0=Cross/dưới, bit1=Circle/phải,
+bit3=Square/trái, bit4=Triangle/trên):
+
+1. **A/B và X/Y ngược vị trí.** Brick Pro dùng layout kiểu Nintendo (A ở
+   Đông/phải, B ở Nam/dưới — `inputs.go` đã ghi rõ và phải đảo A↔B, X↔Y).
+   Trước đây A(305)→bit0 nên hiện Cross, B(304)→bit1 nên hiện Circle; X→bit3
+   hiện Square, Y→bit4 hiện Triangle. Nay bit đi theo vị trí: B→0, A→1, Y→3,
+   X→4 (`hidButtons` trong `mapping.go`). Test
+   `TestFaceButtonsFollowPhysicalPosition` chốt lại.
+2. **Nút PS trống.** MENU (316) chưa bao giờ được gửi đi. Nay gửi ở **bit 12**
+   (giả thiết cần máy thật xác nhận: bấm MENU mà nút PS sáng thì đúng).
+3. **B dừng phiên.** B là nút test trên điện thoại mà bấm vào dừng luôn phiên
+   Bluetooth. Nay B khi đang chạy bị bỏ qua; dừng bằng **giữ MENU 2 giây**
+   (guard native đã đọc trực tiếp evdev, hạ từ 3s xuống 2s cho cùng một mốc).
+   `quit` (phím Q/SDL_QUIT, không phải nút tay cầm) giữ làm lối thoát khẩn cấp.
+
+PS mode type 2 của tester xáo nút lung tung — bỏ qua, chỉ dùng type 1.
+
 ## 5. Cách dùng màn hình GHI NÚT
 
 Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng

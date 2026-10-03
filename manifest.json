@@ -1,14 +1,14 @@
 {
-  "version": "0.3.32-beta1",
+  "version": "0.3.33-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-03T19:09:03+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.32-beta1/files",
-  "release_tag": "v0.3.32-beta1/files",
+  "built": "2026-10-03T20:57:59+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.33-beta1/files",
+  "release_tag": "v0.3.33-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.32-beta1: man hinh GHI NUT giu lai SELECT/START, moi lan bam chi hien mot dong, giu MENU 2 giay de luu log va thoat; them kenh cap nhat beta rieng trong Cai dat.",
-    "en": "v0.3.32-beta1: the button probe keeps SELECT/START, draws each press once, and saves plus exits after holding MENU for 2 seconds; separate beta update channel in Settings."
+    "vi": "v0.3.33-beta1: nut mat theo vi tri (B/A/Y/X); MENU gui nut PS; dung phien bang giu MENU 2s thay cho phim B; kenh OTA beta rieng.",
+    "en": "v0.3.33-beta1: face buttons follow physical position (B/A/Y/X); MENU sends the PS button; stop the session with MENU hold instead of B; separate beta OTA channel."
   },
   "files": [
     {
@@ -48,7 +48,7 @@
     },
     {
       "path": "bin/brick-pro-bt",
-      "sha256": "7fda176628e424ca577ed5f0d5a13b8f9dd0e2961b80f2ccb81bfa70b53b6007",
+      "sha256": "1d0bc257f145686a7e3c16b7e5bd94178b3fe8a291435cdf15499478b934933e",
       "size": 3932312
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "path": "docs/bluetooth-native-build.json",
-      "sha256": "d67d16e0f045246927523ad165660e626fed60948404f28cbe047b5d00f33c0a",
+      "sha256": "b0d4f9230aa6970fbaef29f61a22f61a010fc085a6cedf5f7e6474c39ac95709",
       "size": 954
     },
     {
@@ -188,8 +188,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "095b1f0c8be111947ce0d8beba0a651d64c15c1c960d97d0706fe10180c12b2a",
-      "size": 26022
+      "sha256": "a9e282a936268adabf34819ef15f167d6b0bc9bb4093b0287243412bc21e55ab",
+      "size": 26128
     },
     {
       "path": "rh/inputs.py",
@@ -243,7 +243,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "8bbcb7818a39bbdad6a5e18e1a0dc1462a231a3fc4fd5a610d1a3b7560f15509",
+      "sha256": "ee40838733db87965d7e3e05aa0b0a37401037b50f14d63c9273702e7ac608f2",
       "size": 1570
     },
     {
@@ -278,8 +278,8 @@
     },
     {
       "path": "rh/screens/bluetooth.py",
-      "sha256": "c1f126783cdf7ff8aa72a28f5b5d37ec8b931eff858d158161d9fdab4cce2852",
-      "size": 3897
+      "sha256": "1b270f1e60dca5df5031051d65d4b5468ada277fef187f6dff227e5d06806142",
+      "size": 4455
     },
     {
       "path": "rh/screens/button_test.py",
@@ -699,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.32-beta1.zip",
-    "sha256": "1a03853fee34db54bc54b3e798a082e21f34d8fedc5b06c1573b50121455befc",
-    "size": 12854448
+    "name": "trimui-chiaki-ng-v0.3.33-beta1.zip",
+    "sha256": "d8a51efb255904cb2de765698047bf8acb7cae9a500338cc1a0f8303ba1e7180",
+    "size": 12854700
   }
 }

@@ -35,13 +35,24 @@ class BluetoothScreen(BaseScreen):
 
     def get_footer_actions(self):
         if self.session.running():
-            return [("B", tr("bluetooth_stop"))]
+            # B la nut can thu tren dien thoai, nen khong duoc dung de dung
+            # phien. Giu MENU 2 giay de dung (guard doc truc tiep evdev).
+            return [("MENU", tr("bluetooth_stop_hold"))]
         return [("A", tr("bluetooth_start")), ("X", tr("bluetooth_button_test")),
                 ("B", tr("back"))]
 
     def handle_input(self, inputs):
         edges = inputs.get("edges", []) if inputs else []
-        if "btn_b" in edges or "quit" in edges:
+        if "btn_b" in edges:
+            # B chi lui man hinh khi phien chua chay. Dang chay ma bam B thi
+            # bo qua: do la nut test tren dien thoai, khong phai lenh dung.
+            if self.session.running():
+                return False
+            self.engine.pop_screen()
+            return True
+        if "quit" in edges:
+            # Quit chi tu phim Q/SDL_QUIT, khong phai nut tay cam: giu lam
+            # duong lui khan cap.
             if self.session.running():
                 self.session.stop()
             else:

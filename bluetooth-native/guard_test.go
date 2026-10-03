@@ -31,7 +31,7 @@ func TestGuardContinuousHoldAndMenuFallback(t *testing.T) {
 		name string
 		keys []int
 		hold time.Duration
-	}{{"START_SELECT", []int{314, 315}, 2 * time.Second}, {"MENU_HOLD", []int{316}, 3 * time.Second}} {
+	}{{"START_SELECT", []int{314, 315}, 2 * time.Second}, {"MENU_HOLD", []int{316}, 2 * time.Second}} {
 		t.Run(tc.name, func(t *testing.T) {
 			g := guardGesture{}
 			keys := [768]bool{}

@@ -370,6 +370,28 @@ func TestBuiltInTableMatchesTheMeasuredDevice(t *testing.T) {
 	}
 }
 
+// Bit HID di theo vi tri nut tren vo may (layout Nintendo), khong theo ten:
+// B duoi=bit0 (Cross), A phai=bit1 (Circle), Y trai=bit3 (Square),
+// X tren=bit4 (Triangle), MENU=bit12 (nut PS). Do bang may that Android
+// (Oppo Reno5, PS mode type 1, 2026-10-03): truoc day A/B va X/Y hien nguoc
+// nhau vi bit di theo ten.
+func TestFaceButtonsFollowPhysicalPosition(t *testing.T) {
+	for _, want := range []struct {
+		code uint16
+		bit  uint
+	}{
+		{304, 0}, {305, 1}, {307, 3}, {308, 4}, {316, 12},
+	} {
+		pad := proPad()
+		pad.keys[want.code] = true
+		buttons := binary.LittleEndian.Uint16(pad.report()[1:3])
+		if buttons != 1<<want.bit {
+			t.Errorf("key %d lights bits %016b, want only bit %d",
+				want.code, buttons, want.bit)
+		}
+	}
+}
+
 // A missing file is the normal case on a fresh install and must fall back to
 // the built-in table without an error.
 func TestLoadMappingFallsBackWhenFileIsMissing(t *testing.T) {

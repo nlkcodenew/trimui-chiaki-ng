@@ -36,7 +36,10 @@ func (g *guardGesture) update(keys [768]bool, now time.Time) string {
 		if g.menu.IsZero() {
 			g.menu = now
 		}
-		if now.Sub(g.menu) >= 3*time.Second {
+		// MENU la nut dung phien Bluetooth (thay cho B, vi B la nut test).
+		// Giu 2 giay, bang START+SELECT, de nguoi dung khong phai nho hai
+		// moc thoi gian khac nhau.
+		if now.Sub(g.menu) >= 2*time.Second {
 			return "MENU_HOLD"
 		}
 	} else {

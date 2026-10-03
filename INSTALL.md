@@ -74,7 +74,7 @@ Nếu phiên cũ chưa được PS4 nhả, chờ khoảng hai phút rồi kết 
 2. Chờ app kiểm tra input và Bluetooth, sau đó bấm **A**.
 3. Trên điện thoại Android, chọn `TrimUI Brick Pro Gamepad` để ghép nối.
 4. Dùng controller tester để kiểm tra D-pad và cả hai joystick analog.
-5. Giữ **START + SELECT** 2 giây hoặc bấm **B** để dừng an toàn.
+5. Giữ **MENU** 2 giây để dừng an toàn (START + SELECT 2 giây là dự phòng). B là nút test trên điện thoại, không dùng để dừng.
 
 Nếu thất bại, lấy `Apps/Chiaki/BrickBluetooth.log`. Không tắt nguồn giữa bước
 "Đang khôi phục Bluetooth"; launcher có recovery marker để thử khởi động lại
