@@ -23,25 +23,44 @@ type padMapping struct {
 // HID report descriptor usages 1..16, so the report bit is usage-1. L2/R2 have
 // no key code of their own: their bit only says "pulled" and report() raises it
 // from the analog axis, while the real value travels in the report tail.
-//
-// Bit di theo VI TRI nut tren vo may, khong theo ten. Brick Pro dung layout
-// kieu Nintendo: A vat ly o Dong (phai), B o Nam (duoi), X o Bac (tren),
-// Y o Tay (trai) — inputs.go cua app cung dao A<->B, X<->Y vi ly do nay.
-// Tester PS-mode dat ten nut theo vi tri chuan (bit0=Cross/duoi,
-// bit1=Circle/phai, bit3=Square/trai, bit4=Triangle/tren). May that
-// (Android Oppo Reno5, 2026-10-03) tung bao A/B va X/Y nguoc nhau vi truoc
-// day bit di theo ten.
-//
-// Bit 12 la nut PS: MENU (316) chua tung duoc gui di, tester bao o PS
-// trong. Day la gia thiet can may that xac nhan: bam MENU ma nut PS sang
-// thi dung, khong thi doi bit.
-var hidButtons = []struct {
+type hidButton struct {
 	name string
 	bit  uint
-}{
-	{"b", 0}, {"a", 1}, {"y", 3}, {"x", 4},
-	{"l1", 6}, {"r1", 7}, {"l2", 8}, {"r2", 9},
-	{"select", 10}, {"start", 11}, {"mode", 12}, {"l3", 13}, {"r3", 14},
+}
+
+// Hai profile bit, chon bang co --profile (mac dinh "ps").
+//
+// "ps": bit di theo VI TRI nut tren vo may. Brick Pro dung layout kieu
+// Nintendo: A vat ly o Dong (phai), B o Nam (duoi), X o Bac (tren),
+// Y o Tay (trai) — inputs.go cua app cung dao A<->B, X<->Y vi ly do nay.
+// Tester PS-mode dat ten nut theo vi tri chuan (bit0=Cross/duoi,
+// bit1=Circle/phai, bit3=Square/trai, bit4=Triangle/tren). Do bang may that
+// (Android Oppo Reno5, PS mode type 1, 2026-10-03).
+//
+// "labels": bit di theo TEN in tren vo (A->0, B->1, X->3, Y->4) nhu truoc
+// v0.3.33. Giu lai cho cong cu dat ten nut theo thu tu label, khong phai
+// vi tri. Bit 12 (nut PS = MENU 316) giong nhau o ca hai profile.
+var hidButtonLayouts = map[string][]hidButton{
+	"ps": {
+		{"b", 0}, {"a", 1}, {"y", 3}, {"x", 4},
+		{"l1", 6}, {"r1", 7}, {"l2", 8}, {"r2", 9},
+		{"select", 10}, {"start", 11}, {"mode", 12}, {"l3", 13}, {"r3", 14},
+	},
+	"labels": {
+		{"a", 0}, {"b", 1}, {"x", 3}, {"y", 4},
+		{"l1", 6}, {"r1", 7}, {"l2", 8}, {"r2", 9},
+		{"select", 10}, {"start", 11}, {"mode", 12}, {"l3", 13}, {"r3", 14},
+	},
+}
+
+// hidProfile do co --profile dat; la ten khong co thi roi ve "ps".
+var hidProfile = "ps"
+
+func hidButtons() []hidButton {
+	if layout, ok := hidButtonLayouts[hidProfile]; ok {
+		return layout
+	}
+	return hidButtonLayouts["ps"]
 }
 
 var analogTriggers = map[string]bool{"l2": true, "r2": true}
@@ -124,7 +143,7 @@ func (m *padMapping) pressed(keys *[768]bool, name string) bool {
 func (m *padMapping) duplicateButtons() [][2]string {
 	seen := map[uint16]string{}
 	dupes := [][2]string{}
-	for _, button := range hidButtons {
+	for _, button := range hidButtons() {
 		code := m.code(button.name)
 		if code == 0 {
 			continue

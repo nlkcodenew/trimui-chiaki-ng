@@ -171,7 +171,13 @@ func main() {
 	heartbeatPath := flag.String("heartbeat-file", "", "Backend heartbeat file")
 	marker := flag.String("recovery-file", "", "Temporary service recovery marker")
 	mapPath := flag.String("map-file", "", "Button/axis map JSON; defaults to bluetooth-map.json beside the app")
+	profileFlag := flag.String("profile", "ps", "HID button bit layout: ps (positional, default) or labels (case print)")
 	flag.Parse()
+	if _, ok := hidButtonLayouts[*profileFlag]; ok {
+		hidProfile = *profileFlag
+	} else {
+		fmt.Printf("Unknown HID profile %q, using ps\n", *profileFlag)
+	}
 	if *versionFlag {
 		fmt.Println("Brick Pro Bluetooth", version, runtime.GOOS, runtime.GOARCH)
 		return
@@ -267,6 +273,7 @@ func main() {
 		}(*parentPID)
 	}
 	status("starting")
+	fmt.Println("HID button profile:", hidProfile)
 	if e := runSession(ctx, status, heartbeat, *marker, mapping); e != nil {
 		status("error")
 		fmt.Fprintln(os.Stderr, "Bluetooth session:", e)

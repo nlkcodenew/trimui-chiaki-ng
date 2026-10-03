@@ -189,7 +189,7 @@ func (pad *padState) report() []byte {
 	report[0] = reportID
 	mapping := pad.mapping()
 	buttons := uint16(0)
-	for _, button := range hidButtons {
+	for _, button := range hidButtons() {
 		if mapping.pressed(&pad.keys, button.name) {
 			buttons |= 1 << button.bit
 		}

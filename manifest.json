@@ -1,14 +1,14 @@
 {
-  "version": "0.3.33-beta1",
+  "version": "0.3.34-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-03T20:57:59+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.33-beta1/files",
-  "release_tag": "v0.3.33-beta1/files",
+  "built": "2026-10-03T21:20:16+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.34-beta1/files",
+  "release_tag": "v0.3.34-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.33-beta1: nut mat theo vi tri (B/A/Y/X); MENU gui nut PS; dung phien bang giu MENU 2s thay cho phim B; kenh OTA beta rieng.",
-    "en": "v0.3.33-beta1: face buttons follow physical position (B/A/Y/X); MENU sends the PS button; stop the session with MENU hold instead of B; separate beta OTA channel."
+    "vi": "v0.3.34-beta1: menu tay cam them muc chon profile nut (PlayStation/theo ten); giu MENU 2s dung phien thay phim B.",
+    "en": "v0.3.34-beta1: gamepad menu gains a button-profile selector (PlayStation/by-label); hold MENU 2s to stop instead of B."
   },
   "files": [
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "bluetooth-session.sh",
-      "sha256": "831191bcf6a643afbd7f16b675c96f50ddfd8c08d53bf2fd53107bdac54d99f7",
-      "size": 4969
+      "sha256": "dd8f9595df5b573c0fedf8fb0e8362abfcef96c52f09cea5d8b7c30af0518daf",
+      "size": 5006
     },
     {
       "path": "config.json",
@@ -48,7 +48,7 @@
     },
     {
       "path": "bin/brick-pro-bt",
-      "sha256": "1d0bc257f145686a7e3c16b7e5bd94178b3fe8a291435cdf15499478b934933e",
+      "sha256": "0656e7f8734c7e7fcf27af5c368ef7b9299d246557fc30dc72ad641ae6d99b72",
       "size": 3932312
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "path": "docs/bluetooth-native-build.json",
-      "sha256": "b0d4f9230aa6970fbaef29f61a22f61a010fc085a6cedf5f7e6474c39ac95709",
+      "sha256": "3944e0cf509477f6331a6bef891d1fa2d2bac038303307b24c480b9e9f65dd37",
       "size": 954
     },
     {
@@ -158,8 +158,8 @@
     },
     {
       "path": "rh/bluetooth_gamepad.py",
-      "sha256": "59f667c17f6e5b6f49c893d3ee023eadee46928e23cdbd1a11a4e4764bc09c28",
-      "size": 7119
+      "sha256": "9847933704168dee2bfc7c85dd2307c1879b9f136cff8ea8dbb613c085fe0377",
+      "size": 7443
     },
     {
       "path": "rh/chiaki.py",
@@ -188,8 +188,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "a9e282a936268adabf34819ef15f167d6b0bc9bb4093b0287243412bc21e55ab",
-      "size": 26128
+      "sha256": "307cd10d692ee0317462d516552bf37130a112e2eab5715d7b8528d9d17f0b37",
+      "size": 26650
     },
     {
       "path": "rh/inputs.py",
@@ -233,8 +233,8 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "78a65960a5cad021c98fa61cb28ea5d0d7b14be315e1c301cae5a331ba4c532d",
-      "size": 5865
+      "sha256": "39d96fce974adaf48b2a165734f2de799bc25ac4f36beaecdbb971fefa86a824",
+      "size": 6320
     },
     {
       "path": "rh/updater.py",
@@ -243,7 +243,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "ee40838733db87965d7e3e05aa0b0a37401037b50f14d63c9273702e7ac608f2",
+      "sha256": "f5f11e64734b57b921bf342c6188fe18ebd6fbc77f49f0c11224e6788ff54d2c",
       "size": 1570
     },
     {
@@ -278,8 +278,8 @@
     },
     {
       "path": "rh/screens/bluetooth.py",
-      "sha256": "1b270f1e60dca5df5031051d65d4b5468ada277fef187f6dff227e5d06806142",
-      "size": 4455
+      "sha256": "136bd54bdab607871c1901e0c07cad625ca7993f4d04a8e4149bc9f4fc1558ee",
+      "size": 5756
     },
     {
       "path": "rh/screens/button_test.py",
@@ -699,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.33-beta1.zip",
-    "sha256": "d8a51efb255904cb2de765698047bf8acb7cae9a500338cc1a0f8303ba1e7180",
-    "size": 12854700
+    "name": "trimui-chiaki-ng-v0.3.34-beta1.zip",
+    "sha256": "55002e667a4970bb392de8f7dfdf5caf34ddac9bf62e73e1819ef00ca050d7ac",
+    "size": 12856494
   }
 }

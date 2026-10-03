@@ -330,6 +330,22 @@ bit3=Square/trái, bit4=Triangle/trên):
 
 PS mode type 2 của tester xáo nút lung tung — bỏ qua, chỉ dùng type 1.
 
+## 4g. Profile nút (`v0.3.34-beta1`): ghi rõ và chọn được
+
+Profile đã đo trên Android được ghi thành bảng, không còn nằm ngầm trong code.
+Menu `TAY CẦM BLUETOOTH` có mục chọn (Trái/Phải khi chưa kết nối), lưu vào
+`settings.json` (`gamepad_profile`), backend nhận qua `--profile`:
+
+| Profile | Bit nút mặt | Khi nào dùng |
+|---|---|---|
+| `ps` (mặc định) | B→0, A→1, Y→3, X→4 (theo vị trí) | Tester PS-mode, game — đã đo trên Oppo Reno5 |
+| `labels` | A→0, B→1, X→3, Y→4 (theo tên vỏ) | Công cụ đặt tên theo thứ tự label; cách cũ trước v0.3.33 |
+
+Các bit còn lại giống nhau ở cả hai profile: L1→6, R1→7, L2→8, R2→9,
+Select→10, Start→11, PS(MENU)→12, L3→13, R3→14. Tên lạ rơi về `ps`.
+Profile DS4/Xbox giả lập tay cầm thật để dành sau stable: cần descriptor
+chính xác từ kernel/dump, không đoán.
+
 ## 5. Cách dùng màn hình GHI NÚT
 
 Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng

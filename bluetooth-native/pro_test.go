@@ -374,21 +374,41 @@ func TestBuiltInTableMatchesTheMeasuredDevice(t *testing.T) {
 // B duoi=bit0 (Cross), A phai=bit1 (Circle), Y trai=bit3 (Square),
 // X tren=bit4 (Triangle), MENU=bit12 (nut PS). Do bang may that Android
 // (Oppo Reno5, PS mode type 1, 2026-10-03): truoc day A/B va X/Y hien nguoc
-// nhau vi bit di theo ten.
+// nhau vi bit di theo ten. Profile "labels" giu lai cach cu cho cong cu
+// dat ten theo thu tu label.
 func TestFaceButtonsFollowPhysicalPosition(t *testing.T) {
-	for _, want := range []struct {
+	old := hidProfile
+	defer func() { hidProfile = old }()
+	for profile, want := range map[string][]struct {
 		code uint16
 		bit  uint
 	}{
-		{304, 0}, {305, 1}, {307, 3}, {308, 4}, {316, 12},
+		"ps":     {{304, 0}, {305, 1}, {307, 3}, {308, 4}, {316, 12}},
+		"labels": {{305, 0}, {304, 1}, {308, 3}, {307, 4}, {316, 12}},
 	} {
-		pad := proPad()
-		pad.keys[want.code] = true
-		buttons := binary.LittleEndian.Uint16(pad.report()[1:3])
-		if buttons != 1<<want.bit {
-			t.Errorf("key %d lights bits %016b, want only bit %d",
-				want.code, buttons, want.bit)
+		hidProfile = profile
+		for _, button := range want {
+			pad := proPad()
+			pad.keys[button.code] = true
+			buttons := binary.LittleEndian.Uint16(pad.report()[1:3])
+			if buttons != 1<<button.bit {
+				t.Errorf("profile %s: key %d lights bits %016b, want only bit %d",
+					profile, button.code, buttons, button.bit)
+			}
 		}
+	}
+}
+
+// Profile la ten khong co thi roi ve "ps", khong bao gio roi vao bang rong.
+func TestUnknownProfileFallsBackToPS(t *testing.T) {
+	old := hidProfile
+	defer func() { hidProfile = old }()
+	hidProfile = "nonsense"
+	pad := proPad()
+	pad.keys[304] = true
+	buttons := binary.LittleEndian.Uint16(pad.report()[1:3])
+	if buttons != 1<<0 {
+		t.Fatalf("fallback profile lights %016b, want bit 0", buttons)
 	}
 }
 

@@ -21,6 +21,10 @@ auto_update = True
 # Kenh cap nhat: "stable" chi nhan ban on dinh, "beta" chi nhan ban beta.
 # Mac dinh stable de may dang dung on khong bao gio bi day beta.
 update_channel = "stable"
+# Profile bit nut Bluetooth: "ps" theo vi tri (mac dinh, da do tren Android),
+# "labels" theo ten in tren vo (cach cu truoc v0.3.33, cho cong cu dat ten
+# theo thu tu label).
+gamepad_profile = "ps"
 enable_logging = False
 intro = True
 device_id = ""
@@ -47,8 +51,8 @@ _save_lock = threading.Lock()
 def _load():
     global settings_load_error
     global current_lang, video_resolution, video_fps, video_bitrate, audio_volume
-    global wifi_awake, auto_update, update_channel, enable_logging, device_id
-    global skipped_versions
+    global wifi_awake, auto_update, update_channel, gamepad_profile
+    global enable_logging, device_id, skipped_versions
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
     global psn_account_id, psn_online_id, regist_key, rp_key, rp_key_type, server_mac
     global host_target
@@ -73,6 +77,9 @@ def _load():
     loaded_channel = str(cfg.get("update_channel", update_channel) or "stable")
     update_channel = (loaded_channel if loaded_channel in ("stable", "beta")
                       else "stable")
+    loaded_profile = str(cfg.get("gamepad_profile", gamepad_profile) or "ps")
+    gamepad_profile = (loaded_profile if loaded_profile in ("ps", "labels")
+                       else "ps")
     enable_logging = bool(cfg.get("enable_logging", enable_logging))
     intro = bool(cfg.get("intro", intro))
     device_id = cfg.get("device_id", device_id)
@@ -111,6 +118,7 @@ def save_settings():
                 "wifi_awake": wifi_awake,
                 "auto_update": auto_update,
                 "update_channel": update_channel,
+                "gamepad_profile": gamepad_profile,
                 "enable_logging": enable_logging,
                 "intro": intro,
                 "device_id": device_id,

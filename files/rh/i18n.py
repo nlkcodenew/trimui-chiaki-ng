@@ -74,6 +74,10 @@ TEXTS = {
         "bluetooth_exit_help": "Dừng tay cầm: giữ MENU 2 giây (START+SELECT 2 giây dự phòng). B là nút test.",
         "bluetooth_log": "Log: %s",
         "bluetooth_button_test": "THỬ NÚT",
+        "bluetooth_profile": "Profile nút: %s",
+        "bluetooth_profile_ps": "PlayStation (theo vị trí)",
+        "bluetooth_profile_labels": "Theo tên in trên vỏ (cũ)",
+        "bluetooth_profile_hint": "Trái/Phải: đổi profile (khi chưa kết nối)",
 
         "button_test_title": "GHI NÚT TAY CẦM",
         "button_test_subtitle": "Ghi lại nút bấm của Brick Pro",
@@ -264,6 +268,10 @@ TEXTS = {
         "bluetooth_exit_help": "Stop the gamepad: hold MENU 2 seconds (START+SELECT 2 seconds as fallback). B is a test button.",
         "bluetooth_log": "Log: %s",
         "bluetooth_button_test": "TEST",
+        "bluetooth_profile": "Button profile: %s",
+        "bluetooth_profile_ps": "PlayStation (positional)",
+        "bluetooth_profile_labels": "By case labels (legacy)",
+        "bluetooth_profile_hint": "Left/Right: change profile (when idle)",
 
         "button_test_title": "RECORD GAMEPAD BUTTONS",
         "button_test_subtitle": "Record the Brick Pro button presses",

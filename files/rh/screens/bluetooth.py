@@ -4,9 +4,14 @@
 from ..bluetooth_gamepad import BluetoothGamepadSession, REPORT_FILE
 from ..i18n import tr
 from ..logger import get_logger
+from .. import state
 from .base import BaseScreen
 
 log = get_logger()
+
+# Profile bit nut cho backend (co --profile). "ps" theo vi tri, da do tren
+# Android; "labels" theo ten in tren vo, cach cu truoc v0.3.33.
+PROFILES = ("ps", "labels")
 
 
 class BluetoothScreen(BaseScreen):
@@ -14,6 +19,18 @@ class BluetoothScreen(BaseScreen):
         super().__init__(engine, "bluetooth")
         self.session = BluetoothGamepadSession()
         self.previous_status = ""
+
+    def _profile_index(self):
+        try:
+            return list(PROFILES).index(state.gamepad_profile)
+        except ValueError:
+            return 0
+
+    def _cycle_profile(self, delta):
+        index = (self._profile_index() + delta) % len(PROFILES)
+        state.gamepad_profile = PROFILES[index]
+        state.save_settings()
+        log.info("bluetooth profile -> %s", state.gamepad_profile)
 
     def _open_button_test(self):
         # Thu nut can doc /dev/input, nen khong dua chung voi phien Bluetooth:
@@ -65,6 +82,15 @@ class BluetoothScreen(BaseScreen):
             if not self.session.start():
                 log.warning("Bluetooth gamepad start refused")
             return True
+        # Doi profile bang Trai/Phai khi phien chua chay. Dang chay thi bo
+        # qua de khong vo tinh doi layout giua phien.
+        if not self.session.running():
+            if "btn_right" in edges:
+                self._cycle_profile(1)
+                return True
+            if "btn_left" in edges:
+                self._cycle_profile(-1)
+                return True
         return False
 
     def update(self, dt):
@@ -113,6 +139,11 @@ class BluetoothScreen(BaseScreen):
         for line in lines:
             engine.draw_text(line, engine.font_sub, 54, y, 220, 225, 235)
             y += 48
+        profile_name = tr("bluetooth_profile_" + PROFILES[self._profile_index()])
+        engine.draw_text(tr("bluetooth_profile") % profile_name,
+                         engine.font_sub, 54, 452, 240, 220, 120)
+        engine.draw_text(tr("bluetooth_profile_hint"),
+                         engine.font_sub, 54, 484, 150, 165, 185)
         engine.draw_text(tr("bluetooth_log") % REPORT_FILE,
                          engine.font_sub, 54, engine.screen_h - 118,
                          150, 165, 185)

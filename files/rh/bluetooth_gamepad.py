@@ -9,6 +9,7 @@ import threading
 
 from .logger import get_logger
 from .paths import APP_DIR
+from . import state
 
 log = get_logger()
 
@@ -78,6 +79,12 @@ class BluetoothGamepadSession:
 
     def available(self):
         return os.path.isfile(BACKEND) and os.path.isfile(SESSION_SCRIPT)
+
+    @staticmethod
+    def _bt_profile():
+        """Profile bit nut truyen xuong backend; la thi roi ve ps."""
+        profile = getattr(state, "gamepad_profile", "ps") or "ps"
+        return profile if profile in ("ps", "labels") else "ps"
 
     def running(self):
         return self.process is not None and self.process.poll() is None
@@ -155,6 +162,7 @@ class BluetoothGamepadSession:
         self.stop_requested = False
         environment = os.environ.copy()
         environment["CHIAKI_PARENT_PID"] = str(os.getpid())
+        environment["CHIAKI_BT_PROFILE"] = self._bt_profile()
         try:
             self.process = subprocess.Popen(
                 ["/bin/sh", SESSION_SCRIPT, self.run_dir],

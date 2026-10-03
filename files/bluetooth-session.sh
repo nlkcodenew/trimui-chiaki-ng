@@ -136,7 +136,7 @@ case "$(cat "$GUARD_FILE" 2>/dev/null || true)" in
     *) echo "input_guard_timeout" > "$STATUS_FILE"; echo "input_guard_timeout" > "$RESULT_FILE"; exit 1 ;;
 esac
 
-"$BACKEND" --run --status-file "$STATUS_FILE" --heartbeat-file "$HEARTBEAT_FILE" --recovery-file "$RECOVERY_FILE" --parent-pid $$ >> "$LOG_FILE" 2>&1 &
+"$BACKEND" --run --profile "${CHIAKI_BT_PROFILE:-ps}" --status-file "$STATUS_FILE" --heartbeat-file "$HEARTBEAT_FILE" --recovery-file "$RECOVERY_FILE" --parent-pid $$ >> "$LOG_FILE" 2>&1 &
 WORKER_PID=$!
 
 while alive "$WORKER_PID"; do

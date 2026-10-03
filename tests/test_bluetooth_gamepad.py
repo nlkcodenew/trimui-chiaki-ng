@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import importlib
+import json
 import os
 import shutil
 import sys
@@ -86,6 +87,92 @@ class BluetoothGamepadIntegrationTests(unittest.TestCase):
         actions = screen.get_footer_actions()
         self.assertEqual([key for key, _label in actions], ["MENU"])
         self.assertIn("2", actions[0][1])
+
+    def test_profile_cycles_with_left_right_while_idle_and_persists(self):
+        screen = self.screen_module.BluetoothScreen(mock.Mock())
+        screen.session = mock.Mock()
+        screen.session.running.return_value = False
+        state = self.screen_module.state
+        original = state.gamepad_profile
+        try:
+            state.gamepad_profile = "ps"
+            with mock.patch.object(state, "save_settings") as save:
+                self.assertTrue(screen.handle_input({"edges": ["btn_right"]}))
+            self.assertEqual(state.gamepad_profile, "labels")
+            save.assert_called_once_with()
+            with mock.patch.object(state, "save_settings"):
+                self.assertTrue(screen.handle_input({"edges": ["btn_left"]}))
+            self.assertEqual(state.gamepad_profile, "ps")
+        finally:
+            state.gamepad_profile = original
+
+    def test_profile_cycle_ignored_while_running(self):
+        screen = self.screen_module.BluetoothScreen(mock.Mock())
+        screen.session = mock.Mock()
+        screen.session.running.return_value = True
+        state = self.screen_module.state
+        original = state.gamepad_profile
+        try:
+            state.gamepad_profile = "ps"
+            with mock.patch.object(state, "save_settings") as save:
+                self.assertFalse(
+                    screen.handle_input({"edges": ["btn_right"]}))
+            self.assertEqual(state.gamepad_profile, "ps")
+            save.assert_not_called()
+        finally:
+            state.gamepad_profile = original
+
+    def test_session_start_passes_profile_to_backend(self):
+        session = self.manager.BluetoothGamepadSession()
+        state = self.manager.state
+        original = state.gamepad_profile
+        state.gamepad_profile = "labels"
+        try:
+            with mock.patch.object(session, "available", return_value=True), \
+                    mock.patch.object(session, "cleanup_runtime"), \
+                    mock.patch.object(self.manager.subprocess, "Popen") as popen, \
+                    mock.patch.object(self.manager.tempfile, "mkdtemp",
+                                      return_value="/tmp/bt-test"):
+                self.assertTrue(session.start())
+            env = popen.call_args.kwargs["env"]
+            self.assertEqual(env["CHIAKI_BT_PROFILE"], "labels")
+        finally:
+            state.gamepad_profile = original
+
+    def test_backend_profile_falls_back_to_ps(self):
+        state = self.manager.state
+        original = state.gamepad_profile
+        state.gamepad_profile = "nonsense"
+        try:
+            self.assertEqual(self.manager.BluetoothGamepadSession._bt_profile(),
+                             "ps")
+        finally:
+            state.gamepad_profile = original
+
+    def test_supervisor_passes_profile_flag_to_backend(self):
+        script = os.path.join(FILES, "bluetooth-session.sh")
+        with open(script, encoding="utf-8") as handle:
+            text = handle.read()
+        self.assertIn("--profile", text)
+        self.assertIn("CHIAKI_BT_PROFILE", text)
+
+    def test_gamepad_profile_defaults_ps_persists_and_rejects_junk(self):
+        state = self.manager.state
+        original = state.gamepad_profile
+        try:
+            self.assertEqual(original, "ps")
+            state.gamepad_profile = "labels"
+            self.assertTrue(state.save_settings())
+            state.gamepad_profile = "ps"
+            state._load()
+            self.assertEqual(state.gamepad_profile, "labels")
+            with open(state.SETTINGS_FILE, "w", encoding="utf-8") as handle:
+                json.dump({"gamepad_profile": "junk"}, handle)
+            state._load()
+            self.assertEqual(state.gamepad_profile, "ps")
+        finally:
+            state.gamepad_profile = original
+            state.save_settings()
 
     def test_home_menu_opens_bluetooth_screen(self):
         engine = mock.Mock()

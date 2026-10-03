@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: nut mat theo vi tri (B/A/Y/X); MENU gui nut PS; dung phien bang giu MENU 2s thay cho phim B; kenh OTA beta rieng." % version,
-            "en": "v%s: face buttons follow physical position (B/A/Y/X); MENU sends the PS button; stop the session with MENU hold instead of B; separate beta OTA channel." % version,
+            "vi": "v%s: menu tay cam them muc chon profile nut (PlayStation/theo ten); giu MENU 2s dung phien thay phim B." % version,
+            "en": "v%s: gamepad menu gains a button-profile selector (PlayStation/by-label); hold MENU 2s to stop instead of B." % version,
         },
         "files": files,
         "remove": [],
