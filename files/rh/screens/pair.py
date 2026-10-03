@@ -4,6 +4,7 @@ from .. import state
 from .. import chiaki
 from ..i18n import tr
 from ..logger import get_logger
+from ..ui.primitives import ellipsis_text, theme
 from .base import BaseScreen
 log = get_logger()
 ACCOUNT_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
@@ -233,18 +234,20 @@ class PairScreen(BaseScreen):
         except Exception as exc:
             log.warning("cannot queue diagnostic %s: %s", reason, exc)
     def render(self, engine):
-        engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, 13, 17, 28, 255)
+        c = theme(state.theme)
+        engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, *c["bg"], 255)
         if not self.host:
-            engine.draw_text(self.status, engine.font_title, engine.screen_w//2, 200, 255, 100, 100, center_x=True); return
-        title = "%s [%s]" % (self.host.name or "PS4", self.host.addr)
-        engine.draw_text(title, engine.font_title, engine.screen_w//2, 140, 255, 255, 255, center_x=True)
+            engine.draw_text(self.status, engine.font_title, engine.screen_w//2, 200, *c["err"], center_x=True); return
+        title = ellipsis_text(engine, "%s [%s]" % (self.host.name or "PS4", self.host.addr),
+                              engine.font_title, engine.screen_w - 80)
+        engine.draw_text(title, engine.font_title, engine.screen_w//2, 140, *c["text"], center_x=True)
         if self._is_ps5() and self.mode == "account_id":
             self._render_account_id(engine)
             return
         if self._is_ps5() and self.mode == "account_error":
             self._render_account_error(engine)
             return
-        engine.draw_text(tr("pair_pin_label"), engine.font_sub, engine.screen_w//2, 210, 180, 195, 215, center_x=True)
+        engine.draw_text(tr("pair_pin_label"), engine.font_sub, engine.screen_w//2, 210, *c["muted"], center_x=True)
         bw, bh, gap = 72, 86, 12
         total = 8*bw + 7*gap
         x0 = (engine.screen_w - total)//2
@@ -252,26 +255,31 @@ class PairScreen(BaseScreen):
         disp = (self.pin + "00000000")[:8]
         for i, ch in enumerate(disp):
             x = x0 + i*(bw+gap)
-            col = (0, 230, 150) if i == self.cursor else (40, 60, 90)
-            engine.fill_rect(x, y0, bw, bh, col[0], col[1], col[2], 240)
-            engine.draw_text(ch, engine.font_title, x+bw//2, y0+bh//2, 255, 255, 255, center_x=True, center_y=True)
-        engine.draw_text(self.status, engine.font_sub, engine.screen_w//2, y0+115, 0, 230, 150, center_x=True)
+            box = c["accent"] if i == self.cursor else c["row"]
+            engine.fill_rect(x, y0, bw, bh, *box, 240)
+            digit_c = c["chip_text"] if i == self.cursor else c["text"]
+            engine.draw_text(ch, engine.font_title, x+bw//2, y0+bh//2, *digit_c, center_x=True, center_y=True)
+        status = ellipsis_text(engine, self.status, engine.font_sub, engine.screen_w - 80)
+        engine.draw_text(status, engine.font_sub, engine.screen_w//2, y0+115, *c["accent"], center_x=True)
         if getattr(self.host, "is_ps5", False):
             engine.draw_text(tr("pair_ps5_account_ready"), engine.font_sub,
-                             engine.screen_w//2, y0+150, 220, 225, 235, center_x=True)
+                             engine.screen_w//2, y0+150, *c["sub"], center_x=True)
             if self.diagnostic_code:
-                engine.draw_text(tr("pair_ps5_report_code") % (
+                report = ellipsis_text(engine, tr("pair_ps5_report_code") % (
                     self.diagnostic_code, getattr(state, "device_id", "CHI-????")),
-                    engine.font_sub, engine.screen_w//2, y0+185,
-                    255, 190, 80, center_x=True)
+                    engine.font_sub, engine.screen_w - 80)
+                engine.draw_text(report, engine.font_sub,
+                                 engine.screen_w//2, y0+185,
+                                 *c["warn"], center_x=True)
         else:
             engine.draw_text(tr("pair_hint_input"), engine.font_sub,
-                             engine.screen_w//2, y0+160, 180, 195, 215, center_x=True)
+                             engine.screen_w//2, y0+160, *c["muted"], center_x=True)
     def _render_account_id(self, engine):
+        c = theme(state.theme)
         engine.draw_text(tr("pair_ps5_account_title"), engine.font_title,
-                         engine.screen_w//2, 200, 255, 255, 255, center_x=True)
+                         engine.screen_w//2, 200, *c["text"], center_x=True)
         engine.draw_text(tr("pair_ps5_account_help"), engine.font_sub,
-                         engine.screen_w//2, 245, 180, 195, 215, center_x=True)
+                         engine.screen_w//2, 245, *c["muted"], center_x=True)
         box_w, box_h, gap = 68, 72, 8
         total = 12 * box_w + 11 * gap
         x0 = (engine.screen_w - total) // 2
@@ -280,30 +288,38 @@ class PairScreen(BaseScreen):
         for index, char in enumerate(value):
             x = x0 + index * (box_w + gap)
             selected = index == self.cursor and index < 11
-            color = (0, 230, 150) if selected else (40, 60, 90)
-            engine.fill_rect(x, y0, box_w, box_h, color[0], color[1], color[2], 240)
+            box = c["accent"] if selected else c["row"]
+            engine.fill_rect(x, y0, box_w, box_h, *box, 240)
+            digit_c = c["chip_text"] if selected else c["text"]
             engine.draw_text(char, engine.font_title, x + box_w//2, y0 + box_h//2,
-                             255, 255, 255, center_x=True, center_y=True)
+                             *digit_c, center_x=True, center_y=True)
         engine.draw_text(tr("pair_ps5_account_controls"), engine.font_sub,
-                         engine.screen_w//2, y0 + 145, 220, 225, 235, center_x=True)
-        engine.draw_text(self.status, engine.font_sub, engine.screen_w//2,
-                         y0 + 105, 0, 230, 150, center_x=True)
+                         engine.screen_w//2, y0 + 145, *c["sub"], center_x=True)
+        status = ellipsis_text(engine, self.status, engine.font_sub,
+                               engine.screen_w - 80)
+        engine.draw_text(status, engine.font_sub, engine.screen_w//2,
+                         y0 + 105, *c["accent"], center_x=True)
         engine.draw_text(tr("pair_ps5_account_private"), engine.font_sub,
-                         engine.screen_w//2, y0 + 180, 255, 190, 80, center_x=True)
+                         engine.screen_w//2, y0 + 180, *c["warn"], center_x=True)
         if self.diagnostic_code:
-            engine.draw_text(tr("pair_ps5_report_code") % (
+            report = ellipsis_text(engine, tr("pair_ps5_report_code") % (
                 self.diagnostic_code, getattr(state, "device_id", "CHI-????")),
-                engine.font_sub, engine.screen_w//2, y0 + 215,
-                255, 120, 120, center_x=True)
+                engine.font_sub, engine.screen_w - 80)
+            engine.draw_text(report, engine.font_sub, engine.screen_w//2, y0 + 215,
+                             *c["err"], center_x=True)
     def _render_account_error(self, engine):
+        c = theme(state.theme)
         engine.draw_text(tr("pair_ps5_account_error_title"), engine.font_title,
-                         engine.screen_w//2, 230, 255, 120, 120, center_x=True)
-        engine.draw_text(self.status, engine.font_sub, engine.screen_w//2,
-                         300, 220, 225, 235, center_x=True)
-        engine.draw_text(tr("pair_ps5_report_code") % (
+                         engine.screen_w//2, 230, *c["err"], center_x=True)
+        status = ellipsis_text(engine, self.status, engine.font_sub,
+                               engine.screen_w - 80)
+        engine.draw_text(status, engine.font_sub, engine.screen_w//2,
+                         300, *c["sub"], center_x=True)
+        report = ellipsis_text(engine, tr("pair_ps5_report_code") % (
             self.diagnostic_code, getattr(state, "device_id", "CHI-????")),
-            engine.font_title, engine.screen_w//2, 370,
-            255, 190, 80, center_x=True)
+            engine.font_title, engine.screen_w - 80)
+        engine.draw_text(report, engine.font_title, engine.screen_w//2, 370,
+                         *c["warn"], center_x=True)
         engine.draw_text(tr("pair_ps5_account_error_help"), engine.font_sub,
                          engine.screen_w//2, 430, 220, 225, 235, center_x=True)
         engine.draw_text(tr("pair_ps5_account_hidden"), engine.font_sub,

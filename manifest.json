@@ -1,14 +1,14 @@
 {
-  "version": "0.3.34-beta1",
+  "version": "0.3.35-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-03T21:20:16+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.34-beta1/files",
-  "release_tag": "v0.3.34-beta1/files",
+  "built": "2026-10-03T22:08:43+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.35-beta1/files",
+  "release_tag": "v0.3.35-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.34-beta1: menu tay cam them muc chon profile nut (PlayStation/theo ten); giu MENU 2s dung phien thay phim B.",
-    "en": "v0.3.34-beta1: gamepad menu gains a button-profile selector (PlayStation/by-label); hold MENU 2s to stop instead of B."
+    "vi": "v0.3.35-beta1: giao dien moi 2 theme toi/sang, chip footer do theo chu, chon hang kieu accent-bar, chu dai tu cat.",
+    "en": "v0.3.35-beta1: new UI with dark/light themes, measured footer chips, accent-bar selection, and text truncation."
   },
   "files": [
     {
@@ -173,8 +173,8 @@
     },
     {
       "path": "rh/engine.py",
-      "sha256": "180ab75ee4b3b3b85f5ab0b19bcc9f6408f116d1b6b1ed005378c8093570116d",
-      "size": 22287
+      "sha256": "83a80c265bc0bc1cd225a20138dd288ae491d9386aa00550dad0cb3c382bc104",
+      "size": 23039
     },
     {
       "path": "rh/fonts.py",
@@ -188,8 +188,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "307cd10d692ee0317462d516552bf37130a112e2eab5715d7b8528d9d17f0b37",
-      "size": 26650
+      "sha256": "2a46ac8b1b34c266ea48771a6d73a128690e3af75679f73b186ee5e89f80fdce",
+      "size": 26735
     },
     {
       "path": "rh/inputs.py",
@@ -233,8 +233,8 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "39d96fce974adaf48b2a165734f2de799bc25ac4f36beaecdbb971fefa86a824",
-      "size": 6320
+      "sha256": "a8b77ca0a93be7cbb1fa1c376de64ad27b23e9adfe4876e6440b19c592acbafd",
+      "size": 6554
     },
     {
       "path": "rh/updater.py",
@@ -243,7 +243,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "f5f11e64734b57b921bf342c6188fe18ebd6fbc77f49f0c11224e6788ff54d2c",
+      "sha256": "884b2b8e595452951f05ddf1a14ac14bdb299ab9034c2dbf7f3c0d56f13cdbed",
       "size": 1570
     },
     {
@@ -258,13 +258,13 @@
     },
     {
       "path": "rh/modals/common.py",
-      "sha256": "7b4250251dbbc99adc9a32010e6d2332f7df8f33f1c2401073b12266d856ebfa",
-      "size": 4461
+      "sha256": "af0f18d3c95e6894939164b9f0642b277f62c0dccf3acf322fc21611249c56e7",
+      "size": 5283
     },
     {
       "path": "rh/modals/update.py",
-      "sha256": "ce93963934a45be09a019645ce19d32f03cb6905f17e4215300cd54af72e9bc4",
-      "size": 7519
+      "sha256": "235a0b432b739163549df9bedf93e0bc5183c924c662b3e45c192304b6fbbfb4",
+      "size": 8140
     },
     {
       "path": "rh/screens/__init__.py",
@@ -273,38 +273,38 @@
     },
     {
       "path": "rh/screens/base.py",
-      "sha256": "f87f8dc731cb495c7203f326e499e93351f3e7ad887102cbd10e23dae6cba82a",
-      "size": 475
+      "sha256": "590e8bd94b1e03a20257b5ed04a816a98017ffaadc89e3748b2534c7f7d91c8d",
+      "size": 526
     },
     {
       "path": "rh/screens/bluetooth.py",
-      "sha256": "136bd54bdab607871c1901e0c07cad625ca7993f4d04a8e4149bc9f4fc1558ee",
-      "size": 5756
+      "sha256": "43a209bcebeeb3c7d0a04b7de3abf42324a8553a096b2d6726d0ca5f835ad072",
+      "size": 6495
     },
     {
       "path": "rh/screens/button_test.py",
-      "sha256": "506ba3e6d38d02ac4b1da2277dfe265187c46351a8b77e23d0292688fe12508c",
-      "size": 9435
+      "sha256": "815103708ff2b8090e6595f55c50531dfc0bb8cd46584f900d11c3c84fbab013",
+      "size": 9894
     },
     {
       "path": "rh/screens/guide.py",
-      "sha256": "aea529280b3a178ea6cd8b13e1ab5a1b253c865684b95b393a7f5ffbee6094d1",
-      "size": 2605
+      "sha256": "18579fc06336dca1574afd154848be98ef93c601a5be65ee561a4658463c90dc",
+      "size": 2679
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "0376bc946dc192c45cf82089497afaf38574511bae28912e93f4f189e1320215",
-      "size": 11138
+      "sha256": "59c8ec65368cde1b2f409c02654b5a06dafdda422ac5d050c916eed7ffc49f49",
+      "size": 12038
     },
     {
       "path": "rh/screens/pair.py",
-      "sha256": "9c8694fbf872ec686c2b9a91a6d311f8e6381c4e1a8f872f937dae5413c3003c",
-      "size": 15075
+      "sha256": "bd580ddc1a31e9e276ca202e4445ca2591a400017da6b07e27355d9ab58e1373",
+      "size": 16003
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "641d33ed16f6b832c3ad199fbd5277d569fca15b017fa56cd5934b24b20cf72f",
-      "size": 7625
+      "sha256": "817f56fd96780893f21d8cac25e34dc8c83a4164bf0d0be997df7fa73f72f391",
+      "size": 8103
     },
     {
       "path": "rh/ui/__init__.py",
@@ -313,8 +313,8 @@
     },
     {
       "path": "rh/ui/primitives.py",
-      "sha256": "6a442959f8f295c0b7ecfd460c66567573314c32929c300a6c61b693fed127f1",
-      "size": 2407
+      "sha256": "805cd885c7ba171f7eabfdff0bd579f566993caec4415a8296581c589f41aa89",
+      "size": 6548
     },
     {
       "path": "vendor/sdl2/COPYING.txt",
@@ -699,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.34-beta1.zip",
-    "sha256": "55002e667a4970bb392de8f7dfdf5caf34ddac9bf62e73e1819ef00ca050d7ac",
-    "size": 12856494
+    "name": "trimui-chiaki-ng-v0.3.35-beta1.zip",
+    "sha256": "583a51db31691e96e286b3ff3e514539d46fd7a13893259db3b6cd279f7a4451",
+    "size": 12859231
   }
 }

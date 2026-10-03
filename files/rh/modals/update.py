@@ -11,6 +11,7 @@ from ..i18n import tr
 from ..paths import APP_DIR
 from ..version import is_newer, APP_VERSION
 from ..logger import get_logger
+from ..ui.primitives import ellipsis_text, theme, wrap_lines
 from ..updater import (
     apply_update, check_for_update, download_update, release_note,
     request_restart, skip_version,
@@ -161,35 +162,44 @@ class UpdateModal(BaseModal):
             self.busy = False
 
     def render(self, engine):
-        engine.fill_rect(0, 0, engine.screen_w, engine.screen_h, 0, 0, 0, 180)
+        c = theme(state.theme)
+        engine.fill_rect(0, 0, engine.screen_w, engine.screen_h, *c["dim"], 180)
         w, h = 920, 380
         x = (engine.screen_w - w) // 2
         y = (engine.screen_h - h) // 2
-        engine.fill_rect(x, y, w, h, 20, 28, 46, 240)
-        engine.draw_text(tr("update"), engine.font_title, x + 40, y + 30, 255, 255, 255)
+        engine.fill_rect(x, y, w, h, *c["header"], 240)
+        engine.fill_rect(x, y, w, 3, *c["accent"], 255)
+        engine.draw_text(tr("update"), engine.font_title, x + 40, y + 30, *c["text"])
         if self.manifest:
             note = release_note(self.manifest, state.current_lang)
             engine.draw_text("v%s" % self.manifest.get("version", "?"),
-                             engine.font_item, x + 40, y + 90, 0, 230, 150)
-            engine.draw_text(note or "", engine.font_sub, x + 40, y + 130,
-                             220, 225, 235)
+                             engine.font_item, x + 40, y + 90, *c["accent"])
+            for index, line in enumerate(wrap_lines(engine, note or "",
+                                                    engine.font_sub, w - 80,
+                                                    max_lines=2)):
+                engine.draw_text(line, engine.font_sub, x + 40, y + 130 + index * 30,
+                                 *c["sub"])
             engine.draw_text("%d file(s)" % len(self.files),
-                             engine.font_sub, x + 40, y + 160, 180, 195, 215)
+                             engine.font_sub, x + 40, y + 196, *c["muted"])
         if self.busy:
-            engine.draw_text(self.phase, engine.font_sub, x + 40, y + 200, 255, 255, 255)
-            engine.draw_text(self.status, engine.font_sub, x + 40, y + 230, 200, 210, 220)
-            bar_x, bar_y, bar_w, bar_h = x + 40, y + 270, w - 80, 14
-            engine.fill_rect(bar_x, bar_y, bar_w, bar_h, 10, 14, 24, 255)
+            engine.draw_text(self.phase, engine.font_sub, x + 40, y + 236, *c["text"])
+            status = ellipsis_text(engine, self.status, engine.font_sub, w - 80)
+            engine.draw_text(status, engine.font_sub, x + 40, y + 266, *c["muted"])
+            bar_x, bar_y, bar_w, bar_h = x + 40, y + 300, w - 80, 14
+            engine.fill_rect(bar_x, bar_y, bar_w, bar_h, *c["track"], 255)
             if self.progress_pct > 0:
                 engine.fill_rect(bar_x, bar_y, int(bar_w * self.progress_pct), bar_h,
-                                 0, 230, 150, 255)
+                                 *c["accent"], 255)
         else:
             labels = self.get_labels()
             base_x = x + 40
             base_y = y + h - 90
             for i, lbl in enumerate(labels):
                 bx = base_x + i * 280
-                col = (0, 230, 150) if i == self.selected_opt else (40, 60, 90)
-                engine.fill_rect(bx, base_y, 240, 60, col[0], col[1], col[2], 240)
+                selected = (i == self.selected_opt)
+                engine.fill_rect(bx, base_y, 240, 60, *(c["accent"] if selected else c["row"]), 240)
+                if selected:
+                    engine.fill_rect(bx, base_y, 6, 60, *c["accent"], 255)
                 engine.draw_text(lbl, engine.font_sub, bx + 120, base_y + 30,
-                                 255, 255, 255, center_x=True)
+                                 *(c["chip_text"] if selected else c["text"]),
+                                 center_x=True, center_y=True)

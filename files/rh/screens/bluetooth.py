@@ -4,6 +4,7 @@
 from ..bluetooth_gamepad import BluetoothGamepadSession, REPORT_FILE
 from ..i18n import tr
 from ..logger import get_logger
+from ..ui.primitives import ellipsis_text, safe_measure, theme
 from .. import state
 from .base import BaseScreen
 
@@ -122,12 +123,17 @@ class BluetoothScreen(BaseScreen):
         return tr("bluetooth_status_idle")
 
     def render(self, engine):
+        c = theme(state.theme)
         engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120,
-                         13, 17, 28, 255)
+                         *c["bg"], 255)
         engine.draw_text(tr("bluetooth_subtitle"), engine.font_title,
-                         48, 92, 255, 255, 255)
-        engine.draw_text(self._status_text(), engine.font_sub,
-                         48, 154, 0, 230, 150)
+                         48, 92, *c["text"])
+        status = ellipsis_text(engine, self._status_text(), engine.font_sub,
+                               engine.screen_w - 140)
+        sw = safe_measure(engine, status, engine.font_sub) + 44
+        engine.fill_rect(48, 142, sw, 40, *c["header"], 220)
+        engine.fill_rect(56, 156, 12, 12, *c["accent"], 255)
+        engine.draw_text(status, engine.font_sub, 76, 162, *c["text"])
         lines = [
             tr("bluetooth_step_1"),
             tr("bluetooth_step_2"),
@@ -137,13 +143,21 @@ class BluetoothScreen(BaseScreen):
         ]
         y = 210
         for line in lines:
-            engine.draw_text(line, engine.font_sub, 54, y, 220, 225, 235)
+            line = ellipsis_text(engine, line, engine.font_sub,
+                                 engine.screen_w - 108)
+            engine.draw_text(line, engine.font_sub, 54, y, *c["sub"])
             y += 48
         profile_name = tr("bluetooth_profile_" + PROFILES[self._profile_index()])
         engine.draw_text(tr("bluetooth_profile") % profile_name,
-                         engine.font_sub, 54, 452, 240, 220, 120)
+                         engine.font_sub, 54, 452, *c["gold"])
         engine.draw_text(tr("bluetooth_profile_hint"),
-                         engine.font_sub, 54, 484, 150, 165, 185)
-        engine.draw_text(tr("bluetooth_log") % REPORT_FILE,
-                         engine.font_sub, 54, engine.screen_h - 118,
-                         150, 165, 185)
+                         engine.font_sub, 54, 484, *c["muted"])
+        log_line = ellipsis_text(engine, tr("bluetooth_log") % REPORT_FILE,
+                                 engine.font_sub, engine.screen_w - 108)
+        engine.draw_text(log_line, engine.font_sub, 54,
+                         engine.screen_h - 118, *c["faint"])
+
+    def get_header_right(self):
+        if self.session.running():
+            return tr("bluetooth_profile_" + PROFILES[self._profile_index()])
+        return ""

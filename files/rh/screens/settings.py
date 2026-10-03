@@ -11,6 +11,7 @@ import time
 from .. import state
 from ..i18n import tr
 from ..logger import clear_runtime_logs, get_logger, runtime_log_size
+from ..ui.primitives import theme
 from .base import BaseScreen
 
 log = get_logger()
@@ -30,6 +31,7 @@ class SettingsScreen(BaseScreen):
             ("audio_volume", [0, 25, 50, 75, 100], None),
             ("auto_update", [True, False], None),
             ("update_channel", ["stable", "beta"], None),
+            ("theme", ["dark", "light"], None),
             ("enable_logging", [True, False], self._set_logging),
             ("intro", [True, False], None),
             ("current_lang", ["VI", "EN"], self._set_lang),
@@ -175,12 +177,14 @@ class SettingsScreen(BaseScreen):
                      state.current_lang)
 
     def render(self, engine):
-        engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, 13, 17, 28, 255)
+        c = theme(state.theme)
+        engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, *c["bg"], 255)
         visible = 6
         first = max(0, min(self.selected - (visible - 2), max(0, len(self.rows) - visible)))
         y = 100
         for i in range(first, min(len(self.rows), first + visible)):
             key, values, _ = self.rows[i]
+            selected = (i == self.selected)
             if values is None:
                 label = tr(key)
                 value = "→"
@@ -188,13 +192,18 @@ class SettingsScreen(BaseScreen):
                 cur = getattr(state, key)
                 label = tr(self.LABEL_KEYS.get(key, key))
                 value = str(cur)
-            col = (0, 230, 150) if i == self.selected else (40, 60, 90)
-            engine.fill_rect(40, y, engine.screen_w - 80, 70, col[0], col[1], col[2], 240)
-            engine.draw_text(label, engine.font_title, 60, y + 8, 255, 255, 255)
-            engine.draw_text(value, engine.font_sub, engine.screen_w - 120, y + 22,
-                             220, 225, 235)
+            engine.fill_rect(40, y, engine.screen_w - 80, 70, *c["row"], 240)
+            if selected:
+                engine.fill_rect(40, y, 6, 70, *c["accent"], 255)
+            engine.draw_text(label, engine.font_title, 60, y + 8,
+                             *(c["text"] if selected else c["sub"]))
+            engine.draw_text_right(value, engine.font_sub, engine.screen_w - 60,
+                                   y + 22, *(c["text"] if selected else c["muted"]))
             y += 80
         if engine.font_sub:
             engine.draw_text(tr("profile_summary") % (
                 state.video_resolution, state.video_fps, state.video_bitrate),
-                engine.font_sub, 40, engine.screen_h - 140, 180, 195, 215)
+                engine.font_sub, 40, engine.screen_h - 140, *c["muted"])
+            engine.draw_text_right("%d/%d" % (self.selected + 1, len(self.rows)),
+                                   engine.font_sub, engine.screen_w - 40,
+                                   engine.screen_h - 140, *c["faint"])

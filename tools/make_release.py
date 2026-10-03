@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: menu tay cam them muc chon profile nut (PlayStation/theo ten); giu MENU 2s dung phien thay phim B." % version,
-            "en": "v%s: gamepad menu gains a button-profile selector (PlayStation/by-label); hold MENU 2s to stop instead of B." % version,
+            "vi": "v%s: giao dien moi 2 theme toi/sang, chip footer do theo chu, chon hang kieu accent-bar, chu dai tu cat." % version,
+            "en": "v%s: new UI with dark/light themes, measured footer chips, accent-bar selection, and text truncation." % version,
         },
         "files": files,
         "remove": [],

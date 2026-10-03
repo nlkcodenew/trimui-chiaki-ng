@@ -1,6 +1,13 @@
-# Bàn giao session mới — trimui-chiaki-ng v0.3.27-beta1
+# Bàn giao session mới — trimui-chiaki-ng v0.3.35-beta1
 
-> Cập nhật: 2026-10-02. Đọc file này trước khi tiếp tục dự án.
+> Cập nhật: 2026-10-03. Đọc file này trước khi tiếp tục dự án.
+>
+> Beta hiện tại: `v0.3.35-beta1` (pre-release). Tay cầm Bluetooth đã đúng trên
+> Android (Oppo Reno5, PS mode type 1): nút theo vị trí, MENU gửi nút PS, dừng
+> bằng giữ MENU 2s. Bản này làm mới UI (2 theme tối/sáng, chip footer đo theo
+> chữ, accent-bar, ellipsis/wrap) và thêm mục chọn profile nút trong menu
+> Bluetooth. Logo NLK khởi động giữ nguyên. Chi tiết xem
+> `docs/BLUETOOTH_GAMEPAD.md` mục 4e–4g và `docs/PROJECT_STATUS.md`.
 
 > **Ghi chú thay thế 2026-09-26:** phần PS5 đã dừng phát triển sau
 > `v0.4.0-beta2`. Nội dung PS5 cũ trong handoff này chỉ là lịch sử. PS4 là nền

@@ -22,5 +22,8 @@ class BaseScreen:
     def get_header_title(self):
         return ""
 
+    def get_header_right(self):
+        return ""
+
     def get_footer_actions(self):
         return []

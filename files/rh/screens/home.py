@@ -9,6 +9,7 @@ from ..i18n import tr
 from ..version import APP_VERSION
 from ..device_identity import install_id
 from ..logger import get_logger
+from ..ui.primitives import ellipsis_text, safe_measure, theme
 from .base import BaseScreen
 
 log = get_logger()
@@ -246,44 +247,63 @@ class HomeScreen(BaseScreen):
             self.toast = ""
 
     def render(self, engine):
-        engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, 13, 17, 28, 255)
-        engine.draw_text(tr("app_subtitle"), engine.font_sub, 40, 90, 180, 195, 215)
-        engine.draw_text(tr("stream_exit_guide"), engine.font_sub, 40, 125, 0, 230, 150)
+        c = theme(state.theme)
+        engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, *c["bg"], 255)
+        engine.draw_text(tr("app_subtitle"), engine.font_sub, 40, 90, *c["muted"])
+        engine.draw_text(tr("stream_exit_guide"), engine.font_sub, 40, 125, *c["accent"])
         if self.hosts:
             self._render_hosts(engine)
         else:
             self._render_menu(engine)
         if self.toast:
-            engine.fill_rect(40, engine.screen_h - 110, 720, 50, 20, 28, 46, 220)
-            engine.draw_text(self.toast, engine.font_sub, 60, engine.screen_h - 100, 0, 230, 150)
+            msg = ellipsis_text(engine, self.toast, engine.font_sub, 860)
+            tw = safe_measure(engine, msg, engine.font_sub) + 40
+            ty = engine.screen_h - 116
+            engine.fill_rect(40, ty, tw, 44, *c["header"], 220)
+            engine.fill_rect(40, ty, tw, 3, *c["accent"], 255)
+            engine.draw_text(msg, engine.font_sub, 60, ty + 22, *c["accent"],
+                             center_y=True)
         if self.scanning:
             engine.draw_text(tr("scanning"), engine.font_sub, engine.screen_w - 200,
-                             engine.screen_h - 100, 180, 195, 215)
+                             engine.screen_h - 100, *c["muted"])
 
     def _render_menu(self, engine):
+        c = theme(state.theme)
         y = 145
         item_height = 72 if len(self.ITEMS) > 5 else 82
         item_step = 80 if len(self.ITEMS) > 5 else 90
         for i, (key, label) in enumerate(self.ITEMS):
-            col = (0, 230, 150) if i == self.selected else (40, 60, 90)
+            selected = (i == self.selected)
             engine.fill_rect(40, y, engine.screen_w - 80, item_height,
-                             col[0], col[1], col[2], 240)
+                             *c["row"], 240)
+            if selected:
+                engine.fill_rect(40, y, 6, item_height, *c["accent"], 255)
             engine.draw_text(tr(label), engine.font_title, 70, y + 4,
-                             255, 255, 255)
+                             *(c["text"] if selected else c["sub"]))
             sub = tr(label + "_hint")
             if sub != label + "_hint":
                 engine.draw_text(sub, engine.font_sub, 70, y + 40,
-                                 220, 225, 235)
+                                 *(c["sub"] if selected else c["muted"]))
             y += item_step
 
     def _render_hosts(self, engine):
-        engine.draw_text(tr("host"), engine.font_title, 40, 160, 255, 255, 255)
+        c = theme(state.theme)
+        engine.draw_text(tr("host"), engine.font_title, 40, 160, *c["text"])
         y = 220
         for i, h in enumerate(self.hosts[:6]):
-            col = (0, 230, 150) if i == self.host_selected else (40, 60, 90)
-            engine.fill_rect(40, y, engine.screen_w - 80, 90, col[0], col[1], col[2], 240)
-            label = "%s [%s]" % (h.name or "(no name)", h.state)
-            engine.draw_text(label, engine.font_title, 60, y + 8, 255, 255, 255)
-            sub = "%s | v%s | %s" % (h.addr, h.system_version or "?", h.running_app or "-")
-            engine.draw_text(sub, engine.font_sub, 60, y + 50, 220, 225, 235)
-            y += 100
+            selected = (i == self.host_selected)
+            engine.fill_rect(40, y, engine.screen_w - 80, 64, *c["row"], 240)
+            if selected:
+                engine.fill_rect(40, y, 6, 64, *c["accent"], 255)
+            label = ellipsis_text(
+                engine, "%s [%s]" % (h.name or "(no name)", h.state),
+                engine.font_title, engine.screen_w - 180)
+            engine.draw_text(label, engine.font_title, 60, y + 4,
+                             *(c["text"] if selected else c["sub"]))
+            sub = ellipsis_text(
+                engine, "%s | v%s | %s" % (h.addr, h.system_version or "?",
+                                           h.running_app or "-"),
+                engine.font_sub, engine.screen_w - 180)
+            engine.draw_text(sub, engine.font_sub, 60, y + 38,
+                             *(c["sub"] if selected else c["muted"]))
+            y += 72

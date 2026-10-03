@@ -267,6 +267,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.32-beta1` | Kênh cập nhật beta riêng cho OTA (mặc định stable); sửa so sánh `beta10 > beta9` để beta mới luôn được đề nghị |
 | `v0.3.33-beta1` | Nút mặt theo vị trí (B/A/Y/X, do layout Nintendo); MENU gửi nút PS (bit 12); dừng phiên bằng giữ MENU 2s thay phím B |
 | `v0.3.34-beta1` | Mục chọn profile nút trong menu Bluetooth (ps/labels, lưu settings, backend nhận `--profile`) |
+| `v0.3.35-beta1` | Giao diện mới: 2 theme tối/sáng (Cài đặt), chip footer đo theo chữ, chọn hàng kiểu accent-bar, ellipsis/wrap dùng chung, hết chữ tràn/chồng |
 
 ## 10. Kiểm thử và build gate
 

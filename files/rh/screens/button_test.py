@@ -19,6 +19,8 @@ import time
 from ..gamepad_map import BUTTON_LABELS
 from ..i18n import tr
 from ..logger import get_logger
+from ..ui.primitives import ellipsis_text, theme
+from .. import state
 from ..pad_probe import (PadProbe, RECORD_LIMIT, append_note, clear_log,
                          find_gamepad, format_entry, write_log)
 from ..paths import APP_DIR
@@ -149,70 +151,81 @@ class ButtonTestScreen(BaseScreen):
     # ---- render ----
 
     def render(self, engine):
-        engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, 13, 17, 28, 255)
+        c = theme(state.theme)
+        engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120,
+                         *c["bg"], 255)
 
         if not self.device_path:
             engine.draw_text(tr("button_test_subtitle"), engine.font_title,
-                             40, 92, 255, 255, 255)
+                             40, 92, *c["text"])
             engine.draw_text(self.error or tr("button_test_no_device"),
-                             engine.font_sub, 40, 170, 255, 140, 120)
+                             engine.font_sub, 40, 170, *c["err"])
             return
 
-        engine.draw_text(self.device_name or self.device_path, engine.font_sub,
-                         40, 86, 150, 165, 190)
+        engine.draw_text(
+            ellipsis_text(engine, self.device_name or self.device_path,
+                          engine.font_sub, engine.screen_w - 80),
+            engine.font_sub, 40, 86, *c["muted"])
         engine.draw_text(tr("button_test_count") % len(self.entries),
-                         engine.font_big, 40, 120, 0, 230, 150)
+                         engine.font_big, 40, 120, *c["accent"])
         engine.draw_text(tr("button_test_hint"), engine.font_sub,
-                         40, 190, 150, 165, 185)
+                         40, 190, *c["muted"])
         engine.draw_text(tr("button_test_exit_hint"), engine.font_sub,
-                         40, 222, 200, 150, 110)
+                         40, 222, *c["warn"])
 
         if self.last:
             engine.draw_text(tr("button_test_last"), engine.font_sub,
-                             40, 272, 240, 220, 120)
-            engine.draw_text(format_entry(self.last), engine.font_sub,
-                             40, 310, 235, 238, 245)
+                             40, 272, *c["gold"])
+            engine.draw_text(
+                ellipsis_text(engine, format_entry(self.last),
+                              engine.font_sub, engine.screen_w - 80),
+                engine.font_sub, 40, 310, *c["text"])
 
         self._render_list(engine)
         self._render_order(engine)
 
         if self.saved_path:
             engine.draw_text(tr("button_test_saved_ok"), engine.font_sub,
-                             40, engine.screen_h - 152, 0, 230, 150)
+                             40, engine.screen_h - 152, *c["accent"])
         if self.error:
-            engine.draw_text(self.error, engine.font_sub, 40, 300, 255, 140, 120)
-        engine.draw_text(tr("button_test_device") % self.device_path,
-                         engine.font_sub, 40, engine.screen_h - 118, 120, 135, 155)
+            engine.draw_text(self.error, engine.font_sub, 40, 300, *c["err"])
+        engine.draw_text(
+            ellipsis_text(engine, tr("button_test_device") % self.device_path,
+                          engine.font_sub, engine.screen_w - 80),
+            engine.font_sub, 40, engine.screen_h - 118, *c["faint"])
 
     def _render_list(self, engine):
+        c = theme(state.theme)
         if not self.entries:
             engine.draw_text(tr("button_test_empty"), engine.font_sub,
-                             40, 348, 120, 132, 150)
+                             40, 348, *c["faint"])
             return
         # Lan bam cuoi da in rieng o dong "Vua bam" phia tren. Danh sach chi
-        # lay cac lan truoc do, de mot lan bam khong bao gio hien hai dong
-        # giong het nhau.
-        history = self.entries[-8:-1] if len(self.entries) > 1 else []
+        # lay 4 lan truoc do (348..438) de khong de len khoi thu tu (466).
+        history = self.entries[-5:-1] if len(self.entries) > 1 else []
         if not history:
             return
         y = 348
         for entry in history:
-            burst = [c for c in entry.get("codes", []) if c not in entry["keys"]]
+            burst = [code for code in entry.get("codes", [])
+                     if code not in entry["keys"]]
             if burst:
                 # Firmware phat them ma trong khoang giu: chinh la nguon gay
                 # ban do sai truoc day.
-                color = (240, 190, 90)
+                color = c["warn"]
             elif len(entry["keys"]) > 1:
-                color = (255, 150, 120)
+                color = c["err"]
             else:
-                color = (235, 238, 245)
-            engine.draw_text(format_entry(entry), engine.font_sub,
-                             40, y, color[0], color[1], color[2])
+                color = c["text"]
+            engine.draw_text(
+                ellipsis_text(engine, format_entry(entry), engine.font_sub,
+                              engine.screen_w - 80),
+                engine.font_sub, 40, y, *color)
             y += 30
         hidden = len(self.entries) - len(history) - 1
         if hidden > 0:
             engine.draw_text(tr("button_test_more") % hidden,
-                             engine.font_sub, 40, y, 120, 132, 150)
+                             engine.font_sub, 40, y, *c["faint"])
 
     def _render_order(self, engine):
         engine.draw_text(tr("button_test_analog_note"), engine.font_sub,

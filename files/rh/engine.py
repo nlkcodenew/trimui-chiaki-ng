@@ -24,6 +24,7 @@ from .paths import APP_DIR, SDCARD_PATH
 from .fonts import FALLBACK_FONT, font_candidates, pick_font
 from .inputs import InputManager
 from .logger import get_logger
+from .ui.primitives import FOOTER_H, HEADER_H, footer_layout, theme
 
 log = get_logger()
 
@@ -216,11 +217,13 @@ class ChiakiEngine:
         except Exception as exc:
             print("draw_text failed: %s" % exc)
 
-    def draw_text_right(self, text, font, x, y, r, g, b, a=255):
+    def draw_text_right(self, text, font, x, y, r, g, b, a=255,
+                          center_y=False):
         if not font or not text:
             return
         w = self.measure_text(text, font)
-        self.draw_text(text, font, int(x - w), int(y), r, g, b, a)
+        self.draw_text(text, font, int(x - w), int(y), r, g, b, a,
+                       center_y=center_y)
 
     # ----- NLK boot logo (intro 2.2s, port tu Music-Player) -------------------
 
@@ -501,16 +504,22 @@ class ChiakiEngine:
                 self.current_screen.update(0.016)
 
             # render
-            sdl2.SDL_SetRenderDrawColor(self.renderer, 13, 17, 28, 255)
+            colors = theme(getattr(state, "theme", "dark"))
+            sdl2.SDL_SetRenderDrawColor(self.renderer, *colors["bg"], 255)
             sdl2.SDL_RenderClear(self.renderer)
-            self.fill_rect(0, 0, self.screen_w, self.screen_h, 13, 17, 28, 255)
+            self.fill_rect(0, 0, self.screen_w, self.screen_h, *colors["bg"], 255)
             # header
-            self.fill_rect(0, 0, self.screen_w, header_h, 20, 28, 46, 255)
-            self.fill_rect(0, header_h - 2, self.screen_w, 2, 0, 246, 246, 255)
+            self.fill_rect(0, 0, self.screen_w, header_h, *colors["header"], 255)
+            self.fill_rect(0, header_h - 2, self.screen_w, 2, *colors["header_line"], 255)
             title = self.current_screen.get_header_title() if self.current_screen else ""
             if title and self.font_title:
                 self.draw_text(title, self.font_title, 30, header_h // 2,
-                               255, 255, 255, center_y=True)
+                               *colors["text"], center_y=True)
+            right = (self.current_screen.get_header_right()
+                     if self.current_screen else "")
+            if right and self.font_sub:
+                self.draw_text_right(right, self.font_sub, self.screen_w - 30,
+                                     header_h // 2, *colors["muted"], center_y=True)
 
             # body
             if self.active_modal:
@@ -522,19 +531,20 @@ class ChiakiEngine:
 
             # footer
             foot_y = self.screen_h - footer_h
-            self.fill_rect(0, foot_y, self.screen_w, footer_h, 10, 14, 24, 255)
-            self.fill_rect(0, foot_y, self.screen_w, 2, 35, 45, 75, 255)
+            self.fill_rect(0, foot_y, self.screen_w, footer_h, *colors["footer"], 255)
+            self.fill_rect(0, foot_y, self.screen_w, 2, *colors["footer_line"], 255)
             actions = self.current_screen.get_footer_actions() if self.current_screen else []
-            fx = 30
-            for key, label in actions:
-                self.fill_rect(fx, foot_y + 12, 36, 36, 0, 230, 150, 220)
+            for key, label, chip_x, chip_w, label_x in footer_layout(
+                    self, actions, start_x=30, max_x=self.screen_w - 30):
+                self.fill_rect(chip_x, foot_y + 10, chip_w, 36,
+                               *colors["accent"], 220)
                 if self.font_sub:
-                    self.draw_text(key, self.font_sub, fx + 18, foot_y + 16,
-                                   10, 14, 24, center_x=True, center_y=True)
+                    self.draw_text(key, self.font_sub, chip_x + chip_w // 2,
+                                   foot_y + 28, *colors["chip_text"],
+                                   center_x=True, center_y=True)
                 if self.font_sub:
-                    self.draw_text(label, self.font_sub, fx + 50, foot_y + 18,
-                                   220, 225, 235)
-                fx += 280
+                    self.draw_text(label, self.font_sub, label_x, foot_y + 28,
+                                   *colors["sub"], center_y=True)
 
             sdl2.SDL_RenderPresent(self.renderer)
             time.sleep(0.016)

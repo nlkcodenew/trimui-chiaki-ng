@@ -25,6 +25,8 @@ update_channel = "stable"
 # "labels" theo ten in tren vo (cach cu truoc v0.3.33, cho cong cu dat ten
 # theo thu tu label).
 gamepad_profile = "ps"
+# Giao dien: "dark" mac dinh, "light" nen sang.
+theme = "dark"
 enable_logging = False
 intro = True
 device_id = ""
@@ -51,7 +53,7 @@ _save_lock = threading.Lock()
 def _load():
     global settings_load_error
     global current_lang, video_resolution, video_fps, video_bitrate, audio_volume
-    global wifi_awake, auto_update, update_channel, gamepad_profile
+    global wifi_awake, auto_update, update_channel, gamepad_profile, theme
     global enable_logging, device_id, skipped_versions
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
     global psn_account_id, psn_online_id, regist_key, rp_key, rp_key_type, server_mac
@@ -80,6 +82,8 @@ def _load():
     loaded_profile = str(cfg.get("gamepad_profile", gamepad_profile) or "ps")
     gamepad_profile = (loaded_profile if loaded_profile in ("ps", "labels")
                        else "ps")
+    loaded_theme = str(cfg.get("theme", theme) or "dark")
+    theme = loaded_theme if loaded_theme in ("dark", "light") else "dark"
     enable_logging = bool(cfg.get("enable_logging", enable_logging))
     intro = bool(cfg.get("intro", intro))
     device_id = cfg.get("device_id", device_id)
@@ -119,6 +123,7 @@ def save_settings():
                 "auto_update": auto_update,
                 "update_channel": update_channel,
                 "gamepad_profile": gamepad_profile,
+                "theme": theme,
                 "enable_logging": enable_logging,
                 "intro": intro,
                 "device_id": device_id,

@@ -604,6 +604,88 @@ class LogUploaderTests(unittest.TestCase):
             state.update_channel = original
             state.save_settings()
 
+    def _ui_primitives(self):
+        return importlib.import_module("rh.ui.primitives")
+
+    def test_themes_share_the_same_token_keys(self):
+        primitives = self._ui_primitives()
+        self.assertEqual(set(primitives.THEMES["dark"]),
+                         set(primitives.THEMES["light"]))
+        self.assertEqual(primitives.theme("dark"), primitives.THEMES["dark"])
+        self.assertEqual(primitives.theme("light"), primitives.THEMES["light"])
+        self.assertEqual(primitives.theme("nonsense"), primitives.THEMES["dark"])
+
+    def test_ellipsis_keeps_short_text_and_cuts_long_text(self):
+        primitives = self._ui_primitives()
+        engine = mock.Mock()
+        engine.measure_text.side_effect = lambda text, font: 13 * len(str(text))
+        self.assertEqual(
+            primitives.ellipsis_text(engine, "ngan", object(), 200), "ngan")
+        long_text = "x" * 100
+        cut = primitives.ellipsis_text(engine, long_text, object(), 200)
+        self.assertTrue(cut.endswith("..."))
+        self.assertLess(len(cut), len(long_text))
+        self.assertEqual(primitives.ellipsis_text(engine, "abc", object(), 0), "")
+
+    def test_wrap_lines_respects_width_and_max_lines(self):
+        primitives = self._ui_primitives()
+        engine = mock.Mock()
+        engine.measure_text.side_effect = lambda text, font: 13 * len(str(text))
+        lines = primitives.wrap_lines(engine, "mot hai ba bon", object(), 100)
+        self.assertTrue(len(lines) > 1)
+        self.assertEqual(" ".join(lines), "mot hai ba bon")
+        capped = primitives.wrap_lines(engine, "mot hai ba bon nam sau",
+                                       object(), 100, max_lines=2)
+        self.assertEqual(len(capped), 2)
+        self.assertEqual(" ".join(capped), "mot hai ba bon")
+        overflow = primitives.wrap_lines(
+            engine, "mot supercalifragilisticexpialidocious hai", object(),
+            100, max_lines=2)
+        self.assertEqual(len(overflow), 2)
+        self.assertTrue(overflow[-1].endswith("..."))
+
+    def test_footer_layout_measures_chips_and_stays_in_bounds(self):
+        primitives = self._ui_primitives()
+        engine = mock.Mock()
+        engine.font_sub = object()
+        engine.measure_text.side_effect = lambda text, font: 13 * len(str(text))
+        actions = [("MENU", "DUNG (giu 2s)"), ("A", "BAT DAU")]
+        items = primitives.footer_layout(engine, actions, start_x=30,
+                                         max_x=1250)
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0][0], "MENU")
+        key, _label, chip_x, chip_w, label_x = items[0]
+        self.assertGreaterEqual(chip_w, 36)
+        self.assertGreater(label_x, chip_x + chip_w)
+        self.assertLessEqual(items[-1][4] + 13 * len(actions[-1][1]), 1250)
+        narrow = primitives.footer_layout(engine, actions, start_x=30,
+                                          max_x=100)
+        self.assertEqual(len(narrow), 1)
+
+    def test_theme_defaults_dark_persists_and_has_settings_row(self):
+        from rh.screens.settings import SettingsScreen
+        rows = {key: values for key, values, _ in SettingsScreen().rows}
+        self.assertEqual(rows["theme"], ["dark", "light"])
+        state = self.updater.state
+        original = state.theme
+        try:
+            state.theme = "light"
+            self.assertTrue(state.save_settings())
+            state.theme = "dark"
+            state._load()
+            self.assertEqual(state.theme, "light")
+            with open(state.SETTINGS_FILE, "w", encoding="utf-8") as handle:
+                json.dump({"theme": "neon"}, handle)
+            state._load()
+            self.assertEqual(state.theme, "dark")
+        finally:
+            state.theme = original
+            state.save_settings()
+
+    def test_header_right_defaults_to_empty(self):
+        base = importlib.import_module("rh.screens.base")
+        self.assertEqual(base.BaseScreen().get_header_right(), "")
+
     def test_payload_urls_include_repository_files_directory(self):
         urls = self.updater.payload_base_urls(
             {"release_tag": "v0.2.6/files"}, "app.py")
@@ -955,6 +1037,9 @@ class LogUploaderTests(unittest.TestCase):
             def draw_text(self, *args, **kwargs):
                 return None
 
+            def draw_text_right(self, *args, **kwargs):
+                return None
+
         engine = FakeEngine()
         for index in range(len(screen.rows)):
             screen.selected = index
@@ -1010,6 +1095,8 @@ class LogUploaderTests(unittest.TestCase):
             def fill_rect(self, *args, **kwargs):
                 return None
             def draw_text(self, *args, **kwargs):
+                return None
+            def draw_text_right(self, *args, **kwargs):
                 return None
         screen.render(FakeEngine())
 
