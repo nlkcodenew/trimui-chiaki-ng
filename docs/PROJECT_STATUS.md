@@ -264,6 +264,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.27-beta1` | Một lần bấm chỉ gán một nút; chặn bản đồ trùng mã; sửa SDP record; bỏ hciconfig không hỗ trợ |
 | `v0.3.30-beta1` | Đưa bản đồ đã đo bằng máy thật vào mặc định Go + Python; MENU=316; bỏ L2/R2 khỏi danh sách nút |
 | `v0.3.31-beta1` | Giữ SELECT/START cũ khi giữ START+SELECT để thoát; mỗi lần bấm chỉ hiện một dòng; giữ MENU 2s để lưu log và thoát |
+| `v0.3.32-beta1` | Kênh cập nhật beta riêng cho OTA (mặc định stable); sửa so sánh `beta10 > beta9` để beta mới luôn được đề nghị |
 
 ## 10. Kiểm thử và build gate
 

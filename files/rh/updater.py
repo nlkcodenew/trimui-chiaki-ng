@@ -39,12 +39,17 @@ DEFAULT_BRANCH = "main"
 
 UPDATE_BASE_URL = "https://raw.githubusercontent.com/%s/%s" % (DEFAULT_REPO, DEFAULT_BRANCH)
 LATEST_RELEASE_URL = "https://github.com/%s/releases/latest/download" % DEFAULT_REPO
+# GitHub khong co duong /releases/latest cho prerelease, nen kenh beta phai
+# hoi API danh sach release roi chon prerelease moi nhat. Repo la public nen
+# khong can token; loi mang/rate-limit thi bo qua nhu cac nguon khac.
+RELEASES_API_URL = "https://api.github.com/repos/%s/releases?per_page=20" % DEFAULT_REPO
 GHPROXY_BASE_URL = "https://ghproxy.net/" + UPDATE_BASE_URL
 CDN_BASE_URL = "https://cdn.jsdelivr.net/gh/%s@%s" % (DEFAULT_REPO, DEFAULT_BRANCH)
 
 UA = "trimui-chiaki-ng/%s" % APP_VERSION
 TIMEOUT = 15
 MAX_MANIFEST_BYTES = 512 * 1024
+MAX_RELEASES_BYTES = 512 * 1024
 
 # settings.json la file cua nguoi dung, bao gio cung khong nam trong OTA.
 # Neu de no trong manifest, khi state.py random device_id roi ghi lai,
@@ -129,6 +134,95 @@ def candidate_manifest_urls():
     urls.extend("%s/manifest.json" % base.rstrip("/")
                 for base in candidate_base_urls("manifest.json"))
     return urls
+
+
+def update_channel():
+    """Kenh OTA dang dung: "stable" mac dinh, "beta" chi nhan ban beta."""
+    channel = str(getattr(state, "update_channel", "") or "stable").strip().lower()
+    return channel if channel in ("stable", "beta") else "stable"
+
+
+def _valid_manifest(parsed):
+    """Kiem tra hinh dang manifest, tra ve manifest neu dat, None neu khong."""
+    if not isinstance(parsed, dict) or not parsed.get("version"):
+        return None
+    files = parsed.get("files", [])
+    if not isinstance(files, list):
+        return None
+    for f in files:
+        if not isinstance(f, dict):
+            return None
+        if not _safe_rel(f.get("path", "")) or len(f.get("sha256", "")) != 64:
+            return None
+    return parsed
+
+
+def latest_beta_manifest_url():
+    """(tag, url manifest.json) cua prerelease moi nhat, hoac (None, None).
+
+    Chi xet release khong phai draft, co co prerelease, tag co hau to beta
+    (vd v0.3.31-beta1) va co asset manifest.json. Chon ban co version lon
+    nhat theo is_newer, khong theo thu tu API tra ve.
+    """
+    try:
+        raw = _get(RELEASES_API_URL, MAX_RELEASES_BYTES)
+        releases = json.loads(raw.decode("utf-8"))
+    except Exception as exc:
+        log.info("OTA beta releases unavailable: %s", exc)
+        return None, None
+    if not isinstance(releases, list):
+        return None, None
+    best_version = ""
+    best_url = ""
+    best_tag = ""
+    for release in releases:
+        if not isinstance(release, dict):
+            continue
+        if release.get("draft") or not release.get("prerelease"):
+            continue
+        tag = str(release.get("tag_name") or "")
+        version = tag.lstrip("vV")
+        if "-" not in version:
+            continue
+        manifest_url = ""
+        for asset in release.get("assets") or []:
+            if (isinstance(asset, dict) and asset.get("name") == "manifest.json"
+                    and asset.get("browser_download_url")):
+                manifest_url = asset["browser_download_url"]
+                break
+        if not manifest_url:
+            continue
+        if not best_version or is_newer(version, best_version):
+            best_version, best_url, best_tag = version, manifest_url, tag
+    if not best_url:
+        return None, None
+    return best_tag, best_url
+
+
+def fetch_beta_manifest():
+    """Tai manifest.json dinh kem prerelease moi nhat cho kenh beta."""
+    global _last_check_status
+    _last_check_status = "checking"
+    tag, manifest_url = latest_beta_manifest_url()
+    if not manifest_url:
+        _last_check_status = "network_error"
+        return None
+    try:
+        separator = "&" if "?" in manifest_url else "?"
+        url = "%s%s_t=%d" % (manifest_url, separator, int(time.time()))
+        log.info("OTA beta manifest check: tag=%s", tag)
+        raw = _get(url, MAX_MANIFEST_BYTES)
+        parsed = _valid_manifest(json.loads(raw.decode("utf-8")))
+        if parsed is None:
+            return None
+        _last_check_status = "ok"
+        log.info("OTA beta manifest ready: version=%s tag=%s",
+                 parsed.get("version"), tag)
+        return parsed
+    except (urllib.error.URLError, OSError, ValueError, UnicodeDecodeError) as exc:
+        log.info("OTA beta manifest unavailable: error=%s", exc)
+        _last_check_status = "network_error"
+        return None
 
 
 def payload_base_urls(manifest, rel_path=""):
@@ -232,6 +326,8 @@ def sha256_of(path):
 
 def fetch_manifest():
     global _last_check_status
+    if update_channel() == "beta":
+        return fetch_beta_manifest()
     _last_check_status = "checking"
     failures = []
     manifest_urls = candidate_manifest_urls()
@@ -241,25 +337,14 @@ def fetch_manifest():
             url = "%s%s_t=%d" % (manifest_url, separator, int(time.time()))
             log.info("OTA manifest check: %s", url)
             raw = _get(url, MAX_MANIFEST_BYTES)
-            parsed = json.loads(raw.decode("utf-8"))
-            if not isinstance(parsed, dict) or not parsed.get("version"):
+            parsed = _valid_manifest(json.loads(raw.decode("utf-8")))
+            if parsed is None:
                 continue
             files = parsed.get("files", [])
-            if not isinstance(files, list):
-                continue
-            ok = True
-            for f in files:
-                if not isinstance(f, dict):
-                    ok = False
-                    break
-                if not _safe_rel(f.get("path", "")) or len(f.get("sha256", "")) != 64:
-                    ok = False
-                    break
-            if ok:
-                _last_check_status = "ok"
-                log.info("OTA manifest ready: version=%s files=%d source=%s",
-                         parsed.get("version"), len(files), manifest_url)
-                return parsed
+            _last_check_status = "ok"
+            log.info("OTA manifest ready: version=%s files=%d source=%s",
+                     parsed.get("version"), len(files), manifest_url)
+            return parsed
         except (urllib.error.URLError, OSError, ValueError, UnicodeDecodeError) as exc:
             failures.append(exc)
             log.info("OTA manifest source unavailable; trying fallback: source=%s error=%s",
@@ -309,7 +394,13 @@ def check_for_update(force=False):
         return None
     if not m:
         return None
-    if m.get("prerelease") and "-" not in APP_VERSION:
+    if update_channel() == "beta":
+        # Kenh beta chi nhan prerelease, khong bao gio nhan ban stable.
+        if not m.get("prerelease"):
+            log.info("OTA stable ignored by beta channel: version=%s",
+                     m.get("version"))
+            return None
+    elif m.get("prerelease") and "-" not in APP_VERSION:
         log.info("OTA prerelease ignored by stable install: version=%s",
                  m.get("version"))
         return None

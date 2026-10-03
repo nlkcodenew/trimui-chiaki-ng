@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: man hinh GHI NUT giu lai SELECT/START, moi lan bam chi hien mot dong, giu MENU 2 giay de luu log va thoat." % version,
-            "en": "v%s: the button probe keeps SELECT/START, draws each press once, and saves plus exits after holding MENU for 2 seconds." % version,
+            "vi": "v%s: man hinh GHI NUT giu lai SELECT/START, moi lan bam chi hien mot dong, giu MENU 2 giay de luu log va thoat; them kenh cap nhat beta rieng trong Cai dat." % version,
+            "en": "v%s: the button probe keeps SELECT/START, draws each press once, and saves plus exits after holding MENU for 2 seconds; separate beta update channel in Settings." % version,
         },
         "files": files,
         "remove": [],

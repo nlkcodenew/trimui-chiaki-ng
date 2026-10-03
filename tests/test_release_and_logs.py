@@ -505,6 +505,105 @@ class LogUploaderTests(unittest.TestCase):
             self.assertEqual(self.updater.check_for_update(force=True),
                              (manifest, manifest["files"]))
 
+    def _beta_api_payload(self):
+        def release(tag, prerelease=True, draft=False, with_manifest=True):
+            assets = ([{"name": "manifest.json",
+                        "browser_download_url":
+                            "https://example.com/%s/manifest.json" % tag}]
+                      if with_manifest else [])
+            return {"tag_name": tag, "prerelease": prerelease, "draft": draft,
+                    "assets": assets}
+        return json.dumps([
+            release("v1.0.0-beta9"),
+            release("v1.0.0"),
+            release("v1.0.0-beta10"),
+            release("v9.9.9-beta1", with_manifest=False),
+            release("v1.0.0-beta11", draft=True),
+            "not-a-release",
+        ]).encode("utf-8")
+
+    def test_beta_channel_picks_the_newest_prerelease_manifest(self):
+        manifest = {"version": "1.0.0-beta10", "prerelease": True,
+                    "files": [{"path": "app.py", "sha256": "0" * 64}]}
+        state = self.updater.state
+        original = state.update_channel
+        state.update_channel = "beta"
+        try:
+            with mock.patch.object(
+                    self.updater, "_get",
+                    side_effect=[self._beta_api_payload(),
+                                 json.dumps(manifest).encode("utf-8")]) as getter:
+                result = self.updater.fetch_manifest()
+            self.assertEqual(result["version"], "1.0.0-beta10")
+            self.assertEqual(
+                getter.call_args_list[0].args[0], self.updater.RELEASES_API_URL)
+            second_url = getter.call_args_list[1].args[0]
+            self.assertTrue(
+                second_url.startswith(
+                    "https://example.com/v1.0.0-beta10/manifest.json?"),
+                second_url)
+        finally:
+            state.update_channel = original
+
+    def test_beta_channel_offers_newer_beta_to_stable_install(self):
+        manifest = {
+            "version": "99.0.0-beta1",
+            "prerelease": True,
+            "files": [{"path": "app.py", "sha256": "0" * 64}],
+        }
+        state = self.updater.state
+        original = state.update_channel
+        state.update_channel = "beta"
+        try:
+            with mock.patch.object(self.updater, "APP_VERSION", "1.0.0"), \
+                    mock.patch.object(self.updater, "fetch_manifest",
+                                      return_value=manifest), \
+                    mock.patch.object(self.updater, "pending_files",
+                                      return_value=manifest["files"]):
+                self.assertEqual(self.updater.check_for_update(force=True),
+                                 (manifest, manifest["files"]))
+        finally:
+            state.update_channel = original
+
+    def test_beta_channel_never_offers_a_stable_manifest(self):
+        manifest = {
+            "version": "99.0.0",
+            "files": [{"path": "app.py", "sha256": "0" * 64}],
+        }
+        state = self.updater.state
+        original = state.update_channel
+        state.update_channel = "beta"
+        try:
+            with mock.patch.object(self.updater, "APP_VERSION", "1.0.0-beta5"), \
+                    mock.patch.object(self.updater, "fetch_manifest",
+                                      return_value=manifest), \
+                    mock.patch.object(self.updater, "pending_files") as pending:
+                self.assertIsNone(self.updater.check_for_update(force=True))
+            pending.assert_not_called()
+        finally:
+            state.update_channel = original
+
+    def test_update_channel_defaults_stable_persists_and_has_settings_row(self):
+        from rh.screens.settings import SettingsScreen
+        rows = {key: values for key, values, _ in SettingsScreen().rows}
+        self.assertEqual(rows["update_channel"], ["stable", "beta"])
+        state = self.updater.state
+        original = state.update_channel
+        try:
+            self.assertEqual(original, "stable")
+            state.update_channel = "beta"
+            self.assertTrue(state.save_settings())
+            state.update_channel = "stable"
+            state._load()
+            self.assertEqual(state.update_channel, "beta")
+            with open(state.SETTINGS_FILE, "w", encoding="utf-8") as handle:
+                json.dump({"update_channel": "not-a-channel"}, handle)
+            state._load()
+            self.assertEqual(state.update_channel, "stable")
+        finally:
+            state.update_channel = original
+            state.save_settings()
+
     def test_payload_urls_include_repository_files_directory(self):
         urls = self.updater.payload_base_urls(
             {"release_tag": "v0.2.6/files"}, "app.py")
@@ -1016,6 +1115,12 @@ class LogUploaderTests(unittest.TestCase):
         version = importlib.import_module("rh.version")
         self.assertTrue(version.is_newer("0.3.0-beta.1", "0.3.0-beta"))
         self.assertFalse(version.is_newer("0.3.0-beta", "0.3.0-beta.1"))
+        # So cuoi duoc so dang so: beta10 moi hon beta9, ke ca dang chuoi
+        # "beta1" dung truoc "beta9".
+        self.assertTrue(version.is_newer("0.3.10-beta10", "0.3.10-beta9"))
+        self.assertFalse(version.is_newer("0.3.10-beta9", "0.3.10-beta10"))
+        self.assertTrue(version.is_newer("0.3.10", "0.3.10-beta12"))
+        self.assertFalse(version.is_newer("0.3.10-beta12", "0.3.10"))
 
     def test_update_modal_uses_edges_and_closes_to_home(self):
         engine = types.SimpleNamespace(active_modal=None)

@@ -18,6 +18,9 @@ video_bitrate = 8000
 audio_volume = 80
 wifi_awake = True
 auto_update = True
+# Kenh cap nhat: "stable" chi nhan ban on dinh, "beta" chi nhan ban beta.
+# Mac dinh stable de may dang dung on khong bao gio bi day beta.
+update_channel = "stable"
 enable_logging = False
 intro = True
 device_id = ""
@@ -44,7 +47,8 @@ _save_lock = threading.Lock()
 def _load():
     global settings_load_error
     global current_lang, video_resolution, video_fps, video_bitrate, audio_volume
-    global wifi_awake, auto_update, enable_logging, device_id, skipped_versions
+    global wifi_awake, auto_update, update_channel, enable_logging, device_id
+    global skipped_versions
     global update_url, pending_update, pending_catalog_notice, host_name, host_addr
     global psn_account_id, psn_online_id, regist_key, rp_key, rp_key_type, server_mac
     global host_target
@@ -66,6 +70,9 @@ def _load():
     audio_volume = int(cfg.get("audio_volume", audio_volume))
     wifi_awake = bool(cfg.get("wifi_awake", wifi_awake))
     auto_update = bool(cfg.get("auto_update", auto_update))
+    loaded_channel = str(cfg.get("update_channel", update_channel) or "stable")
+    update_channel = (loaded_channel if loaded_channel in ("stable", "beta")
+                      else "stable")
     enable_logging = bool(cfg.get("enable_logging", enable_logging))
     intro = bool(cfg.get("intro", intro))
     device_id = cfg.get("device_id", device_id)
@@ -103,6 +110,7 @@ def save_settings():
                 "audio_volume": audio_volume,
                 "wifi_awake": wifi_awake,
                 "auto_update": auto_update,
+                "update_channel": update_channel,
                 "enable_logging": enable_logging,
                 "intro": intro,
                 "device_id": device_id,

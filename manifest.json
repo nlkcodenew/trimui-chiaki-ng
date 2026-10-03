@@ -1,14 +1,14 @@
 {
-  "version": "0.3.31-beta1",
+  "version": "0.3.32-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-03T18:57:56+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.31-beta1/files",
-  "release_tag": "v0.3.31-beta1/files",
+  "built": "2026-10-03T19:09:03+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.32-beta1/files",
+  "release_tag": "v0.3.32-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.31-beta1: man hinh GHI NUT giu lai SELECT/START, moi lan bam chi hien mot dong, giu MENU 2 giay de luu log va thoat.",
-    "en": "v0.3.31-beta1: the button probe keeps SELECT/START, draws each press once, and saves plus exits after holding MENU for 2 seconds."
+    "vi": "v0.3.32-beta1: man hinh GHI NUT giu lai SELECT/START, moi lan bam chi hien mot dong, giu MENU 2 giay de luu log va thoat; them kenh cap nhat beta rieng trong Cai dat.",
+    "en": "v0.3.32-beta1: the button probe keeps SELECT/START, draws each press once, and saves plus exits after holding MENU for 2 seconds; separate beta update channel in Settings."
   },
   "files": [
     {
@@ -188,8 +188,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "7fce81cfd96938265cfeb67a9c462c424f3231fe7c4e70c58b7fb833dbb64610",
-      "size": 25902
+      "sha256": "095b1f0c8be111947ce0d8beba0a651d64c15c1c960d97d0706fe10180c12b2a",
+      "size": 26022
     },
     {
       "path": "rh/inputs.py",
@@ -233,18 +233,18 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "4ad3141fa6c0ef72809d02f429b8c914faffed1c866f74defc566c92b21a2647",
-      "size": 5430
+      "sha256": "78a65960a5cad021c98fa61cb28ea5d0d7b14be315e1c301cae5a331ba4c532d",
+      "size": 5865
     },
     {
       "path": "rh/updater.py",
-      "sha256": "2791bbb78a6b7f810751d1e5c72c0f5751c9c6942dc4aee55a18436389a23d1f",
-      "size": 16597
+      "sha256": "e37b68f04a882ff6be2f15e27de9b7247745e460aa3880c38a51bc57c80add82",
+      "size": 20203
     },
     {
       "path": "rh/version.py",
-      "sha256": "cfa5ab20877097ee5aee3ad052c340564be9015e48a280e95879dbca18bc52e6",
-      "size": 1184
+      "sha256": "8bbcb7818a39bbdad6a5e18e1a0dc1462a231a3fc4fd5a610d1a3b7560f15509",
+      "size": 1570
     },
     {
       "path": "rh/modals/__init__.py",
@@ -303,8 +303,8 @@
     },
     {
       "path": "rh/screens/settings.py",
-      "sha256": "65613c7f0fe5e907c8cb7ddd7c27a4c5bd96f3e213fa6b2edb7b42d51b46115f",
-      "size": 7567
+      "sha256": "641d33ed16f6b832c3ad199fbd5277d569fca15b017fa56cd5934b24b20cf72f",
+      "size": 7625
     },
     {
       "path": "rh/ui/__init__.py",
@@ -699,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.31-beta1.zip",
-    "sha256": "aa011b9c8eb1dc7a214ad49ecdf6341070dafbdc723b9f633893a95e34fa592b",
-    "size": 12853250
+    "name": "trimui-chiaki-ng-v0.3.32-beta1.zip",
+    "sha256": "1a03853fee34db54bc54b3e798a082e21f34d8fedc5b06c1573b50121455befc",
+    "size": 12854448
   }
 }
