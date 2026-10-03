@@ -262,6 +262,8 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.25-beta1` | Tay cầm Bluetooth Classic HID cho Brick Pro Stock OS (hướng A) |
 | `v0.3.26-beta1` | HIDP đúng đặc tả; bảng ánh xạ nút + màn hình THỬ NÚT; bỏ 4 lỗi dùng hằng ngày |
 | `v0.3.27-beta1` | Một lần bấm chỉ gán một nút; chặn bản đồ trùng mã; sửa SDP record; bỏ hciconfig không hỗ trợ |
+| `v0.3.30-beta1` | Đưa bản đồ đã đo bằng máy thật vào mặc định Go + Python; MENU=316; bỏ L2/R2 khỏi danh sách nút |
+| `v0.3.31-beta1` | Giữ SELECT/START cũ khi giữ START+SELECT để thoát; mỗi lần bấm chỉ hiện một dòng; giữ MENU 2s để lưu log và thoát |
 
 ## 10. Kiểm thử và build gate
 

@@ -279,10 +279,27 @@ giải thích được: 316 là MENU, 317 là L3 thật.
 Kết luận: giả thuyết nhiễu phải đặt lại thành câu hỏi mở. Hiện tại **không có
 bằng chứng nào** cho thấy firmware phát mã thừa trên máy này.
 
-### MENU thoát, không dùng B
+### Log 18:32 cùng ngày và ba sửa trong `v0.3.31-beta1`
 
-- **Giữ MENU 1.5 s** → thoát (không ghi log).
-- **Giữ START + SELECT 2 s** → thoát, dự phòng.
+Log thứ hai vẫn ghi đúng từng nút riêng, nhưng có hai lỗi do app:
+
+1. **Mất hai dòng đã ghi.** Log nhảy từ `008` sang `011`: khi người dùng giữ
+   START+SELECT để thoát, `_drop_exit_only_entry()` lọc lại toàn bộ
+   `probe.reported` và xóa cả hai dòng SELECT/START đã đóng trước đó. Bản sửa
+   chỉ bỏ entry thoát đang mở trong đúng cử chỉ đó; các lần bấm độc lập cũ
+   được giữ nguyên, nên số thứ tự không nhảy nữa.
+2. **Một lần bấm hiện hai dòng giống hệt nhau.** Người dùng báo bấm A một lần
+   nhưng màn hình hiện nội dung `001 ... keys=305` hai lần: một lần ở dòng
+   "Vừa bấm", một lần ở dòng đầu bảng. Danh sách nay loại đúng dòng mới nhất
+   đã in riêng, nên mỗi lần bấm chỉ còn một dòng.
+3. **A không còn là nút lưu.** Người dùng đã yêu cầu bỏ việc "bấm A để lưu"
+   từ trước. `HOLD_EXIT_SECONDS` nay là **2,0 giây**: giữ MENU 2 giây vừa lưu
+   `BrickButtons.log` vừa thoát; START+SELECT giữ 2 giây là dự phòng.
+
+### MENU thoát, không dùng A/B
+
+- **Giữ MENU 2 s** → lưu log và thoát.
+- **Giữ START + SELECT 2 s** → lưu log và thoát, dự phòng.
 
 `_exit_gesture()` chỉ nhận MENU khi nó được giữ **một mình** (`keys ==
 {316}`), và `START+SELECT` khi đúng hai phim đó. Có test cho trường hợp MENU
@@ -297,7 +314,7 @@ cờ `--map-file`. Xóa file để trở về mặc định.
 2. `TAY CẦM BLUETOOTH` → bấm **X**.
 3. Bấm từng nút một lần theo thứ tự in trên màn hình (`1.A 2.B ... 10.START`).
    **L2/R2 không có mã phím** nên không cần bấm.
-4. Bấm **A** để lưu. **Giữ MENU** 1.5 s (hoặc START + SELECT 2 s) để thoát.
+4. Giữ **MENU 2 giây** để lưu log và thoát (START + SELECT 2 giây là dự phòng).
 
 Log ra `BrickButtons.log`:
 

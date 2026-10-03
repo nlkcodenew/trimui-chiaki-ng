@@ -296,16 +296,37 @@ class ButtonTestScreenTests(unittest.TestCase):
         screen.update(0)
         screen.engine.pop_screen.assert_not_called()
 
-    def test_a_saves_and_does_not_leave(self):
+    def test_a_is_a_recorded_button_not_a_save_control(self):
+        """A la nut can thu, nen khong duoc lam nut luu va khong duoc thoat."""
         screen = self._screen()
-        self._feed(screen, {"index": 1, "elapsed": 1.0, "keys": [304],
-                            "hat": [0, 0], "codes": [304], "held_ms": 60})
+        screen.probe.poll.return_value = []
         with mock.patch.object(self.module, "write_log",
-                               return_value="/tmp/BrickButtons.log"), \
-                mock.patch.object(self.module, "append_note"):
+                               return_value="/tmp/BrickButtons.log") as writer:
             handled = screen.handle_input({"edges": ["btn_a"], "btn_a": True})
         self.assertFalse(handled)
+        writer.assert_not_called()
         screen.engine.pop_screen.assert_not_called()
+
+    def test_menu_is_the_only_footer_action_and_means_save_plus_exit(self):
+        screen = self._screen()
+        actions = screen.get_footer_actions()
+        self.assertEqual([key for key, _label in actions], ["MENU"])
+        self.assertEqual(actions[0][1], self.module.tr("button_test_save_exit"))
+        self.assertIn("2", actions[0][1])
+
+    def test_one_press_is_drawn_exactly_once(self):
+        """Mot lan bam khong duoc hien hai dong giong het nhau."""
+        screen = self._screen()
+        entry = {"index": 1, "elapsed": 1.43, "keys": [305],
+                 "hat": [0, 0], "codes": [305], "held_ms": 60}
+        self._feed(screen, entry)
+        screen.update(0)
+        engine = self._engine()
+        screen.render(engine)
+        expected = self.module.format_entry(entry)
+        drawn = [call.args[0] for call in engine.draw_text.call_args_list
+                 if call.args and isinstance(call.args[0], str)]
+        self.assertEqual(drawn.count(expected), 1)
 
     def test_holding_menu_saves_and_leaves(self):
         screen = self._screen()

@@ -20,8 +20,9 @@ Y nghia cac truong:
   nhieu hoac do phim gui lai, khong phai nhieu nut.
 - ``held``  thoi gian nut duoc giu. Mot nut giu bao lau van chi la MOT dong.
 
-Giu nut MENU (bat ky phim nao ngoai vung BTN_GAMEPAD) hoac giu START+SELECT de
-thoat man hinh. Cac phim thoat do khong bao ghi lai, vi khong phai nut can thu.
+Giu MENU 2 giay hoac giu START+SELECT 2 giay de luu log va thoat man hinh.
+Chinh cua thoat khong duoc ghi thanh mot lan bam rieng, vi no khong phai nut
+can thu. Nhung cac lan bam SELECT/START doc lap truoc do phai duoc giu lai.
 """
 
 import json
@@ -63,7 +64,7 @@ KEY_MENU = 316
 KEY_SELECT = 314
 KEY_START = 315
 
-HOLD_EXIT_SECONDS = 1.5
+HOLD_EXIT_SECONDS = 2.0
 HOLD_START_SELECT_SECONDS = 2.0
 
 EVENT_FORMAT = "@qqHHi"
@@ -341,12 +342,12 @@ class PadProbe:
         self._drop_exit_only_entry()
 
     def _drop_exit_only_entry(self):
-        """Bo cac dong chi chua phim thoat.
+        """Bo dong cua thoat vua hinh thanh trong cua dang giu.
 
-        Do phim thoat co the xuong truoc nut can thu (START an truoc roi
-        SELECT), nen dong do da ghi phai bi lay ra khoi danh sach. Danh sach
-        ``reported`` la noi dung duy nhat: man hinh doc chinh no, nen dong bi
-        bo o day se khong bao gio xuat hien trong log.
+        Chi duoc bo entry dang mo cua chinh cua nay. Khong duoc loc lai
+        ``reported``, vi neu loc thi cac lan bam SELECT/START doc lap truoc
+        do (da dong va da co trong log) se bien mat ngay khi nguoi dung giu
+        START+SELECT de thoat. Log phai giu nguyen thu tu so.
         """
         exit_keys = set(self.keys) & {KEY_MENU, KEY_SELECT, KEY_START}
         if not exit_keys:
@@ -354,8 +355,6 @@ class PadProbe:
         if self.open_entry is not None and self.open_entry["keys"] and \
                 set(self.open_entry["keys"]) <= exit_keys:
             self._discard(self.open_entry)
-        self.reported = [e for e in self.reported
-                         if not (e["keys"] and set(e["keys"]) <= exit_keys)]
 
     def _discard(self, entry):
         if entry in self.reported:

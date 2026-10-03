@@ -193,6 +193,39 @@ class PadProbeTests(unittest.TestCase):
         self.stub.advance(self.module.HOLD_START_SELECT_SECONDS + 0.1)
         self.assertEqual(probe.exit_held(), "start_select")
 
+    def test_menu_exit_needs_two_held_seconds(self):
+        self.assertEqual(self.module.HOLD_EXIT_SECONDS, 2.0)
+
+    def test_old_select_and_start_survive_the_exit_combo(self):
+        """SELECT/START bam doc lap phai con lai khi giu START+SELECT de thoat.
+
+        Day la loi trong log may that: dong 009 va 010 bien mat, so thu tu
+        nhay tu 008 sang 011, vi bo loc xoa ca ``reported``.
+        """
+        probe = self.probe
+        probe._on_key(self.module.KEY_SELECT, 1)
+        self.stub.advance(0.1)
+        probe._on_key(self.module.KEY_SELECT, 0)
+        probe._close_open()
+        self.stub.advance(self.module.COOLDOWN_SECONDS + 0.1)
+        probe._on_key(self.module.KEY_START, 1)
+        self.stub.advance(0.1)
+        probe._on_key(self.module.KEY_START, 0)
+        probe._close_open()
+        self.stub.advance(self.module.COOLDOWN_SECONDS + 0.1)
+        self.assertEqual([entry["keys"] for entry in probe.reported],
+                         [[self.module.KEY_SELECT], [self.module.KEY_START]])
+
+        probe._on_key(self.module.KEY_SELECT, 1)
+        probe._on_key(self.module.KEY_START, 1)
+        self.stub.advance(self.module.HOLD_START_SELECT_SECONDS + 0.1)
+        self.assertEqual(probe.exit_held(), "start_select")
+        probe._on_key(self.module.KEY_START, 0)
+        probe._on_key(self.module.KEY_SELECT, 0)
+        self.assertEqual([entry["keys"] for entry in probe.reported],
+                         [[self.module.KEY_SELECT], [self.module.KEY_START]])
+        self.assertEqual([entry["index"] for entry in probe.reported], [1, 2])
+
     def test_select_alone_is_still_recorded(self):
         """SELECT doi thanh thoat khi co START, nhung van phai thu duoc."""
         probe = self.probe

@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: muc GHI NUT chi ghi tho ma phim kernel phat ra, khong doan ban do. Dung de chon ra nut nao that su bi nhieu." % version,
-            "en": "v%s: the button test now records raw key codes only and never guesses a map, so firmware noise can be told apart from real buttons." % version,
+            "vi": "v%s: man hinh GHI NUT giu lai SELECT/START, moi lan bam chi hien mot dong, giu MENU 2 giay de luu log va thoat." % version,
+            "en": "v%s: the button probe keeps SELECT/START, draws each press once, and saves plus exits after holding MENU for 2 seconds." % version,
         },
         "files": files,
         "remove": [],

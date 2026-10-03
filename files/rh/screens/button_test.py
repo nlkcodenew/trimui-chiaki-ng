@@ -6,8 +6,10 @@ cung luc. Man hinh cu hon "hop nhan" tung nut da ghi ban do sai va lam vai nut
 sang len cung luc tren dien thoai. O day app chi ghi lai:
 
 1. Bam nut theo thu tu tu 1 den het, moi nut mot lan.
-2. Man hinh hien so thu tu vua bam va ma phim tu kernel bao ra.
-3. Bam A de luu file BrickButtons.log, roi bao lai thu tu da bam.
+2. Man hinh hien so thu tu vua bam va ma phim tu kernel bao ra, moi lan chi
+   hien mot dong trong danh sach.
+3. Giu MENU 2 giay de luu file BrickButtons.log va thoat, roi bao lai thu tu
+   da bam.
 
 Ban do chi duoc sinh tu log do, khong con gi doan trong app.
 """
@@ -90,11 +92,9 @@ class ButtonTestScreen(BaseScreen):
         return tr("button_test_title")
 
     def get_footer_actions(self):
-        actions = []
-        if self.entries:
-            actions.append(("A", tr("button_test_save_log")))
-        actions.append(("MENU", tr("button_test_exit")))
-        return actions
+        # A cung la nut can thu, nen khong duoc lam nut luu. MENU giu 2 giay
+        # vua luu log vua thoat; START+SELECT la duong du phong.
+        return [("MENU", tr("button_test_save_exit"))]
 
     # ---- input ----
 
@@ -189,9 +189,14 @@ class ButtonTestScreen(BaseScreen):
             engine.draw_text(tr("button_test_empty"), engine.font_sub,
                              40, 348, 120, 132, 150)
             return
+        # Lan bam cuoi da in rieng o dong "Vua bam" phia tren. Danh sach chi
+        # lay cac lan truoc do, de mot lan bam khong bao gio hien hai dong
+        # giong het nhau.
+        history = self.entries[-8:-1] if len(self.entries) > 1 else []
+        if not history:
+            return
         y = 348
-        recent = self.entries[-7:]
-        for entry in recent:
+        for entry in history:
             burst = [c for c in entry.get("codes", []) if c not in entry["keys"]]
             if burst:
                 # Firmware phat them ma trong khoang giu: chinh la nguon gay
@@ -204,8 +209,9 @@ class ButtonTestScreen(BaseScreen):
             engine.draw_text(format_entry(entry), engine.font_sub,
                              40, y, color[0], color[1], color[2])
             y += 30
-        if len(self.entries) > len(recent):
-            engine.draw_text(tr("button_test_more") % (len(self.entries) - len(recent)),
+        hidden = len(self.entries) - len(history) - 1
+        if hidden > 0:
+            engine.draw_text(tr("button_test_more") % hidden,
                              engine.font_sub, 40, y, 120, 132, 150)
 
     def _render_order(self, engine):
