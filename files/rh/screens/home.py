@@ -7,7 +7,7 @@ import time
 from .. import state, chiaki
 from ..i18n import tr
 from ..version import APP_VERSION
-from ..device_identity import install_id
+from ..device_identity import hardware_id
 from ..logger import get_logger
 from ..ui.primitives import ellipsis_text, safe_measure, theme
 from .base import BaseScreen
@@ -43,6 +43,13 @@ class HomeScreen(BaseScreen):
         self.host_selected = 0
         self.toast = ""
         self.toast_until = 0
+        # Ma phan cung bam (HW-...) on dinh theo may, khong doi moi lan cai
+        # nhu CHI-xxxx. Doc mot lan o day vi get_header_title chay moi khung
+        # hinh, khong duoc doc file he thong lien tuc.
+        try:
+            self.hw_id = hardware_id()
+        except Exception:
+            self.hw_id = "HW-UNKNOWN"
 
     def on_enter(self, params=None):
         log.info("home: on_enter, auto_update=%s", state.auto_update)
@@ -67,7 +74,7 @@ class HomeScreen(BaseScreen):
         threading.Thread(target=worker, daemon=True).start()
 
     def get_header_title(self):
-        return "%s v%s | ID: %s" % (tr("app_title"), APP_VERSION, install_id())
+        return "%s v%s | %s" % (tr("app_title"), APP_VERSION, self.hw_id)
 
     def get_footer_actions(self):
         if self.hosts:
@@ -269,7 +276,7 @@ class HomeScreen(BaseScreen):
 
     def _render_menu(self, engine):
         c = theme(state.theme)
-        y = 145
+        y = 165
         item_height = 72 if len(self.ITEMS) > 5 else 82
         item_step = 80 if len(self.ITEMS) > 5 else 90
         for i, (key, label) in enumerate(self.ITEMS):

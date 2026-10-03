@@ -1100,22 +1100,26 @@ class LogUploaderTests(unittest.TestCase):
                 return None
         screen.render(FakeEngine())
 
-    def test_home_title_includes_app_version(self):
+    def test_home_title_shows_hardware_id_not_install_id(self):
         home_module = importlib.import_module("rh.screens.home")
         version = importlib.import_module("rh.version").APP_VERSION
+        device_identity = importlib.import_module("rh.device_identity")
         state = importlib.import_module("rh.state")
         original_id = state.device_id
         state.device_id = "CHI-ABCD"
         screen = home_module.HomeScreen()
         try:
             title = screen.get_header_title()
+            hardware = device_identity.hardware_id()
         finally:
             state.device_id = original_id
         self.assertIn(version, title)
-        self.assertIn("ID: CHI-ABCD", title)
         self.assertTrue(title.startswith("CHIAKI-NG"))
+        self.assertIn(hardware, title)
+        self.assertTrue(hardware.startswith(("HW-", "APP-")))
+        self.assertNotIn("CHI-ABCD", title)
 
-    def test_header_install_id_matches_issue_identity(self):
+    def test_header_hardware_id_matches_issue_identity(self):
         state = importlib.import_module("rh.state")
         original_id = state.device_id
         state.device_id = "CHI-E2E1"
@@ -1124,7 +1128,7 @@ class LogUploaderTests(unittest.TestCase):
             identity = self.device_identity.diagnostic_identity()
         finally:
             state.device_id = original_id
-        self.assertIn(identity["install_id"], title)
+        self.assertIn(identity["hardware_id"], title)
         self.assertEqual(identity["install_id"], "CHI-E2E1")
 
     def test_home_menu_opens_user_guide(self):

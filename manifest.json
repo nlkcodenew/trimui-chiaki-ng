@@ -1,14 +1,14 @@
 {
-  "version": "0.3.35-beta1",
+  "version": "0.3.36-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-03T22:08:43+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.35-beta1/files",
-  "release_tag": "v0.3.35-beta1/files",
+  "built": "2026-10-03T22:27:49+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.36-beta1/files",
+  "release_tag": "v0.3.36-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.35-beta1: giao dien moi 2 theme toi/sang, chip footer do theo chu, chon hang kieu accent-bar, chu dai tu cat.",
-    "en": "v0.3.35-beta1: new UI with dark/light themes, measured footer chips, accent-bar selection, and text truncation."
+    "vi": "v0.3.36-beta1: tieu de hien ma HW; menu lui xuong lo het dong huong dan; dong thoat Bluetooth xuong 2 dong.",
+    "en": "v0.3.36-beta1: title shows HW id; menu shifted to reveal the guide line; Bluetooth exit help wraps to two lines."
   },
   "files": [
     {
@@ -188,8 +188,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "2a46ac8b1b34c266ea48771a6d73a128690e3af75679f73b186ee5e89f80fdce",
-      "size": 26735
+      "sha256": "ebfa8ab3a05ea01c5363fa815622b77a12d0c4a77122c21e5c5ba8583465eb73",
+      "size": 26743
     },
     {
       "path": "rh/inputs.py",
@@ -243,7 +243,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "884b2b8e595452951f05ddf1a14ac14bdb299ab9034c2dbf7f3c0d56f13cdbed",
+      "sha256": "f408d4fc20f5f676c0c94429e44e6fdb519a45213a811e754d1a47a5732ad4b9",
       "size": 1570
     },
     {
@@ -278,8 +278,8 @@
     },
     {
       "path": "rh/screens/bluetooth.py",
-      "sha256": "43a209bcebeeb3c7d0a04b7de3abf42324a8553a096b2d6726d0ca5f835ad072",
-      "size": 6495
+      "sha256": "d9e9a632391384a8132299fa5f3f7d04079f20f2d1f2f9534e9e531d3825d823",
+      "size": 6825
     },
     {
       "path": "rh/screens/button_test.py",
@@ -293,8 +293,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "59c8ec65368cde1b2f409c02654b5a06dafdda422ac5d050c916eed7ffc49f49",
-      "size": 12038
+      "sha256": "d07c5ccad9d82ae09e5b5de258942ae91e20d1078b2d5059f2d559513e661f93",
+      "size": 12357
     },
     {
       "path": "rh/screens/pair.py",
@@ -699,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.35-beta1.zip",
-    "sha256": "583a51db31691e96e286b3ff3e514539d46fd7a13893259db3b6cd279f7a4451",
-    "size": 12859231
+    "name": "trimui-chiaki-ng-v0.3.36-beta1.zip",
+    "sha256": "c0e00a455969f5c62f44195e3f96c488e26beb1cb45c7ee5dae9af23cae56859",
+    "size": 12859451
   }
 }

@@ -4,7 +4,7 @@
 from ..bluetooth_gamepad import BluetoothGamepadSession, REPORT_FILE
 from ..i18n import tr
 from ..logger import get_logger
-from ..ui.primitives import ellipsis_text, safe_measure, theme
+from ..ui.primitives import ellipsis_text, safe_measure, theme, wrap_lines
 from .. import state
 from .base import BaseScreen
 
@@ -142,16 +142,22 @@ class BluetoothScreen(BaseScreen):
             tr("bluetooth_exit_help"),
         ]
         y = 210
-        for line in lines:
+        for line in lines[:4]:
             line = ellipsis_text(engine, line, engine.font_sub,
                                  engine.screen_w - 108)
             engine.draw_text(line, engine.font_sub, 54, y, *c["sub"])
             y += 48
+        # Dong huong dan thoat dai nen cho xuong 2 dong, khong cat dut y.
+        y = 400
+        for line in wrap_lines(engine, lines[4], engine.font_sub,
+                               engine.screen_w - 108, max_lines=2):
+            engine.draw_text(line, engine.font_sub, 54, y, *c["sub"])
+            y += 32
         profile_name = tr("bluetooth_profile_" + PROFILES[self._profile_index()])
         engine.draw_text(tr("bluetooth_profile") % profile_name,
-                         engine.font_sub, 54, 452, *c["gold"])
+                         engine.font_sub, 54, 466, *c["gold"])
         engine.draw_text(tr("bluetooth_profile_hint"),
-                         engine.font_sub, 54, 484, *c["muted"])
+                         engine.font_sub, 54, 498, *c["muted"])
         log_line = ellipsis_text(engine, tr("bluetooth_log") % REPORT_FILE,
                                  engine.font_sub, engine.screen_w - 108)
         engine.draw_text(log_line, engine.font_sub, 54,

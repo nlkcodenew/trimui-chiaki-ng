@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: giao dien moi 2 theme toi/sang, chip footer do theo chu, chon hang kieu accent-bar, chu dai tu cat." % version,
-            "en": "v%s: new UI with dark/light themes, measured footer chips, accent-bar selection, and text truncation." % version,
+            "vi": "v%s: tieu de hien ma HW; menu lui xuong lo het dong huong dan; dong thoat Bluetooth xuong 2 dong." % version,
+            "en": "v%s: title shows HW id; menu shifted to reveal the guide line; Bluetooth exit help wraps to two lines." % version,
         },
         "files": files,
         "remove": [],
