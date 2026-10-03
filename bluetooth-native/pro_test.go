@@ -289,12 +289,12 @@ func TestMappingOverrideMovesButtonsAndAxes(t *testing.T) {
 func TestUnmappedKeysAreReported(t *testing.T) {
 	pad := proPad()
 	pad.keys[172] = true
-	pad.keys[304] = true
+	pad.keys[305] = true // 305 la nut A tren may nay
 	found := pad.unmappedKeys(8)
 	if len(found) != 1 || found[0] != 172 {
 		t.Fatalf("unmapped = %v", found)
 	}
-	pad.keys[304] = false
+	pad.keys[305] = false
 	mapping := defaultMapping()
 	mapping.Buttons["a"] = 172
 	pad.padMap = mapping
@@ -317,7 +317,7 @@ func TestLoadMappingRejectsUnknownNamesAndCodes(t *testing.T) {
 	if mapping.Buttons["a"] != 318 || mapping.Buttons["l3"] != 172 {
 		t.Fatalf("valid button overrides lost: %+v", mapping.Buttons)
 	}
-	if mapping.Buttons["b"] != 305 {
+	if mapping.Buttons["b"] != 304 {
 		t.Fatalf("out of range code accepted: %d", mapping.Buttons["b"])
 	}
 	if _, ok := mapping.Buttons["nonsense"]; ok {
@@ -331,11 +331,52 @@ func TestLoadMappingRejectsUnknownNamesAndCodes(t *testing.T) {
 	}
 }
 
+// Every key-coded button must land on its own code. A shared code is what makes
+// the phone light several buttons at once, so the built-in table must not have
+// one. L2/R2 are analog and carry no code, so they cannot collide.
+func TestBuiltInTableHasNoSharedKeyCode(t *testing.T) {
+	mapping := defaultMapping()
+	if duplicates := mapping.duplicateButtons(); len(duplicates) != 0 {
+		t.Fatalf("built-in table shares key codes: %v", duplicates)
+	}
+	for _, name := range []string{"a", "b", "x", "y", "l1", "r1", "l3", "r3", "select", "start"} {
+		if code := mapping.code(name); code == 0 {
+			t.Fatalf("%s has no key code", name)
+		}
+	}
+}
+
+// A is 305 and B is 304 on this device: the Stock OS firmware reports the pair
+// the other way round from BTN_SOUTH/BTN_EAST. Measured on real hardware.
+func TestBuiltInTableMatchesTheMeasuredDevice(t *testing.T) {
+	mapping := defaultMapping()
+	for _, want := range []struct {
+		name string
+		code uint16
+	}{
+		{"a", 305}, {"b", 304}, {"x", 308}, {"y", 307},
+		{"l1", 310}, {"r1", 311}, {"l3", 317}, {"r3", 318},
+		{"select", 314}, {"start", 315}, {"mode", 316},
+	} {
+		if got := mapping.code(want.name); got != want.code {
+			t.Errorf("%s = %d, want %d", want.name, got, want.code)
+		}
+	}
+	// L2/R2 must stay unmapped so a key code can never fake an analog trigger.
+	for _, name := range []string{"l2", "r2"} {
+		if got := mapping.code(name); got != 0 {
+			t.Errorf("%s = %d, want 0 (analog axis)", name, got)
+		}
+	}
+}
+
 // A missing file is the normal case on a fresh install and must fall back to
 // the built-in table without an error.
 func TestLoadMappingFallsBackWhenFileIsMissing(t *testing.T) {
 	mapping := loadMapping(filepath.Join(t.TempDir(), "absent.json"))
-	if mapping.Buttons["a"] != 304 || mapping.Axes["hat_x"] != 16 {
+	if mapping.Buttons["a"] != 305 || mapping.Buttons["b"] != 304 ||
+		mapping.Buttons["x"] != 308 || mapping.Buttons["y"] != 307 ||
+		mapping.Axes["hat_x"] != 16 {
 		t.Fatalf("defaults not restored: %+v", mapping.Buttons)
 	}
 	if _, err := os.Stat(filepath.Join(t.TempDir(), "absent.json")); err == nil {

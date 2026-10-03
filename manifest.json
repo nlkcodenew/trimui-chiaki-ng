@@ -1,14 +1,14 @@
 {
-  "version": "0.3.27-beta1",
+  "version": "0.3.30-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-02T21:25:00+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.27-beta1/files",
-  "release_tag": "v0.3.27-beta1/files",
+  "built": "2026-10-03T12:05:32+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.30-beta1/files",
+  "release_tag": "v0.3.30-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.27-beta1: sua man hinh THU BUT de mot lan ban chi gan mot nut va chan ban do co ma trung; them thong bao ma phim dang giu; sua SDP record va bo lenh hciconfig khong ho tro.",
-    "en": "v0.3.27-beta1: button test now assigns one button per press and refuses maps with duplicate codes, shows the live key code, fixes the SDP record and drops unsupported hciconfig calls."
+    "vi": "v0.3.30-beta1: muc GHI NUT chi ghi tho ma phim kernel phat ra, khong doan ban do. Dung de chon ra nut nao that su bi nhieu.",
+    "en": "v0.3.30-beta1: the button test now records raw key codes only and never guesses a map, so firmware noise can be told apart from real buttons."
   },
   "files": [
     {
@@ -48,7 +48,7 @@
     },
     {
       "path": "bin/brick-pro-bt",
-      "sha256": "194f41786223dafe1c02ba330797b60450f62abe71f24a80ff442f71e10e39d3",
+      "sha256": "7fda176628e424ca577ed5f0d5a13b8f9dd0e2961b80f2ccb81bfa70b53b6007",
       "size": 3932312
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "path": "docs/bluetooth-native-build.json",
-      "sha256": "14f06a083e6c7e94ea3fc92b7e5fa9342fda9a5d4e6077460a594561d70e5be5",
+      "sha256": "d67d16e0f045246927523ad165660e626fed60948404f28cbe047b5d00f33c0a",
       "size": 954
     },
     {
@@ -188,8 +188,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "d55624be8870da68ee5591304be993eaca5693465bb2ce18d5207fb6041fd657",
-      "size": 25616
+      "sha256": "04e2f36408742b340e6a2bb473fec58ca26241e9fcb82394c7b6e705fd5d812d",
+      "size": 25724
     },
     {
       "path": "rh/inputs.py",
@@ -205,6 +205,11 @@
       "path": "rh/logger.py",
       "sha256": "eb0eaca8e4feadd4710de4e3b822683f1ede75972f4bd8a9c93314a40c453313",
       "size": 11935
+    },
+    {
+      "path": "rh/pad_probe.py",
+      "sha256": "498d9258eeb39ab608ad4e722d5beecf63dfa59d7dd61bb2cf7157ef4a7c85e5",
+      "size": 19164
     },
     {
       "path": "rh/paths.py",
@@ -238,7 +243,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "fd95533106272c179fff3836627aadc1d9b6d0e05111d4f79bd7bd2b40dc13d2",
+      "sha256": "216352e532ad0cb6c5471cfc8b7d6d8a0f5302b7255c1dce0ffe109b33732300",
       "size": 1184
     },
     {
@@ -278,8 +283,8 @@
     },
     {
       "path": "rh/screens/button_test.py",
-      "sha256": "d5f0fdcfd2432a06abec9d83a0bc923ac830f59ee2e192a388735fb822d4b13a",
-      "size": 13315
+      "sha256": "4a7ada5d94f13150728e67595433cba29f790b01b2fec6d015976885a70e972f",
+      "size": 9094
     },
     {
       "path": "rh/screens/guide.py",
@@ -694,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.27-beta1.zip",
-    "sha256": "993f1e5d421ad6f1791a4fccf31a0e41aa08c0ff03d061dd3214d3b6d9f48f38",
-    "size": 12847459
+    "name": "trimui-chiaki-ng-v0.3.30-beta1.zip",
+    "sha256": "7d0b57512958cdba674c2ecdf2871250716a60e4e1fd83937dc5302a455e8209",
+    "size": 12853038
   }
 }

@@ -18,5 +18,8 @@ files/BrickBluetooth.log*
 # Ban do nut do nguoi dung tao qua man hinh THU BUT. Khong commit: moi may mot
 # ban do va ban mac dinh trong backend da la du de chay.
 files/bluetooth-map.json
+# Log ghi nut do muc GHI NUT tao ra tren may. Khong commit: duy nhat may nay
+# moi ghi duoc, va no chua du lieu phai do nguoi dung doc.
+files/BrickButtons.log
 deploy/issue-relay/wrangler.toml
 deploy/issue-relay/.wrangler/

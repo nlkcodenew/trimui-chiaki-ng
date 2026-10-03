@@ -1,6 +1,6 @@
 # Brick Pro Bluetooth Gamepad — hồ sơ kỹ thuật
 
-> Cập nhật: 2026-10-02. Áp dụng cho `v0.3.27-beta1`.
+> Cập nhật: 2026-10-03. Áp dụng cho `v0.3.29-beta1`.
 
 Tài liệu này ghi lại kết quả rà soát app sau khi người dùng chạy thử `v0.3.25-beta1`
 trên Brick Pro Stock OS và ghép với **iPhone** (`D8:DE:3A:21:25:E6`).
@@ -25,6 +25,11 @@ người dùng tự tìm và bấm thiết bị trong Cài đặt — không ph�
 Điều chưa xác nhận được trong môi trường máy tính: hành vi nút bấm thực tế trên máy.
 
 ## 2. Mã phím thật của thiết bị
+
+> **Cảnh báo: mục này sai và đã bị bác bỏ.** Bảng dưới đây suy ra từ dòng
+> `B: KEY=` mà driver khai báo, và nó dự đoán sai ba mã: `316` (MENU) và `317`
+> (L3) đều **có thật** trên máy, còn `305`/`304` của A/B bị đảo. Xem mục 4d
+> cho số đo thật. Giữ lại để thấy sai ở đâu; không dùng làm nguồn ánh xạ.
 
 Dòng `B: KEY=` trong `/proc/bus/input/devices` phải được giải mã đúng theo
 `input_seq_print_bitmap()` của kernel 4.9 (`drivers/input/input.c`):
@@ -53,16 +58,17 @@ Tập đầy đủ, đúng thứ tự:
 
 | Ý nghĩa | Mã mong đợi | Thực tế | Kết luận |
 |---|---|---|---|
-| A / B | 304 / 305 | có | đúng |
-| X / Y | 307 / 308 | có | đúng |
+| A / B | 304 / 305 | **305 / 304** | **đảo, xem mục 4d** |
+| X / Y | 307 / 308 | **308 / 307** | **đảo, xem mục 4d** |
 | L1 / R1 | 310 / 311 | có | đúng |
 | SELECT / START | 314 / 315 | có | đúng |
-| L2 / R2 analog | axis 2 / 5, range 0..255 | có | đúng |
+| L2 / R2 analog | axis 2 / 5, range 0..255 | có | đúng, **không có mã phím** |
 | 2 joystick | axis 0/1 và 3/4, range ±32767 | có | đúng |
 | D-pad | axis 16/17 (hat) | có | đúng |
-| **L3** | **317 (BTN_THUMBL)** | **không có** | **chưa từng hoạt động** |
+| L3 | 317 (BTN_THUMBL) | **có** | bitmap sai, xem mục 4d |
 | R3 | 318 (BTN_THUMBR) | có | đúng |
-| 8 phím còn lại | — | 60, 63, 114, 115, 172, 319, 320 | chưa gán |
+| MENU | 316 (BTN_MODE) | **có** | bitmap sai, xem mục 4d |
+| 5 phím còn lại | — | 60, 63, 114, 115, 172 | chưa gán |
 
 `padState.report()` cũ dùng `1 << (key - 304)`, tức giả định mã phím tăng đơn điệu
 với bit HID. Với tập mã thật ở trên, các nút chưa gán rơi vào bit trùng hoặc bit
@@ -196,25 +202,115 @@ Test `TestServiceRecordIsWellFormedXML` bắt được ngay.
 `pkt_type`, `power_save`, `sc_only`, và mỗi lần gọi đều in ra `hci0 ... DOWN`.
 Chỉ giữ lại `rfkill unblock`.
 
-## 5. Cách dùng màn hình THỬ NÚT
+## 4d. Kết quả ghi thô trên máy thật (2026-10-03)
+
+`BrickButtons.log` từ lần test đầu tiên **sạch hoàn toàn**: 18 lần bấm, mỗi
+nút một mã riêng, không mã nào trùng, và **không dòng nào có trường `codes=`**
+(tức firmware không phát mã thừa).
+
+```
+001 +3.30s   keys=305      <- A
+002 +6.04s   keys=304      <- B
+003 +7.44s   keys=308      <- X
+004 +8.96s   keys=307      <- Y
+005 +11.81s  keys=310      <- L1
+006 +12.83s  keys=311      <- R1
+007 +27.73s  keys=317      <- L3
+008 +29.03s  keys=318      <- R3
+009 +37.45s  keys=314      <- SELECT
+010 +38.84s  keys=315      <- START
+```
+
+### Bản đồ thật, đã đưa vào mặc định
+
+| Nút | Mã | Mặc định cũ | |
+|---|---|---|---|
+| A | **305** | 304 | **đảo** |
+| B | **304** | 305 | **đảo** |
+| X | **308** | 307 | **đảo** |
+| Y | **307** | 308 | **đảo** |
+| L1 / R1 | 310 / 311 | 310 / 311 | đúng |
+| L3 / R3 | **317** / 318 | 317 / 318 | L3 có thật |
+| SELECT / START | 314 / 315 | 314 / 315 | đúng |
+
+Người dùng đã xác nhận trực tiếp: bấm A ra 305, bấm B ra 304. Đây là hành vi
+của firmware Stock OS, giữ nguyên.
+
+### Đính chính: bản giải mã bitmap ở mục 2 là sai
+
+Mục 2 kết luận `317` (BTN_THUMBL) không tồn tại và không có `316` (BTN_MODE),
+dựa trên dòng `B: KEY=`. Máy thật báo **cả hai**. Bản giải mã
+`input_seq_print_bitmap()` của kernel 4.9 đã đọc sai số word.
+
+Hậu quả trực tiếp: `v0.3.29-beta1` dùng quy tắc "mọi mã ngoài `0x130..0x140`
+là phím thoát" để tránh đoán mã MENU. Nhưng **316 nằm trong khoảng đó**, nên
+quy tắc ấy chặn đúng nút thoát — giữ MENU không thoát màn hình.
+
+Mã `B: KEY=` không nên là nguồn duy nhất. Nó là khả năng mà driver khai báo, còn
+`BrickButtons.log` là việc thật đã xảy ra. Khi hai nguồn lệch nhau, tin việc
+thật.
+
+### Những gì log này sửa
+
+1. **A/B và X/Y đảo.** Sửa `defaultMapping()` ở Go và `_default_buttons()` ở
+   Python. Test `TestBuiltInTableMatchesTheMeasuredDevice` chốt lại.
+2. **MENU = 316**, xác nhận bằng chính log (dòng 013, 014, 016, 017 đều là
+   `keys=316` — đúng những lần người dùng giữ MENU).
+3. **L2/R2 không có mã phím** — chúng là cảm biến analog (axis 2/5). Chúng có
+   trong `DEFAULT_ORDER` nên mọi thứ lệch sau R1: log chỉ có **10** dòng cho
+   **12** lần bấm. Đã bỏ khỏi danh sách, và `mapping.go` không gán mã cho
+   chúng nữa (`duplicateButtons()` bỏ qua mã 0 để không báo trùng giả).
+4. **Phím thoát đã xóa vẫn lọt vào log.** `_drop_exit_only_entry()` sửa
+   `probe.reported`, còn màn hình giữ danh sách riêng `self.entries`. Nay
+   `reported` là nguồn duy nhất.
+
+### Về issue #67 và giả thuyết "firmware báo mã không ổn định"
+
+`v0.3.29-beta1` xây cả bộ ghi thô lẫn giả định firmware phát nhiều mã cùng lúc
+dựa trên log `Chiaki-debug.log` của issue #67. Log hôm nay **không có dòng nào**
+có `codes=` — giả định đó không được chứng minh trên bản firmware của người
+dùng.
+
+Cách hiểu hợp lý hơn: log #67 ghi `asked=a` rồi `code=304`, rồi `code=305` cho
+cùng một nút. Với bản đồ cũ (A=304), app hỏi A và nhận 305 — người dùng bấm
+nhầm B, hoặc bấm A nhưng màn hình hỏi sai. Trường hợp `L3 → 316, 317` cũng
+giải thích được: 316 là MENU, 317 là L3 thật.
+
+Kết luận: giả thuyết nhiễu phải đặt lại thành câu hỏi mở. Hiện tại **không có
+bằng chứng nào** cho thấy firmware phát mã thừa trên máy này.
+
+### MENU thoát, không dùng B
+
+- **Giữ MENU 1.5 s** → thoát (không ghi log).
+- **Giữ START + SELECT 2 s** → thoát, dự phòng.
+
+`_exit_gesture()` chỉ nhận MENU khi nó được giữ **một mình** (`keys ==
+{316}`), và `START+SELECT` khi đúng hai phim đó. Có test cho trường hợp MENU
+đi kèm nút khác: bấm A kèm mã 316 phải **không** thoát.
+
+## 5. Cách dùng màn hình GHI NÚT
 
 Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng
 cờ `--map-file`. Xóa file để trở về mặc định.
 
 1. Cài ZIP beta đè lên bản cũ.
 2. `TAY CẦM BLUETOOTH` → bấm **X**.
-3. App lần lượt hỏi: A, B, X, Y, L1, R1, L3, R3, SELECT, START.
-4. **Ấn đúng một nút rồi thả hẳn.** Dòng `Đang giữ: <mã>` cho biết kernel
-   báo gì; đợi mất chữ "Nha het nut roi moi an buoc sau" mới sang bước kế.
-5. D-pad lên = bỏ qua, D-pad xuống = lùi, giữ D-pad trái/phải 1.5 s = thoát.
-6. Xong 10 bước thì **A** lưu, **B** làm lại.
+3. Bấm từng nút một lần theo thứ tự in trên màn hình (`1.A 2.B ... 10.START`).
+   **L2/R2 không có mã phím** nên không cần bấm.
+4. Bấm **A** để lưu. **Giữ MENU** 1.5 s (hoặc START + SELECT 2 s) để thoát.
 
-Mã phim đã thuộc về nút khác không bao giờ được gán trùng; mã ngoài
-`0x130..0x140` bị bỏ qua, vì đó không phải mã nút gamepad. Nếu còn trùng, app
-**không lưu** và báo rõ tên các nút bị trùng.
+Log ra `BrickButtons.log`:
 
-Sau khi lưu, quay lại và bấm **A** để bắt đầu phiên Bluetooth. Backend in ra
-`Button map: <path> (version 1, N override(s))` và
+```
+## Brick Pro button press log
+## keys=  first key code reported
+## codes= extra codes in the same moment (repeats or noise)
+## held=  how long the button was held
+001 +1.20s   keys=305
+002 +3.45s   keys=304 held=120ms
+```
+
+Backend in ra `Button map: <path> (version 1, N override(s))` và
 `WARNING: several buttons share one key code: ...` nếu bản đồ còn trùng.
 
 ## 6. Việc chưa làm
@@ -223,8 +319,11 @@ Sau khi lưu, quay lại và bấm **A** để bắt đầu phiên Bluetooth. Ba
   Cần bản mô tả chính xác từ `hid-sony.c` / `hid-playstation.c` / dump của xpadneo;
   không nên đoán, vì sai descriptor sẽ hỏng luôn đường đang chạy tốt.
 - **Rumble.** Brick Pro không có motor rung; backend không khai báo Output Report.
-- **Xác nhận nút trên máy thật.** Mọi khẳng định về nút ở trên đến từ bitmap `B: KEY=`
-  trong log, chưa phải từ thử bấm.
+- **Xác nhận trên điện thoại.** Bản đồ ở mục 4d đã đo bằng log ghi thô trên máy
+  thật, nhưng chưa xác nhận điện thoại hiển thị đúng sau khi sửa A/B và X/Y.
+  Đó là bước kiểm chứng tiếp theo.
+- **5 phím chưa gán (60, 63, 114, 115, 172).** Không biết là nút gì trên vỏ máy.
+  Cần đoán nốt bằng cách bấm từng nút và xem mã ra, nếu quan tâm tới chúng.
 - **`stay_awake` khi đang stream.** Chỉ giữ `stay_alive`; chưa thử idle timer dài.
 
 ## 7. Tham chiếu

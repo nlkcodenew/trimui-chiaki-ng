@@ -327,7 +327,18 @@ Verifier kiểm:
    nguyên từ binary đã được xác nhận hoạt động; không mở thêm roadmap PS5.
 7. `v0.3.27-beta1` là beta tay cầm Bluetooth, cố ý **không** đánh dấu latest để OTA
    không tự đẩy lên thiết bị đang dùng ổn định.
-8. Chưa có bằng chứng nút nào hoạt động trên máy thật. Mọi khẳng định về nút đến từ
-   bitmap `B: KEY=`; cần chạy màn hình THỬ NÚT rồi thử trong game trước khi kết luận.
-9. Profile máy chủ PC/Xbox/PS4 (như Padpod) chưa làm: cần descriptor DS4 và Xbox
-   Wireless chính xác, không được đoán.
+8. `test_relay_is_the_only_upload_transport` chạy thi thoang (khoảng 1/8 lần
+   chạy cả suite) báo fail nhưng chạy riêng luôn đạt. Đây là test flaky có sẵn
+   từ trước, không liên quan tay cầm Bluetooth; `log_uploader.py` và
+   `test_release_and_logs.py` không thay đổi. Khi build nên chạy suite vài lần
+   để phân biệt lỗi thật với lỗi này.
+9. Bản đồ nút đã **đo trên máy thật** bằng `BrickButtons.log` (2026-10-03) và đưa
+   vào mặc định Go + Python. Phát hiện: **A/B và X/Y đảo** (A=305, B=304,
+   X=308, Y=307), **L3=317 và MENU=316 đều có thật**, **L2/R2 là analog không có
+   mã phím**. Bản giải mã bitmap `B: KEY=` ở `docs/BLUETOOTH_GAMEPAD.md` mục 2 là
+   **sai** — đã đánh dấu cảnh báo, không dùng làm nguồn ánh xạ nữa.
+10. Giả thuyết "firmware báo mã phim không ổn định" (issue #67) **chưa được chứng
+    minh**: log ghi thô không có dòng nào chứa `codes=`, tức không mã thừa nào được
+    phát. Chỉ nên coi là câu hỏi mở.
+11. Profile máy chủ PC/Xbox/PS4 (như Padpod) chưa làm: cần descriptor DS4 và Xbox
+    Wireless chính xác, không được đoán.

@@ -76,6 +76,9 @@ func clampDirection(value int) int {
 	return value
 }
 
+// trigger returns one analog trigger value. A mapped key code, when the map
+// has one, means "fully pulled" so a digital-only report still works. L2/R2 have
+// no key code on this device and always fall through to the axis value.
 func (pad *padState) trigger(axis uint16, buttonName string) byte {
 	mapping := pad.mapping()
 	if buttonCode := mapping.code(buttonName); buttonCode > 0 && buttonCode < 768 && pad.keys[buttonCode] {

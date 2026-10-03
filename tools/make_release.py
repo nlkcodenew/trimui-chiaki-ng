@@ -43,6 +43,7 @@ ARCHIVE_EXCLUDE_PREFIXES = (
     "Chiaki-loi.txt",
     "Chiaki-debug.log",
     "BrickBluetooth.log",
+    "BrickButtons.log",
 )
 LF_NORMALIZED_EXTENSIONS = {
     ".json", ".md", ".py", ".sh", ".txt", ".yaml", ".yml",
@@ -156,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: sua man hinh THU BUT de mot lan ban chi gan mot nut va chan ban do co ma trung; them thong bao ma phim dang giu; sua SDP record va bo lenh hciconfig khong ho tro." % version,
-            "en": "v%s: button test now assigns one button per press and refuses maps with duplicate codes, shows the live key code, fixes the SDP record and drops unsupported hciconfig calls." % version,
+            "vi": "v%s: muc GHI NUT chi ghi tho ma phim kernel phat ra, khong doan ban do. Dung de chon ra nut nao that su bi nhieu." % version,
+            "en": "v%s: the button test now records raw key codes only and never guesses a map, so firmware noise can be told apart from real buttons." % version,
         },
         "files": files,
         "remove": [],

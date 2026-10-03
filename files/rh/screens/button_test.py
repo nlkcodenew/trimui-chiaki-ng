@@ -1,256 +1,150 @@
 # -*- coding: utf-8 -*-
-"""Man hinh THU BUT: xac nhan ma phim that cu tung nut tren Brick Pro.
+"""Man hinh GHI NUT: ghi lai tu lan bam, khong doan ma phim.
 
-Van de: firmware Stock OS day ma phim Linux cua mot so nut o vung 304..320 nhung
-khong dung thu tu chuan, nen L3/R3 va cac nut phia duoi vo may co the khong
-bao toi dien thoai. Man hinh nay hien thi ma phim that moi khi ban, nguoi dung
-an nut theo thu tu, va luu ket qua vao bluetooth-map.json.
+Vay do chinh: firmware Stock OS co the bao mot lan bam ra nhieu ma phim Linux
+cung luc. Man hinh cu hon "hop nhan" tung nut da ghi ban do sai va lam vai nut
+sang len cung luc tren dien thoai. O day app chi ghi lai:
 
-Hai nguyen tac lam man hinh nay dung:
+1. Bam nut theo thu tu tu 1 den het, moi nut mot lan.
+2. Man hinh hien so thu tu vua bam va ma phim tu kernel bao ra.
+3. Bam A de luu file BrickButtons.log, roi bao lai thu tu da bam.
 
-1. Mot lan ban chi gan MOT nut. Sau khi gan xong phai tha het nut truoc khi
-   nhan buoc sau, va ma phim da gan cho nut nao thi khong bao gio cho nut khac.
-2. A va B cung la nut can thu, nen khong dung chung lam phim dieu huong khi
-   dang o giua phien thu. Dieu huong dung D-pad, thu A/B chi dung o man hinh
-   tom tat sau khi thu xong.
+Ban do chi duoc sinh tu log do, khong con gi doan trong app.
 """
 
 import time
-from ..gamepad_map import (BUTTON_LABELS, DEFAULT_BUTTONS, EV_KEY, PadReader,
-                           duplicate_buttons, find_gamepad, is_gamepad_key,
-                           load_map, save_map)
+
+from ..gamepad_map import BUTTON_LABELS
 from ..i18n import tr
 from ..logger import get_logger
+from ..pad_probe import (PadProbe, RECORD_LIMIT, append_note, clear_log,
+                         find_gamepad, format_entry, write_log)
 from ..paths import APP_DIR
 from .base import BaseScreen
 
 log = get_logger()
 
-# Cac nut se hoi lan luot. "mode" khong bat buoc: nhieu dong may khong co.
-ASK_ORDER = ["a", "b", "x", "y", "l1", "r1", "l3", "r3", "select", "start"]
-
 COLORS = {
     "a": (0, 220, 140), "b": (220, 70, 90), "x": (70, 140, 240), "y": (240, 210, 70),
     "l1": (180, 120, 240), "r1": (240, 150, 90), "l3": (120, 220, 220),
     "r3": (240, 120, 200), "select": (150, 160, 190), "start": (200, 200, 210),
+    "l2": (120, 150, 200), "r2": (200, 150, 120),
 }
 
-# Giu D-pad trai hoac phai de thoat khong luu.
-HOLD_EXIT = 1.5
-
-HAT_X = "abs16"
-HAT_Y = "abs17"
+# Danh sach nut de nguoi dung doi chieu khi bao lai thu tu. Chi ghi nhung nut
+# co MA PHIM that: L2/R2 khong co, chung la cam bien analog (axis 2/5), nen
+# bam chung se khong bao gi ca. Truoc day chung co trong danh sach va lam
+# moi thu tu lech sau R1.
+#
+# MENU cung vang khong o day: no la cua thoat, khong phai nut can thu.
+DEFAULT_ORDER = ["a", "b", "x", "y", "l1", "r1", "l3", "r3",
+                 "select", "start"]
 
 
 class ButtonTestScreen(BaseScreen):
     def __init__(self, engine=None):
         super().__init__(engine, "button_test")
-        self.reader = None
+        self.probe = None
         self.device_path = ""
         self.device_name = ""
-        self.buttons = dict(DEFAULT_BUTTONS)
-        self.axes = {}
-        self.step = 0
-        self.keys = {}
-        self.hat = {HAT_X: 0, HAT_Y: 0}
-        self.consumed = set()
-        self.wait_release = False
-        self.hat_prev = 0
-        self.hat_exit_since = 0.0
-        self.flash = ""
-        self.flash_until = 0.0
-        self.finished = False
+        self.entries = []
+        self.last = None
+        self.saved_path = ""
         self.error = ""
-        # Thay cho phep test dieu khong phai vao time.time().
         self.clock = time.time
 
     # ---- vong doi ----
 
     def on_enter(self, params=None):
-        self.buttons, self.axes, error = load_map(APP_DIR)
-        self.error = tr("button_test_map_broken") % error if error else ""
         path, name = find_gamepad()
         if not path:
-            self.error = self.error or tr("button_test_no_device")
+            self.error = tr("button_test_no_device")
             log.warning("button test: khong tim thay gamepad")
             return
         self.device_path = path
         self.device_name = name
-        self.reader = PadReader(path)
-        if not self.reader.open():
+        self.probe = PadProbe(path)
+        if not self.probe.open():
             self.error = tr("button_test_open_failed") % path
             return
-        self._restart()
-        log.info("button test: bat dau tren %s (%s)", path, name)
-
-    def _restart(self):
-        self.step = 0
-        self.finished = False
-        self.keys = {}
-        self.hat = {HAT_X: 0, HAT_Y: 0}
-        self.consumed = set()
-        self.wait_release = False
-        self.hat_prev = 0
-        self.hat_exit_since = 0.0
-        self.flash = ""
-        self.flash_until = 0.0
+        self.entries = []
+        self.last = None
+        self.saved_path = ""
+        clear_log()
+        log.info("button test: ghi nut tren %s (%s)", path, name)
 
     def on_exit(self):
-        if self.reader:
-            self.reader.close()
-            self.reader = None
+        if self.probe:
+            # Lay lai danh sach tu probe truoc khi ghi, vi ``reported`` moi la
+            # noi dung duy nhat va co the da bo phim thoat.
+            self.entries = list(self.probe.reported)
+            # Ghi lai ca phien du chua bam A, de khong mat du lieu.
+            if self.entries and not self.saved_path:
+                write_log(self.entries)
+                append_note("device=%s path=%s"
+                            % (self.device_name, self.device_path))
+            self.probe.close()
+            self.probe = None
 
     def get_header_title(self):
         return tr("button_test_title")
 
     def get_footer_actions(self):
-        if self.finished:
-            return [("A", tr("button_test_save")), ("B", tr("button_test_restart"))]
-        return [("D-PAD", tr("button_test_nav"))]
+        actions = []
+        if self.entries:
+            actions.append(("A", tr("button_test_save_log")))
+        actions.append(("MENU", tr("button_test_exit")))
+        return actions
 
     # ---- input ----
 
     def handle_input(self, inputs):
-        # A va B la nut can thu, nen khi dang thu chi dung D-pad dieu huong.
-        # Neu A/B bi dung o day, nguoi dung an nut duoc yeu cau lai bi hieu
-        # nham la bo qua hoac lui lai.
-        if self.finished and inputs:
-            edges = inputs.get("edges", [])
-            if "btn_a" in edges:
-                self._save()
-                return True
-            if "btn_b" in edges:
-                self._restart()
-                return True
-        return False
+        # A va B deu la nut can thu, nen khong dung lam phim dieu huong. Chi can
+        # giu MENU (hoac START+SELECT) de thoat, xu ly o update() khi doc evdev.
+        # `quit` van duoc giu la duong lui ve an toan.
+        if not inputs:
+            return False
+        return bool(inputs.get("edges") and "quit" in inputs["edges"])
 
-    # ---- doc input that ----
+    # ---- ghi ----
 
     def update(self, dt):
-        if not self.reader:
+        if not self.probe:
             return
-        for kind, code, value in self.reader.poll():
-            if kind == EV_KEY:
-                if value == 0:
-                    self.keys.pop(code, None)
-                else:
-                    self.keys[code] = value
-            elif kind == 3:
-                # ABS: chi giu lai hat switch, phan con lai khong can o day.
-                if code in (16, 17):
-                    self.hat[HAT_X if code == 16 else HAT_Y] = value
-
-        if not self.keys:
-            self.wait_release = False
-
-        if self.finished:
-            self._check_hat_exit()
-            return
-
-        self._check_hat_exit()
-        self._check_hat_nav()
-        if self.wait_release:
-            return
-        self._accept_press()
-
-    def _check_hat_exit(self):
-        """Giu D-pad sang ben de thoat khong luu.
-
-        ABS_HAT0X la trai/phai, ABS_HAT0Y la len/xuong, nen phai dung truc X.
-        """
-        if abs(self.hat.get(HAT_X, 0)) != 1:
-            self.hat_exit_since = 0.0
-            return
-        now = self.clock()
-        if not self.hat_exit_since:
-            self.hat_exit_since = now
-            return
-        if now - self.hat_exit_since >= HOLD_EXIT:
-            self.hat_exit_since = 0.0
-            log.info("button test: thoat khong luu do giu D-pad")
+        for entry in self.probe.poll():
+            log.info("button test: %s", format_entry(entry))
+        # ``reported`` la noi dung duy nhat. No boc phim thoat ra khoi danh
+        # sach, nen doc o day moi dam bao dong do khong bao loi vao log.
+        self.entries = list(self.probe.reported)
+        self.last = self.entries[-1] if self.entries else None
+        if len(self.entries) > RECORD_LIMIT:
+            self._save(limit_reached=True)
+        if self.probe.exit_held():
+            log.info("button test: thoat do giu MENU/START+SELECT")
+            self._save()
             self.engine.pop_screen()
 
-    def _check_hat_nav(self):
-        """D-pad len bo qua buoc, D-pad xuong lui mot buoc.
-
-        Canh le trai nen khong dung A/B: A va B cung la nut dang duoc thu.
-        """
-        now = self.hat.get(HAT_Y, 0)
-        if now != self.hat_prev:
-            self.hat_exit_since = 0.0
-            previous, self.hat_prev = self.hat_prev, now
-            if now < 0 and previous >= 0:
-                log.info("button test: bo qua %s", self._current())
-                self.step += 1
-                self._maybe_finish()
-            elif now > 0 and previous <= 0 and self.step > 0:
-                self.step -= 1
-                self.flash = tr("button_test_back_step")
-                self.flash_until = self.clock() + 2
-                log.info("button test: lui ve buoc %s", self._current())
-
-    def _accept_press(self):
-        for code in sorted(self.keys):
-            if not is_gamepad_key(code):
-                continue
-            if code in self.consumed:
-                # Ma nay da thuoc ve nut khac. Gan lai se lam nhieu nut sang
-                # len cung luc tren dien thoai, nen bo qua.
-                continue
-            self._accept(code)
+    def _save(self, limit_reached=False):
+        if not self.entries:
             return
-
-    # ---- logic ----
-
-    def _current(self):
-        if self.step >= len(ASK_ORDER):
-            return ""
-        return ASK_ORDER[self.step]
-
-    def _accept(self, code):
-        name = self._current()
-        if not name:
+        path = write_log(self.entries)
+        if not path:
+            self.error = tr("button_test_save_failed")
             return
-        previous = self.buttons.get(name)
-        self.buttons[name] = code
-        self.consumed.add(code)
-        self.wait_release = True
-        self.flash = tr("button_test_got") % (BUTTON_LABELS.get(name, name), code)
-        self.flash_until = self.clock() + 2.5
-        log.info("button test: %s -> %d (truoc %s)", name, code, previous)
-        self.step += 1
-        self._maybe_finish()
-
-    def _maybe_finish(self):
-        if self.step < len(ASK_ORDER):
-            return
-        self.finished = True
-        duplicates = duplicate_buttons(self.buttons, ASK_ORDER)
-        if duplicates:
-            names = ", ".join("%s=%s=%d" % pair for pair in duplicates)
-            log.warning("button test: van con ma trung: %s", names)
-        log.info("button test: het cac buoc. A de luu, B de lam lai.")
-
-    def _save(self):
-        duplicates = duplicate_buttons(self.buttons, ASK_ORDER)
-        if duplicates:
-            names = ", ".join("%s=%s=%d" % pair for pair in duplicates)
-            self.flash = tr("button_test_duplicate") % names
-            self.flash_until = self.clock() + 8
-            log.error("button test: khong luu vi co ma trung: %s", names)
-            return
-        try:
-            path = save_map(APP_DIR, self.buttons, self.axes)
-        except OSError as exc:
-            log.error("button test: khong luu duoc: %s", exc)
-            self.error = tr("button_test_save_failed") % exc
-            return
-        changed = [name for name in ASK_ORDER
-                   if self.buttons.get(name) != DEFAULT_BUTTONS.get(name)]
-        self.flash = tr("button_test_saved") % (len(changed), path)
-        self.flash_until = self.clock() + 6
-        log.info("button test: da luu, %d nut khac mac dinh: %s", len(changed), changed)
-        self.engine.pop_screen()
+        self.saved_path = path
+        note = tr("button_test_note") % (len(self.entries), len(self.entries))
+        if limit_reached:
+            note += " " + tr("button_test_limit")
+        append_note(note)
+        append_note("device=%s path=%s" % (self.device_name, self.device_path))
+        append_note("held buttons are one press; codes= lists repeats and noise")
+        multi = sum(1 for e in self.entries if len(e["keys"]) > 1)
+        burst = sum(1 for e in self.entries
+                    if [c for c in e.get("codes", []) if c not in e["keys"]])
+        if multi or burst:
+            append_note("%d press(es) with several keys, %d with extra codes"
+                        % (multi, burst))
+        log.info("button test: %s", note)
 
     # ---- render ----
 
@@ -266,79 +160,70 @@ class ButtonTestScreen(BaseScreen):
 
         engine.draw_text(self.device_name or self.device_path, engine.font_sub,
                          40, 86, 150, 165, 190)
+        engine.draw_text(tr("button_test_count") % len(self.entries),
+                         engine.font_big, 40, 120, 0, 230, 150)
+        engine.draw_text(tr("button_test_hint"), engine.font_sub,
+                         40, 190, 150, 165, 185)
+        engine.draw_text(tr("button_test_exit_hint"), engine.font_sub,
+                         40, 222, 200, 150, 110)
 
-        if self.finished:
-            self._render_summary(engine)
-        else:
-            self._render_prompt(engine)
-        self._render_live(engine)
-        self._render_pad(engine)
+        if self.last:
+            engine.draw_text(tr("button_test_last"), engine.font_sub,
+                             40, 272, 240, 220, 120)
+            engine.draw_text(format_entry(self.last), engine.font_sub,
+                             40, 310, 235, 238, 245)
 
-        if self.flash and self.clock() < self.flash_until:
-            engine.draw_text(self.flash, engine.font_sub, 40,
-                             engine.screen_h - 190, 240, 220, 120)
+        self._render_list(engine)
+        self._render_order(engine)
+
+        if self.saved_path:
+            engine.draw_text(tr("button_test_saved_ok"), engine.font_sub,
+                             40, engine.screen_h - 152, 0, 230, 150)
         if self.error:
             engine.draw_text(self.error, engine.font_sub, 40, 300, 255, 140, 120)
         engine.draw_text(tr("button_test_device") % self.device_path,
                          engine.font_sub, 40, engine.screen_h - 118, 120, 135, 155)
 
-    def _render_prompt(self, engine):
-        label = BUTTON_LABELS.get(self._current(), self._current())
-        engine.draw_text(tr("button_test_press") % label, engine.font_title,
-                         40, 130, 0, 230, 150)
-        engine.draw_text(tr("button_test_progress") % (self.step + 1, len(ASK_ORDER)),
-                         engine.font_sub, 40, 182, 180, 195, 215)
-        if self.wait_release:
-            engine.draw_text(tr("button_test_release"), engine.font_sub,
-                             40, 224, 240, 210, 120)
-        else:
-            engine.draw_text(tr("button_test_hint"), engine.font_sub,
-                             40, 224, 150, 165, 185)
-
-    def _render_summary(self, engine):
-        engine.draw_text(tr("button_test_done"), engine.font_title,
-                         40, 130, 0, 230, 150)
-        half = (len(ASK_ORDER) + 1) // 2
-        for index, name in enumerate(ASK_ORDER):
-            column = 0 if index < half else 1
-            row = index if column == 0 else index - half
-            x = 40 + column * 470
-            y = 196 + row * 46
-            changed = self.buttons.get(name, 0) != DEFAULT_BUTTONS.get(name)
-            engine.draw_text(BUTTON_LABELS.get(name, name), engine.font_sub,
-                             x, y, 235, 238, 245)
-            color = (0, 230, 150) if changed else (150, 160, 180)
-            engine.draw_text(str(self.buttons.get(name, 0)), engine.font_sub,
-                             x + 150, y, color[0], color[1], color[2])
-            if changed:
-                engine.draw_text(tr("button_test_new"), engine.font_sub,
-                                 x + 215, y, 240, 200, 90)
-
-    def _render_live(self, engine):
-        """Ma phim dang giu. Day la thong tin de doc truc tiep tren may."""
-        codes = sorted(code for code in self.keys if is_gamepad_key(code))
-        text = tr("button_test_live") % (", ".join(str(c) for c in codes) or "-")
-        color = (0, 230, 150) if codes else (120, 132, 150)
-        engine.draw_text(text, engine.font_sub, 40, 250, color[0], color[1], color[2])
-        axis = "hat %d,%d" % (self.hat.get(HAT_X, 0), self.hat.get(HAT_Y, 0))
-        engine.draw_text(axis, engine.font_sub, 520, 250, 120, 132, 150)
-
-    def _render_pad(self, engine):
-        base_y = engine.screen_h - 128
-        columns = ["a", "b", "x", "y", "l1", "r1", "l3", "r3", "select", "start"]
-        for index, name in enumerate(columns):
-            x = 40 + index * 94
-            if x + 84 > engine.screen_w:
-                break
-            code = self.buttons.get(name, 0)
-            active = code in self.keys
-            color = COLORS.get(name, (150, 160, 190))
-            if active:
-                fill, text = color, (20, 24, 32)
+    def _render_list(self, engine):
+        if not self.entries:
+            engine.draw_text(tr("button_test_empty"), engine.font_sub,
+                             40, 348, 120, 132, 150)
+            return
+        y = 348
+        recent = self.entries[-7:]
+        for entry in recent:
+            burst = [c for c in entry.get("codes", []) if c not in entry["keys"]]
+            if burst:
+                # Firmware phat them ma trong khoang giu: chinh la nguon gay
+                # ban do sai truoc day.
+                color = (240, 190, 90)
+            elif len(entry["keys"]) > 1:
+                color = (255, 150, 120)
             else:
-                fill, text = (34, 42, 60), (200, 210, 225)
-            engine.fill_rect(x, base_y, 84, 58, fill[0], fill[1], fill[2], 235)
-            engine.draw_text(BUTTON_LABELS.get(name, name), engine.font_sub,
-                             x + 8, base_y + 4, text[0], text[1], text[2])
-            engine.draw_text(str(code), engine.font_sub, x + 8, base_y + 30,
-                             text[0], text[1], text[2])
+                color = (235, 238, 245)
+            engine.draw_text(format_entry(entry), engine.font_sub,
+                             40, y, color[0], color[1], color[2])
+            y += 30
+        if len(self.entries) > len(recent):
+            engine.draw_text(tr("button_test_more") % (len(self.entries) - len(recent)),
+                             engine.font_sub, 40, y, 120, 132, 150)
+
+    def _render_order(self, engine):
+        engine.draw_text(tr("button_test_analog_note"), engine.font_sub,
+                         40, engine.screen_h - 254, 120, 132, 150)
+        engine.draw_text(tr("button_test_order"), engine.font_sub,
+                         40, engine.screen_h - 228, 150, 165, 185)
+        x = 40
+        y = engine.screen_h - 198
+        for index, name in enumerate(DEFAULT_ORDER):
+            label = BUTTON_LABELS.get(name, name.upper())
+            color = COLORS.get(name, (170, 180, 200))
+            engine.draw_text("%d.%s" % (index + 1, label), engine.font_sub,
+                             x, y, color[0], color[1], color[2])
+            x += 110
+            if x > engine.screen_w - 130:
+                x = 40
+                y += 28
+
+
+

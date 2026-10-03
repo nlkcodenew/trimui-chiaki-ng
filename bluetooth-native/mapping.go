@@ -20,9 +20,9 @@ type padMapping struct {
 	Source  string            `json:"-"`
 }
 
-// HID report descriptor usages 1..16, so the report bit is usage-1. L2/R2 are
-// analog triggers: their bit only says "pulled", the value lives in the report
-// tail.
+// HID report descriptor usages 1..16, so the report bit is usage-1. L2/R2 have
+// no key code of their own: their bit only says "pulled" and report() raises it
+// from the analog axis, while the real value travels in the report tail.
 var hidButtons = []struct {
 	name string
 	bit  uint
@@ -45,9 +45,19 @@ var dpadAliases = map[string][]uint16{
 
 func defaultMapping() *padMapping {
 	return &padMapping{
+		// Do doc BrickButtons.log cuoi ngay 2026-10-03: nguoi dung bam tung
+		// nut mot lan theo thu tu A, B, X, Y, L1, R1, L3, R3, SELECT, START va
+		// may bao 305, 304, 308, 307, 310, 311, 317, 318, 314, 315.
+		//
+		// Do do A <-> B va X <-> Y so voi gia tri BTN_SOUTH/BTN_EAST va
+		// BTN_NORTH/BTN_WEST cua Linux. Day la hanh vi cua firmware Stock OS,
+		// da xac nhan bang may that, nen giu nguyen. Doi lai se lam nguoc A/B.
+		//
+		// L2/R2 khong co ma phim nao: chung la cam bien analog (axis 2/5), xu
+		// ly o report[12]/report[13]. Map chung de trong de khong ghi nham.
 		Buttons: map[string]uint16{
-			"a": 304, "b": 305, "x": 307, "y": 308,
-			"l1": 310, "r1": 311, "l2": 312, "r2": 313,
+			"a": 305, "b": 304, "x": 308, "y": 307,
+			"l1": 310, "r1": 311,
 			"select": 314, "start": 315, "mode": 316,
 			"l3": 317, "r3": 318,
 			"dpad_up": 103, "dpad_down": 108,
@@ -95,11 +105,18 @@ func (m *padMapping) pressed(keys *[768]bool, name string) bool {
 // duplicateButtons lists HID buttons that share one Linux key code. A map like
 // that makes the phone see several buttons at once, so it is reported loudly
 // instead of being used quietly.
+//
+// Buttons without a key code are skipped: the analog triggers L2/R2 have none
+// on purpose, and comparing their zero codes would report a duplicate that
+// cannot happen.
 func (m *padMapping) duplicateButtons() [][2]string {
 	seen := map[uint16]string{}
 	dupes := [][2]string{}
 	for _, button := range hidButtons {
 		code := m.code(button.name)
+		if code == 0 {
+			continue
+		}
 		if other, taken := seen[code]; taken {
 			dupes = append(dupes, [2]string{other, button.name})
 			continue

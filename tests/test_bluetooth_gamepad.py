@@ -231,6 +231,14 @@ class ButtonMapTests(unittest.TestCase):
 
 
 class ButtonTestScreenTests(unittest.TestCase):
+    """Man hinh GHI NUT: chi ghi tho, khong gan ban do.
+
+    Cac test cua man hinh "hop nhan tung nut" da bi thay bang tests/test_pad_probe.py.
+    """
+
+    SCREEN_W = 1024
+    SCREEN_H = 768
+
     @classmethod
     def setUpClass(cls):
         cls.temp_dir, cls.app_dir = _fresh_app_copy("chiaki-test-screen-")
@@ -240,144 +248,179 @@ class ButtonTestScreenTests(unittest.TestCase):
     def tearDownClass(cls):
         _drop_app_copy(cls.temp_dir, cls.app_dir)
 
+    def _engine(self):
+        engine = mock.Mock()
+        engine.screen_w = self.SCREEN_W
+        engine.screen_h = self.SCREEN_H
+        return engine
+
     def _screen(self):
         screen = self.module.ButtonTestScreen(mock.Mock())
         screen.device_path = "/dev/input/event3"
         screen.device_name = "TRIMUI Player1"
-        screen.reader = mock.Mock()
-        screen.reader.poll.return_value = []
+        screen.probe = mock.Mock()
+        screen.probe.poll.return_value = []
+        screen.probe.exit_held.return_value = ""
+        screen.probe.reported = []
         return screen
 
-    def _feed(self, screen, code, value):
-        screen.reader.poll.return_value = [(1, code, value)]
+    def _feed(self, screen, entry):
+        """Ghi mot lan bam nhu PadProbe.poll() tra ve roi dua vao reported."""
+        screen.probe.reported.append(entry)
+        screen.probe.poll.return_value = [entry]
+
+    def test_each_press_is_appended_to_the_list(self):
+        screen = self._screen()
+        for index in range(1, 4):
+            self._feed(screen, {"index": index, "elapsed": float(index),
+                                "keys": [300 + index], "hat": [0, 0],
+                                "codes": [300 + index], "held_ms": 80})
+            screen.update(0)
+        self.assertEqual(len(screen.entries), 3)
+        self.assertEqual(screen.last["keys"], [303])
+
+    def test_each_press_survives_a_render_cycle(self):
+        screen = self._screen()
+        screen.probe.exit_held.return_value = ""
+        self._feed(screen, {"index": 1, "elapsed": 1.0, "keys": [304],
+                            "hat": [0, 0], "codes": [304], "held_ms": 70})
         screen.update(0)
+        screen.render(self._engine())
+        self.assertEqual(len(screen.entries), 1)
 
-    def _press(self, screen, code, held_frames=1, released_frames=1):
-        """Feed one physical press: held for N frames, then released."""
-        for _ in range(held_frames):
-            self._feed(screen, code, 1)
-        for _ in range(released_frames):
-            self._feed(screen, code, 0)
-
-    def test_pressing_a_key_assigns_it_to_the_current_button(self):
+    def test_b_does_not_leave_the_screen(self):
+        """B la nut can thu, nen bam B chi duoc ghi chu khong duoc thoat."""
         screen = self._screen()
-        step = self.module.ASK_ORDER.index("l3")
-        screen.step = step
-        self.assertEqual(screen._current(), "l3")
-        self._press(screen, 318)
-        self.assertEqual(screen.buttons["l3"], 318)
-        self.assertEqual(screen.step, step + 1)
+        screen.probe.poll.return_value = []
+        self.assertFalse(screen.handle_input({"edges": ["btn_b"], "btn_b": True}))
+        screen.update(0)
+        screen.engine.pop_screen.assert_not_called()
 
-    def test_one_press_assigns_exactly_one_button(self):
-        """Regression: one press used to fill every following step.
-
-        A held key was offered to each step in turn, so a single press wrote the
-        same code into three buttons and the phone lit all three at once.
-        """
+    def test_a_saves_and_does_not_leave(self):
         screen = self._screen()
-        screen.step = self.module.ASK_ORDER.index("b")
-        start = screen.step
-        for _ in range(30):
-            self._feed(screen, 305, 1)
-        self.assertEqual(screen.step, start + 1)
-        self.assertEqual(screen.buttons["b"], 305)
-        for name in ("x", "y", "l1", "r1", "l3"):
-            self.assertNotEqual(screen.buttons.get(name), 305,
-                                "%s took a code that already belonged to b" % name)
-
-    def test_a_press_that_is_still_held_needs_a_release_first(self):
-        screen = self._screen()
-        screen.step = self.module.ASK_ORDER.index("b")
-        self._feed(screen, 305, 1)
-        self.assertTrue(screen.wait_release)
-        screen.step = self.module.ASK_ORDER.index("x")
-        self._feed(screen, 307, 1)
-        self.assertEqual(screen.buttons["x"], self.module.DEFAULT_BUTTONS["x"])
-        # Nothing is accepted while a button from a previous step is held.
-        for _ in range(10):
-            self._feed(screen, 307, 1)
-        self.assertEqual(screen.buttons["x"], self.module.DEFAULT_BUTTONS["x"])
-        self._feed(screen, 305, 0)
-        self._feed(screen, 307, 0)
-        self.assertFalse(screen.wait_release)
-        self._feed(screen, 307, 1)
-        self.assertEqual(screen.buttons["x"], 307)
-
-    def test_button_a_is_not_a_skip_key_while_it_is_being_tested(self):
-        """Regression: pressing the asked-for A button skipped its own step."""
-        screen = self._screen()
-        self.assertEqual(screen.step, 0)
-        self.assertEqual(screen._current(), "a")
-        handled = screen.handle_input({"edges": ["btn_a"], "btn_a": True})
+        self._feed(screen, {"index": 1, "elapsed": 1.0, "keys": [304],
+                            "hat": [0, 0], "codes": [304], "held_ms": 60})
+        with mock.patch.object(self.module, "write_log",
+                               return_value="/tmp/BrickButtons.log"), \
+                mock.patch.object(self.module, "append_note"):
+            handled = screen.handle_input({"edges": ["btn_a"], "btn_a": True})
         self.assertFalse(handled)
-        self.assertEqual(screen.step, 0)
+        screen.engine.pop_screen.assert_not_called()
 
-    def test_dpad_up_skips_and_dpad_down_steps_back(self):
+    def test_holding_menu_saves_and_leaves(self):
         screen = self._screen()
-        screen.step = 2
-        screen.hat[self.module.HAT_Y] = -1
-        screen.update(0)
-        self.assertEqual(screen.step, 3)
-        screen.hat[self.module.HAT_Y] = 1
-        screen.update(0)
-        self.assertEqual(screen.step, 2)
-
-    def test_all_steps_finish_and_offer_a_save(self):
-        screen = self._screen()
-        for index in range(len(self.module.ASK_ORDER)):
-            screen.step = index
-            screen._accept(1000 + index)
-        self.assertTrue(screen.finished)
-        self.assertEqual(self.module.tr("button_test_save"), "LUU")
-
-    def test_saving_is_refused_while_two_buttons_share_a_code(self):
-        screen = self._screen()
-        screen.step = self.module.ASK_ORDER.index("l3")
-        screen._accept(318)
-        screen.step = self.module.ASK_ORDER.index("r3")
-        screen._accept(318)
-        with mock.patch.object(self.module, "save_map") as saver:
-            screen._save()
-        saver.assert_not_called()
-        self.assertIn("dung mot ma phim", screen.flash)
-
-    def test_saving_writes_the_map_and_returns(self):
-        screen = self._screen()
-        screen.step = self.module.ASK_ORDER.index("l3")
-        screen._accept(330)
-        screen.step = self.module.ASK_ORDER.index("r3")
-        screen._accept(331)
-        screen.finished = True
-        with mock.patch.object(self.module, "save_map",
-                               return_value="/tmp/map.json") as saver:
-            screen._save()
-        saver.assert_called_once()
+        screen.probe.exit_held.return_value = "menu"
+        self._feed(screen, {"index": 1, "elapsed": 1.0, "keys": [304],
+                            "hat": [0, 0], "codes": [304], "held_ms": 60})
+        with mock.patch.object(self.module, "write_log",
+                               return_value="/tmp/BrickButtons.log") as writer, \
+                mock.patch.object(self.module, "append_note"):
+            screen.update(0)
+        writer.assert_called_once()
         screen.engine.pop_screen.assert_called_once()
 
-    def test_a_and_b_are_used_only_on_the_summary_screen(self):
+    def test_an_exit_key_dropped_by_the_probe_stays_out_of_the_log(self):
+        """Probe lo phim thoat khoi ``reported``, thi log cung phai bo no."""
         screen = self._screen()
-        screen.finished = True
-        screen.step = self.module.ASK_ORDER.index("l3")
-        screen._accept(330)
-        screen.step = self.module.ASK_ORDER.index("r3")
-        screen._accept(331)
-        screen.finished = True
-        with mock.patch.object(self.module, "save_map",
-                               return_value="/tmp/map.json"):
-            self.assertTrue(screen.handle_input({"edges": ["btn_a"], "btn_a": True}))
-        screen.finished = True
-        self.assertTrue(screen.handle_input({"edges": ["btn_b"], "btn_b": True}))
-        self.assertFalse(screen.finished)
-
-    def test_holding_a_sideways_dpad_exits_without_saving(self):
-        screen = self._screen()
-        clock = [50.0]
-        screen.clock = lambda: clock[0]
-        screen.hat[self.module.HAT_X] = 1
+        self._feed(screen, {"index": 1, "elapsed": 1.0, "keys": [304],
+                            "hat": [0, 0], "codes": [304], "held_ms": 60})
         screen.update(0)
-        clock[0] = 50.0 + self.module.HOLD_EXIT + 0.1
+        self.assertEqual(len(screen.entries), 1)
+        # Gia lap tinh huong START an truoc, SELECT an sau: dong chi chua phim
+        # thoat bi probe xoa khoi reported, nen man hinh phai bo theo.
+        screen.probe.reported = []
+        screen.update(0)
+        self.assertEqual(screen.entries, [])
+        with mock.patch.object(self.module, "write_log",
+                               return_value="/tmp/BrickButtons.log") as writer:
+            screen._save()
+        writer.assert_not_called()
+
+    def test_holding_start_select_also_leaves(self):
+        screen = self._screen()
+        screen.probe.exit_held.return_value = "start_select"
         screen.update(0)
         screen.engine.pop_screen.assert_called_once()
+
+    def test_a_held_button_alone_never_leaves(self):
+        screen = self._screen()
+        screen.probe.exit_held.return_value = ""
+        for _ in range(20):
+            screen.update(0)
+        screen.engine.pop_screen.assert_not_called()
+
+    def test_a_is_never_treated_as_skip(self):
+        """A van la nut thu, nen A chi luu log chu khong bo qua buoc nao."""
+        screen = self._screen()
+        screen.entries = []
+        self._feed(screen, {"index": 1, "elapsed": 1.0, "keys": [305],
+                            "hat": [0, 0], "codes": [305], "held_ms": 60})
+        screen.update(0)
+        self.assertEqual(len(screen.entries), 1)
+        self.assertEqual(screen.entries[0]["keys"], [305])
+
+    def test_no_device_leaves_an_error_and_no_crash(self):
+        screen = self.module.ButtonTestScreen(mock.Mock())
+        with mock.patch.object(self.module, "find_gamepad",
+                               return_value=(None, "")):
+            screen.on_enter()
+        self.assertEqual(screen.error, self.module.tr("button_test_no_device"))
+        self.assertIsNone(screen.probe)
+        screen.render(self._engine())
+        screen.update(0)
+        # Khong co thiet bi thi khong duoc nhac, va van phai thoat duoc bang
+        # duong an toan cua app.
+        self.assertFalse(screen.handle_input({"edges": [], "btn_b": False}))
+        self.assertTrue(screen.handle_input({"edges": ["quit"], "quit": True}))
+
+    def test_the_report_order_lists_only_buttons_with_a_key_code(self):
+        """L2/R2 la cam bien analog nen khong duoc cho vao danh sach nut."""
+        order = self.module.DEFAULT_ORDER
+        self.assertEqual(len(order), 10)
+        self.assertNotIn("l2", order)
+        self.assertNotIn("r2", order)
+        self.assertNotIn("mode", order)
+
+    def test_render_survives_an_empty_session(self):
+        screen = self._screen()
+        engine = self._engine()
+        screen.render(engine)
+        self.assertTrue(engine.draw_text.called)
+
+    def test_render_draws_every_button_in_the_report_order(self):
+        """Moi nut trong danh sach bao cao deu phai co duoc ve tren man hinh."""
+        screen = self._screen()
+        engine = self._engine()
+        screen.render(engine)
+        drawn = [call.args[0] for call in engine.draw_text.call_args_list
+                 if call.args and isinstance(call.args[0], str)]
+        for index, name in enumerate(self.module.DEFAULT_ORDER):
+            label = "%d.%s" % (index + 1, name.upper())
+            self.assertTrue(any(label in text for text in drawn),
+                            "%s was not drawn" % label)
+
+    def test_leaving_the_screen_still_saves_the_log(self):
+        """Bam B khi chua bam A van giu du lieu, tranh mat ca phien thu."""
+        screen = self._screen()
+        self._feed(screen, {"index": 1, "elapsed": 1.0, "keys": [304],
+                            "hat": [0, 0], "codes": [304], "held_ms": 60})
+        with mock.patch.object(self.module, "write_log",
+                               return_value="/tmp/BrickButtons.log") as writer, \
+                mock.patch.object(self.module, "append_note"):
+            screen.on_exit()
+        writer.assert_called_once()
+
+    def test_saving_twice_writes_once_per_press(self):
+        screen = self._screen()
+        screen.entries = [{"index": 1, "elapsed": 1.0, "keys": [304],
+                           "hat": [0, 0], "codes": [304], "held_ms": 60}]
+        with mock.patch.object(self.module, "write_log",
+                               return_value="/tmp/BrickButtons.log") as writer, \
+                mock.patch.object(self.module, "append_note"):
+            screen._save()
+        # writer duoc goi mot lan cho ca phien, khong phai mot lan moi bam.
+        self.assertEqual(writer.call_count, 1)
+        self.assertEqual(len(writer.call_args[0][0]), 1)
 
 
 if __name__ == "__main__":
