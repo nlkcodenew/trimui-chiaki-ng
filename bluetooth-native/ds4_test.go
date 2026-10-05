@@ -164,7 +164,7 @@ func TestDS4ButtonsAndHat(t *testing.T) {
 
 func TestDS4FeatureReplies(t *testing.T) {
 	for id, payloadSize := range map[byte]int{
-		0x02: 36, 0x05: 40, 0x06: 52, 0x09: 19, 0x12: 16,
+		0x02: 36, 0x05: 40, 0x06: 52, 0x09: 19, 0x12: 16, 0xA3: 48,
 	} {
 		reply, ok := ds4FeatureReply(id)
 		if !ok {
@@ -185,6 +185,18 @@ func TestDS4FeatureReplies(t *testing.T) {
 	}
 	if _, ok := ds4FeatureReply(0x77); ok {
 		t.Fatal("unknown feature 0x77 answered")
+	}
+	// Firmware info contents are fixed placeholders (see ds4FirmwareInfo),
+	// but the shape must be exact: date/time strings plus version fields.
+	info, ok := ds4FeaturePayload(0xA3)
+	if !ok || len(info) != 48 {
+		t.Fatalf("firmware info = %d bytes, ok=%v", len(info), ok)
+	}
+	if string(info[:10]) != "2024-01-01" || string(info[16:24]) != "00:00:00" {
+		t.Fatalf("firmware info strings changed: %q %q", info[:10], info[16:24])
+	}
+	if binary.LittleEndian.Uint32(info[36:]) != 3 {
+		t.Fatalf("firmware sw major = %d, want 3", binary.LittleEndian.Uint32(info[36:]))
 	}
 }
 

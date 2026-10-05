@@ -386,6 +386,23 @@ qua bản ghi này, không có thì vendor = 0 và driver DualShock không bao g
 `0x1200`, và đổi tên adapter bằng `hciconfig` (có lưu/khôi phục). Report và
 descriptor giữ nguyên vì chưa có bằng chứng nào chê chúng.
 
+### Vòng 2 trên iPhone thật (2026-10-05): đã hỏi, thiếu `0xA3`, tên bị cache
+
+iPhone ghép nối, mở cả hai kênh HID rồi gửi đúng hai giao dịch:
+
+```
+HID control: 43a3 => 03          <- xin feature 0xA3 (firmware info), bị từ chối
+HID control: 4302 => a30200...  <- xin feature 0x02 (calibration), đã trả lời
+```
+
+Đây là bằng chứng PnP + descriptor có tác dụng: iOS đã gắn driver và bắt đầu
+hỏi theo trình tự của nó. Việc còn lại:
+
+1. Trả lời `0xA3` đủ 48 byte + CRC (`v0.3.39-beta1`).
+2. iPhone vẫn hiện tên cũ vì cache SDP + tên từ lần pair trước — bắt buộc
+   **Quên thiết bị này** rồi ghép lại từ đầu, nếu không mọi sửa nhận diện đều
+   vô hình với nó.
+
 ## 5. Cách dùng màn hình GHI NÚT
 
 Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng

@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: profile ds4 them ban ghi PnP VID/PID Sony va doi ten adapter; iPhone im lang khong hoi gi la bang chung thieu nhan dien." % version,
-            "en": "v%s: ds4 profile adds the Sony VID/PID PnP record and renames the adapter; a silent iPhone means missing identity." % version,
+            "vi": "v%s: tra loi feature 0xA3 cho iPhone (vong truoc hoi ma bi tu choi); them buoc quen thiet bi cu de xoa cache ten/SDP." % version,
+            "en": "v%s: answer feature 0xA3 for iPhone (asked and refused last round); forget-and-repair clears stale name/SDP cache." % version,
         },
         "files": files,
         "remove": [],

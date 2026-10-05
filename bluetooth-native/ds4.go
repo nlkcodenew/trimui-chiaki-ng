@@ -336,9 +336,28 @@ func ds4FeaturePayload(id byte) ([]byte, bool) {
 		return make([]byte, 19), true
 	case 0x12:
 		return make([]byte, 16), true
+	case 0xA3:
+		return ds4FirmwareInfo(), true
 	default:
 		return nil, false
 	}
+}
+
+// ds4FirmwareInfo is feature 0xA3 (48 bytes): build date/time strings plus
+// hardware/software versions. A real iPhone asks for this during init
+// (seen on device 2026-10-05); values are fixed placeholders, documented
+// as such, because the Brick has no Sony firmware to report.
+func ds4FirmwareInfo() []byte {
+	payload := make([]byte, 48)
+	copy(payload[0:], "2024-01-01")
+	copy(payload[16:], "00:00:00")
+	binary.LittleEndian.PutUint16(payload[32:], 0x0001)
+	binary.LittleEndian.PutUint16(payload[34:], 0x0000)
+	binary.LittleEndian.PutUint32(payload[36:], 3)
+	binary.LittleEndian.PutUint16(payload[40:], 0)
+	binary.LittleEndian.PutUint16(payload[42:], 0)
+	binary.LittleEndian.PutUint32(payload[44:], 0)
+	return payload
 }
 
 // ds4FeatureReply builds the full control-channel reply for a feature
