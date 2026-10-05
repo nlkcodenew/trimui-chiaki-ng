@@ -1,14 +1,14 @@
 {
-  "version": "0.3.36-beta1",
+  "version": "0.3.36",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-03T22:27:49+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.36-beta1/files",
-  "release_tag": "v0.3.36-beta1/files",
-  "prerelease": true,
+  "built": "2026-10-05T08:31:05+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.36/files",
+  "release_tag": "v0.3.36/files",
+  "prerelease": false,
   "note": {
-    "vi": "v0.3.36-beta1: tieu de hien ma HW; menu lui xuong lo het dong huong dan; dong thoat Bluetooth xuong 2 dong.",
-    "en": "v0.3.36-beta1: title shows HW id; menu shifted to reveal the guide line; Bluetooth exit help wraps to two lines."
+    "vi": "v0.3.36: ban on dinh. Tay cam Bluetooth dung nhu tay PS tren Android, 2 theme giao dien, kenh OTA beta rieng.",
+    "en": "v0.3.36: stable release. Bluetooth gamepad works like a PS controller on Android, dual UI themes, separate beta OTA channel."
   },
   "files": [
     {
@@ -243,8 +243,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "f408d4fc20f5f676c0c94429e44e6fdb519a45213a811e754d1a47a5732ad4b9",
-      "size": 1570
+      "sha256": "e9757a5370541db396d02484c1e1e7767772db75da2b3feb4f6ceaf4c0022211",
+      "size": 1564
     },
     {
       "path": "rh/modals/__init__.py",
@@ -699,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.36-beta1.zip",
-    "sha256": "c0e00a455969f5c62f44195e3f96c488e26beb1cb45c7ee5dae9af23cae56859",
-    "size": 12859451
+    "name": "trimui-chiaki-ng-v0.3.36.zip",
+    "sha256": "5b369088e067b94fc26f3de6ca966cb6fbc4017de8742d6936ac0bd6c3898856",
+    "size": 12859450
   }
 }

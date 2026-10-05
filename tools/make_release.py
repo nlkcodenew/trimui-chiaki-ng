@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: tieu de hien ma HW; menu lui xuong lo het dong huong dan; dong thoat Bluetooth xuong 2 dong." % version,
-            "en": "v%s: title shows HW id; menu shifted to reveal the guide line; Bluetooth exit help wraps to two lines." % version,
+            "vi": "v%s: ban on dinh. Tay cam Bluetooth dung nhu tay PS tren Android, 2 theme giao dien, kenh OTA beta rieng." % version,
+            "en": "v%s: stable release. Bluetooth gamepad works like a PS controller on Android, dual UI themes, separate beta OTA channel." % version,
         },
         "files": files,
         "remove": [],

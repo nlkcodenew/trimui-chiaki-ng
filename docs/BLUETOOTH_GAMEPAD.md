@@ -343,8 +343,32 @@ Menu `TAY CẦM BLUETOOTH` có mục chọn (Trái/Phải khi chưa kết nối)
 
 Các bit còn lại giống nhau ở cả hai profile: L1→6, R1→7, L2→8, R2→9,
 Select→10, Start→11, PS(MENU)→12, L3→13, R3→14. Tên lạ rơi về `ps`.
-Profile DS4/Xbox giả lập tay cầm thật để dành sau stable: cần descriptor
-chính xác từ kernel/dump, không đoán.
+
+## 4h. iOS: tại sao chưa nhận, và làm DS4/Xbox ra sao (sau stable)
+
+Triệu chứng trên iPhone: ghép nối Bluetooth thành công (PSM 17/19, `HID
+connected`, phiên giữ hàng phút không lỗi) nhưng không app nào thấy controller.
+Nguyên nhân: iOS chỉ sinh controller cho loại nó biết sẵn (MFi, Xbox Wireless,
+DualShock/DualSense). Gamepad HID generic ghép nối được nhưng không bao giờ
+thành `GCController`. Android nhận generic nên cùng một bản chạy tốt trên
+Oppo Reno5 — đối chứng này loại trừ lỗi đường truyền/report.
+
+Hướng làm (workstream riêng, vài vòng beta, cần iPhone test từng vòng):
+
+1. **Giả lập tay cầm thật theo profile**, dùng đúng chỗ profile hiện có
+   (`--profile ds4` / `--profile xbox`): descriptor HID + layout report lấy
+   từng byte từ nguồn công khai — `hid-sony.c` / `hid-playstation.c` của kernel
+   (đã kiểm tra tải được) và dump xpadneo. Không chép code Padpod, không đoán.
+2. DS4 qua Bluetooth dùng input report `0x11` kèm CRC32; iOS còn gửi feature
+   GET_REPORT khi bắt tay — backend hiện trả lỗi các report lạ nên phải cài
+   trả lời đúng (`controlResponse` trong `hid.go`).
+3. SDP bổ sung PnP ID (VID/PID Sony/Microsoft) và tên "Wireless Controller" /
+   "Xbox Wireless Controller" cho đúng loại giả lập.
+4. Mỗi vòng chỉ tin kết quả trên iPhone thật: hiện controller, đủ nút, stick
+   full range, không đứt phiên.
+
+Rủi ro đã thấy trước: iOS có thể kiểm tra sâu hơn descriptor (hành vi bắt tay,
+thứ tự query), nên vòng đầu có thể vẫn chưa hiện. Không đưa vào bản stable.
 
 ## 5. Cách dùng màn hình GHI NÚT
 
