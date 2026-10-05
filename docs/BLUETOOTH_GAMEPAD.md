@@ -408,7 +408,7 @@ hỏi theo trình tự của nó. Việc còn lại:
 Sau khi Quên thiết bị cũ và ghép lại từ đầu:
 
 - iPhone hiện **"DUALSHOCK 4 wireless controller"**, ghép nối thành công
-  (lần 2 mới xong — Bluetooth pairing重试 lần đầu thất bại là chuyện thường,
+  (lần 2 mới xong — Bluetooth rớt pairing lần đầu là chuyện thường,
   chỉ lo khi thất bại lặp lại có mẫu).
 - App tester **hiện controller, tất cả nút khớp**: B→cross, A→circle,
   Y→square, X→triangle, L1/R1/L2/R2, Select/Start, L3/R3, stick, cò.
@@ -427,6 +427,23 @@ Hai điểm cần theo dõi thêm, chưa phải lỗi:
    `Chiaki-loi.txt` ngay sau đó.
 2. Pair lần đầu thất bại, lần 2 xong — bình thường với Bluetooth, chỉ điều
    tra khi có mẫu lặp.
+
+### Vòng 4: chơi game rớt đều, cần tách bệnh link (2026-10-05)
+
+Chơi game thật được nhưng rớt kênh đều đặn 1.5–3 phút/lần dù hai máy cách
+nhau 20cm; rớt xong iPhone tự nối lại, phía backend không báo lỗi nào.
+Mẫu này là rớt link radio do bên iPhone cắt (nghi: link im lặng quá lâu,
+hoặc xung đột Wi-Fi/BT trên chip combo của Brick), không phải lỗi report
+(vì điều khiển vẫn đúng khi đang nối).
+
+`v0.3.40-beta1` làm hai việc, cả hai đều để đọc log vòng sau:
+
+1. **Gửi lại report hiện tại mỗi 4 giây** khi kênh khỏe (`shouldResend`):
+   DS4 thật stream liên tục chứ không chỉ gửi khi đổi, nên đây vừa là mô
+   phỏng đúng vừa loại trừ giả thiết "link chết vì im lặng".
+2. **Mỗi lần mất kênh ghi rõ lý do** (`disconnect(reason)` + test
+   `TestDisconnectRecordsReason`): peer đóng / lỗi đọc / lỗi gửi / poll.
+   Vòng sau chỉ cần nhìn dòng `HID channels dropped:` là biết bên nào cắt.
 
 ## 5. Cách dùng màn hình GHI NÚT
 

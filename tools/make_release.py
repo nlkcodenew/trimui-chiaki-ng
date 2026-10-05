@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: tra loi feature 0xA3 cho iPhone (vong truoc hoi ma bi tu choi); them buoc quen thiet bi cu de xoa cache ten/SDP." % version,
-            "en": "v%s: answer feature 0xA3 for iPhone (asked and refused last round); forget-and-repair clears stale name/SDP cache." % version,
+            "vi": "v%s: gui lai report 4 giay/lan chong rot link luc roi; ghi ly do moi lan mat kenh de doan ben nao cat." % version,
+            "en": "v%s: resend report every 4s against idle drops; log the reason of every channel loss." % version,
         },
         "files": files,
         "remove": [],

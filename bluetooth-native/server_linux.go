@@ -119,6 +119,11 @@ type hidServer struct {
 	gesture               guardGesture
 	controlMessages       int
 	unmappedLogged        map[uint16]bool
+	// lastReport remembers when the current report last went out, so the
+	// server can resend it on a timer. lastDropReason names the last
+	// channel loss for the log; the phone never explains itself.
+	lastReport     time.Time
+	lastDropReason string
 }
 
 // noteUnmappedKeys reports physical buttons the active mapping has no entry
@@ -145,7 +150,9 @@ func (s *hidServer) waiting() {
 		s.status("waiting")
 	}
 }
-func (s *hidServer) disconnect() {
+func (s *hidServer) disconnect(reason string) {
+	s.lastDropReason = reason
+	fmt.Println("HID channels dropped:", reason)
 	closeFDs(s.channels)
 	s.channels = [2]int{-1, -1}
 	s.queues = [2]packetQueue{}
@@ -158,8 +165,7 @@ func (s *hidServer) queue(which int, data []byte) {
 		return
 	}
 	if e := s.queues[which].push(data, time.Now()); e != nil {
-		fmt.Println(e)
-		s.disconnect()
+		s.disconnect("report queue: " + e.Error())
 	}
 }
 func (s *hidServer) emit(report []byte) {
@@ -167,9 +173,19 @@ func (s *hidServer) emit(report []byte) {
 		return
 	}
 	s.current = append([]byte(nil), report...)
+	s.lastReport = time.Now()
 	if s.channels[0] >= 0 && s.channels[1] >= 0 && !s.suspended {
 		s.queue(1, append([]byte{hidpData | hidpRtypeInput}, report...))
 	}
+}
+
+// shouldResend is true when the link is up but nothing changed for a
+// while. A real DualShock streams reports continuously; resending the
+// current state every few seconds keeps an idle link provably alive and
+// tells "phone went quiet" apart from "we went quiet".
+func (s *hidServer) shouldResend(now time.Time) bool {
+	return s.channels[0] >= 0 && s.channels[1] >= 0 && !s.suspended &&
+		now.Sub(s.lastReport) >= 4*time.Second
 }
 func (s *hidServer) accept(which int) {
 	fd, sa, e := unix.Accept4(s.listeners[which], unix.SOCK_NONBLOCK|unix.SOCK_CLOEXEC)
@@ -217,7 +233,11 @@ func (s *hidServer) receive(which int) {
 		return
 	}
 	if e != nil || n == 0 || flags&unix.MSG_TRUNC != 0 {
-		s.disconnect()
+		if n == 0 && e == nil {
+			s.disconnect("peer closed HID channel")
+		} else {
+			s.disconnect(fmt.Sprintf("HID channel read: %v", e))
+		}
 		return
 	}
 	if which != 0 {
@@ -233,7 +253,7 @@ func (s *hidServer) receive(which int) {
 	}
 	switch action {
 	case "disconnect":
-		s.disconnect()
+		s.disconnect("host requested virtual cable unplug")
 	case "suspend":
 		s.suspended = true
 		s.queues[1] = nil
@@ -254,8 +274,7 @@ func (s *hidServer) flush() {
 			return unix.SendmsgN(fd, data, nil, nil, unix.MSG_DONTWAIT|unix.MSG_NOSIGNAL)
 		})
 		if e != nil {
-			fmt.Println("Disconnected:", e)
-			s.disconnect()
+			s.disconnect(fmt.Sprintf("HID channel send: %v", e))
 			return
 		}
 	}
@@ -291,7 +310,7 @@ func (s *hidServer) loop(ctx context.Context) error {
 			if action == "released" {
 				return errors.New("BlueZ released the HID profile")
 			}
-			s.disconnect()
+			s.disconnect("BlueZ event: " + action)
 		case sig := <-signals:
 			if sig != nil && len(sig.Body) == 3 && sig.Body[0] == "org.bluez" && sig.Body[1] == s.b.owner {
 				return errors.New("BlueZ service stopped")
@@ -336,7 +355,7 @@ func (s *hidServer) loop(ctx context.Context) error {
 				continue
 			}
 			if polls[i+3].Revents&(unix.POLLERR|unix.POLLHUP|unix.POLLNVAL) != 0 {
-				s.disconnect()
+				s.disconnect("HID channel poll error")
 				break
 			}
 			if polls[i+3].Revents&unix.POLLIN != 0 {
@@ -349,7 +368,7 @@ func (s *hidServer) loop(ctx context.Context) error {
 		}
 		if (s.channels[0] >= 0) != (s.channels[1] >= 0) && now.Sub(s.accepted) > 5*time.Second {
 			fmt.Printf("Incomplete HID channel pair timed out (control=%t interrupt=%t)\n", s.channels[0] >= 0, s.channels[1] >= 0)
-			s.disconnect()
+			s.disconnect("incomplete HID channel pair")
 		}
 		if !s.pairClosed && now.After(s.b.pairUntil) {
 			s.pairClosed = true
@@ -364,6 +383,10 @@ func (s *hidServer) loop(ctx context.Context) error {
 			}
 		}
 		s.flush()
+		if s.shouldResend(now) {
+			s.lastReport = now
+			s.queue(1, append([]byte{hidpData | hidpRtypeInput}, s.current...))
+		}
 	}
 }
 func (s *hidServer) close() {
