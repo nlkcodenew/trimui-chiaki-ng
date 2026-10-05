@@ -101,8 +101,14 @@ class BluetoothGamepadIntegrationTests(unittest.TestCase):
             self.assertEqual(state.gamepad_profile, "labels")
             save.assert_called_once_with()
             with mock.patch.object(state, "save_settings"):
-                self.assertTrue(screen.handle_input({"edges": ["btn_left"]}))
+                self.assertTrue(screen.handle_input({"edges": ["btn_right"]}))
+            self.assertEqual(state.gamepad_profile, "ds4")
+            with mock.patch.object(state, "save_settings"):
+                self.assertTrue(screen.handle_input({"edges": ["btn_right"]}))
             self.assertEqual(state.gamepad_profile, "ps")
+            with mock.patch.object(state, "save_settings"):
+                self.assertTrue(screen.handle_input({"edges": ["btn_left"]}))
+            self.assertEqual(state.gamepad_profile, "ds4")
         finally:
             state.gamepad_profile = original
 

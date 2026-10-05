@@ -1,14 +1,14 @@
 {
-  "version": "0.3.36",
+  "version": "0.3.37-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-05T08:31:05+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.36/files",
-  "release_tag": "v0.3.36/files",
-  "prerelease": false,
+  "built": "2026-10-05T09:34:12+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.37-beta1/files",
+  "release_tag": "v0.3.37-beta1/files",
+  "prerelease": true,
   "note": {
-    "vi": "v0.3.36: ban on dinh. Tay cam Bluetooth dung nhu tay PS tren Android, 2 theme giao dien, kenh OTA beta rieng.",
-    "en": "v0.3.36: stable release. Bluetooth gamepad works like a PS controller on Android, dual UI themes, separate beta OTA channel."
+    "vi": "v0.3.37-beta1: them profile DualShock 4 thu nghiem cho iPhone (descriptor + report CRC theo kernel). Stable giu nguyen.",
+    "en": "v0.3.37-beta1: experimental DualShock 4 profile for iPhone (kernel-matched descriptor and CRC reports). Stable untouched."
   },
   "files": [
     {
@@ -48,7 +48,7 @@
     },
     {
       "path": "bin/brick-pro-bt",
-      "sha256": "0656e7f8734c7e7fcf27af5c368ef7b9299d246557fc30dc72ad641ae6d99b72",
+      "sha256": "d6934b86f3ebf6997bf85df2c77892f0b5a10b4a8228ea4eafdbf1586f186437",
       "size": 3932312
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "path": "docs/bluetooth-native-build.json",
-      "sha256": "3944e0cf509477f6331a6bef891d1fa2d2bac038303307b24c480b9e9f65dd37",
+      "sha256": "309448be79c53d3a1abd6f5c8218fd8fe46f9ee4bc35c3af0d101b3a2ec8a472",
       "size": 954
     },
     {
@@ -158,8 +158,8 @@
     },
     {
       "path": "rh/bluetooth_gamepad.py",
-      "sha256": "9847933704168dee2bfc7c85dd2307c1879b9f136cff8ea8dbb613c085fe0377",
-      "size": 7443
+      "sha256": "e500ae03875646b43edf87ee9b53ef45c2b4536c869a6f8c883fdce8cf4d3da5",
+      "size": 7450
     },
     {
       "path": "rh/chiaki.py",
@@ -188,8 +188,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "ebfa8ab3a05ea01c5363fa815622b77a12d0c4a77122c21e5c5ba8583465eb73",
-      "size": 26743
+      "sha256": "ee913fcb9734947f2ef8b8409d165021f2b27cc4525bb8f789b818d044bbccc9",
+      "size": 26901
     },
     {
       "path": "rh/inputs.py",
@@ -233,8 +233,8 @@
     },
     {
       "path": "rh/state.py",
-      "sha256": "a8b77ca0a93be7cbb1fa1c376de64ad27b23e9adfe4876e6440b19c592acbafd",
-      "size": 6554
+      "sha256": "a44af4138df98811f8f2ace4874b31ae5a5aecc9d18a5fc6d8616325a113653e",
+      "size": 6561
     },
     {
       "path": "rh/updater.py",
@@ -243,8 +243,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "e9757a5370541db396d02484c1e1e7767772db75da2b3feb4f6ceaf4c0022211",
-      "size": 1564
+      "sha256": "0da1331ba5149ff83797efe291c0e993840377cf80c752a902ab5a7b40c6c8b1",
+      "size": 1570
     },
     {
       "path": "rh/modals/__init__.py",
@@ -278,8 +278,8 @@
     },
     {
       "path": "rh/screens/bluetooth.py",
-      "sha256": "d9e9a632391384a8132299fa5f3f7d04079f20f2d1f2f9534e9e531d3825d823",
-      "size": 6825
+      "sha256": "8fae12731b6df3ea664f5bbd5746fc4fd4381a0a35ec2811899b7e1ca7dfd679",
+      "size": 6910
     },
     {
       "path": "rh/screens/button_test.py",
@@ -699,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.36.zip",
-    "sha256": "5b369088e067b94fc26f3de6ca966cb6fbc4017de8742d6936ac0bd6c3898856",
-    "size": 12859450
+    "name": "trimui-chiaki-ng-v0.3.37-beta1.zip",
+    "sha256": "2cfc9394dbb05ce2284d59860be8101457ea287a435257b6e20c58274dcd1968",
+    "size": 12865621
   }
 }

@@ -84,7 +84,7 @@ class BluetoothGamepadSession:
     def _bt_profile():
         """Profile bit nut truyen xuong backend; la thi roi ve ps."""
         profile = getattr(state, "gamepad_profile", "ps") or "ps"
-        return profile if profile in ("ps", "labels") else "ps"
+        return profile if profile in ("ps", "labels", "ds4") else "ps"
 
     def running(self):
         return self.process is not None and self.process.poll() is None

@@ -154,6 +154,18 @@ func runSession(ctx context.Context, status func(string), heartbeat func(), mark
 			fmt.Println("Optional gamepad device class:", e)
 		}
 	}
+	if hidProfile == "ds4" {
+		// An iPhone lists Bluetooth devices by adapter name, so a DS4
+		// profile must not advertise the Brick's name. b.restore() in the
+		// deferred cleanup puts the original name back.
+		if name, ok := originalProperties["Name"].Value().(string); ok && name != ds4AdapterName {
+			if e = b.set("Name", ds4AdapterName); e != nil {
+				fmt.Println("Optional DS4 adapter name:", e)
+			} else {
+				fmt.Println("Adapter name for DS4 session:", ds4AdapterName)
+			}
+		}
+	}
 	return server.loop(ctx)
 }
 func main() {
@@ -171,7 +183,7 @@ func main() {
 	heartbeatPath := flag.String("heartbeat-file", "", "Backend heartbeat file")
 	marker := flag.String("recovery-file", "", "Temporary service recovery marker")
 	mapPath := flag.String("map-file", "", "Button/axis map JSON; defaults to bluetooth-map.json beside the app")
-	profileFlag := flag.String("profile", "ps", "HID button bit layout: ps (positional, default) or labels (case print)")
+	profileFlag := flag.String("profile", "ps", "HID button bit layout: ps (positional, default), labels (case print), or ds4 (DualShock 4 emulation for iPhone)")
 	flag.Parse()
 	if _, ok := hidButtonLayouts[*profileFlag]; ok {
 		hidProfile = *profileFlag

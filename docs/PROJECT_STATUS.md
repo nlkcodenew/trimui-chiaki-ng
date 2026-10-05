@@ -270,6 +270,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.35-beta1` | Giao diện mới: 2 theme tối/sáng (Cài đặt), chip footer đo theo chữ, chọn hàng kiểu accent-bar, ellipsis/wrap dùng chung, hết chữ tràn/chồng |
 | `v0.3.36-beta1` | Tiêu đề hiện mã HW thay CHI; menu lùi xuống lộ hết dòng hướng dẫn remote; dòng thoát Bluetooth xuống 2 dòng, hết cắt dở |
 | `v0.3.36` | **Stable**: chốt dãy beta tay cầm + UI. Đã kiểm trên Android (nút PS, MENU 2s, OTA beta). iOS chưa nhận gamepad generic — làm profile DS4/Xbox riêng sau stable |
+| `v0.3.37-beta1` | Profile `ds4` thử nghiệm cho iPhone: descriptor 442 byte đã đối chiếu kernel, report 0x11 + CRC32, trả lời feature 0x02/0x05/0x06/0x09/0x12, tên adapter "Wireless Controller". Cần iPhone thật kiểm chứng |
 
 ## 10. Kiểm thử và build gate
 

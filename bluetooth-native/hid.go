@@ -14,6 +14,21 @@ const reportID = 1
 var descriptor, _ = hex.DecodeString("05010905a10185010509190129101500250175019510810205010939150025073500463b0165147504950181426500750495018103093009310932093516018026ff7f360000460000751095048102050209c509c4150026ff00750895028102c0")
 
 func serviceRecord() string {
+	return serviceRecordFor(hidProfile)
+}
+
+// serviceRecordFor builds the BlueZ HID service record. The ds4 profile
+// advertises the DualShock descriptor and name; every other profile keeps
+// the generic gamepad record byte-identical.
+func serviceRecordFor(profile string) string {
+	name := "TrimUI Brick Pro Gamepad"
+	description := "Dual-stick Bluetooth HID gamepad"
+	desc := descriptor
+	if profile == "ds4" {
+		name = ds4ServiceName
+		description = ds4ServiceDesc
+		desc = ds4Descriptor
+	}
 	return fmt.Sprintf(`<record>
 <attribute id="0x0001"><sequence><uuid value="0x1124"/></sequence></attribute>
 <attribute id="0x0004"><sequence><sequence><uuid value="0x0100"/><uint16 value="0x0011"/></sequence><sequence><uuid value="0x0011"/></sequence></sequence></attribute>
@@ -21,8 +36,8 @@ func serviceRecord() string {
 <attribute id="0x0006"><sequence><uint16 value="0x656e"/><uint16 value="0x006a"/><uint16 value="0x0100"/></sequence></attribute>
 <attribute id="0x0009"><sequence><sequence><uuid value="0x1124"/><uint16 value="0x0101"/></sequence></sequence></attribute>
 <attribute id="0x000d"><sequence><sequence><sequence><uuid value="0x0100"/><uint16 value="0x0013"/></sequence><sequence><uuid value="0x0011"/></sequence></sequence></sequence></attribute>
-<attribute id="0x0100"><text value="TrimUI Brick Pro Gamepad"/></attribute>
-<attribute id="0x0101"><text value="Dual-stick Bluetooth HID gamepad"/></attribute>
+<attribute id="0x0100"><text value="%s"/></attribute>
+<attribute id="0x0101"><text value="%s"/></attribute>
 <attribute id="0x0200"><uint16 value="0x0100"/></attribute>
 <attribute id="0x0201"><uint16 value="0x0111"/></attribute>
 <attribute id="0x0202"><uint8 value="0x08"/></attribute>
@@ -36,7 +51,7 @@ func serviceRecord() string {
 <attribute id="0x020b"><uint16 value="0x0101"/></attribute>
 <attribute id="0x020d"><boolean value="true"/></attribute>
 <attribute id="0x020e"><boolean value="false"/></attribute>
-</record>`, descriptor)
+</record>`, name, description, desc)
 }
 
 type padState struct {
@@ -185,6 +200,9 @@ func (pad *padState) dpad() byte {
 }
 
 func (pad *padState) report() []byte {
+	if hidProfile == "ds4" {
+		return ds4Report(pad)
+	}
 	report := make([]byte, 14)
 	report[0] = reportID
 	mapping := pad.mapping()
@@ -309,6 +327,19 @@ func controlResponse(packet, report []byte) ([]byte, string) {
 		return []byte{hidpHandshake | hidpHshkErrUnsupportedReq}, ""
 
 	case hidpGetReport:
+		if header&0x03 == hidpRtypeFeature && hidProfile == "ds4" {
+			// A DualShock host reads feature reports while pairing up
+			// (calibration 0x05 unlocks the full input reports on a real
+			// DS4). Answer the known ones with the right sizes; anything
+			// else stays an error so unknown queries stay visible.
+			if len(packet) < 2 {
+				return []byte{hidpHandshake | hidpHshkErrInvalidParam}, ""
+			}
+			if reply, ok := ds4FeatureReply(packet[1]); ok {
+				return reply, ""
+			}
+			return []byte{hidpHandshake | hidpHshkErrUnsupportedReq}, ""
+		}
 		if header&0x03 != hidpRtypeInput {
 			return []byte{hidpHandshake | hidpHshkErrUnsupportedReq}, ""
 		}

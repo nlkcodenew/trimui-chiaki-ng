@@ -11,8 +11,9 @@ from .base import BaseScreen
 log = get_logger()
 
 # Profile bit nut cho backend (co --profile). "ps" theo vi tri, da do tren
-# Android; "labels" theo ten in tren vo, cach cu truoc v0.3.33.
-PROFILES = ("ps", "labels")
+# Android; "labels" theo ten in tren vo, cach cu truoc v0.3.33; "ds4" gia
+# lap DualShock 4 cho iPhone (thu nghiem, can may that kiem chung).
+PROFILES = ("ps", "labels", "ds4")
 
 
 class BluetoothScreen(BaseScreen):

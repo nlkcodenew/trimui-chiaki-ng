@@ -78,6 +78,7 @@ TEXTS = {
         "bluetooth_profile": "Profile nút: %s",
         "bluetooth_profile_ps": "PlayStation (theo vị trí)",
         "bluetooth_profile_labels": "Theo tên in trên vỏ (cũ)",
+        "bluetooth_profile_ds4": "DualShock 4 — cho iPhone (thử nghiệm)",
         "bluetooth_profile_hint": "Trái/Phải: đổi profile (khi chưa kết nối)",
 
         "button_test_title": "GHI NÚT TAY CẦM",
@@ -273,6 +274,7 @@ TEXTS = {
         "bluetooth_profile": "Button profile: %s",
         "bluetooth_profile_ps": "PlayStation (positional)",
         "bluetooth_profile_labels": "By case labels (legacy)",
+        "bluetooth_profile_ds4": "DualShock 4 — for iPhone (experimental)",
         "bluetooth_profile_hint": "Left/Right: change profile (when idle)",
 
         "button_test_title": "RECORD GAMEPAD BUTTONS",

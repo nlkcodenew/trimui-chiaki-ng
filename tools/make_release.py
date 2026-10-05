@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: ban on dinh. Tay cam Bluetooth dung nhu tay PS tren Android, 2 theme giao dien, kenh OTA beta rieng." % version,
-            "en": "v%s: stable release. Bluetooth gamepad works like a PS controller on Android, dual UI themes, separate beta OTA channel." % version,
+            "vi": "v%s: them profile DualShock 4 thu nghiem cho iPhone (descriptor + report CRC theo kernel). Stable giu nguyen." % version,
+            "en": "v%s: experimental DualShock 4 profile for iPhone (kernel-matched descriptor and CRC reports). Stable untouched." % version,
         },
         "files": files,
         "remove": [],

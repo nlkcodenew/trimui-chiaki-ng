@@ -51,6 +51,14 @@ var hidButtonLayouts = map[string][]hidButton{
 		{"l1", 6}, {"r1", 7}, {"l2", 8}, {"r2", 9},
 		{"select", 10}, {"start", 11}, {"mode", 12}, {"l3", 13}, {"r3", 14},
 	},
+	// "ds4" shares the physical key codes above; its wire format is built
+	// by ds4Report, not by this bit table. The entry only keeps --profile
+	// validation and the duplicate-code check working for the profile.
+	"ds4": {
+		{"b", 0}, {"a", 1}, {"y", 3}, {"x", 4},
+		{"l1", 6}, {"r1", 7}, {"l2", 8}, {"r2", 9},
+		{"select", 10}, {"start", 11}, {"mode", 12}, {"l3", 13}, {"r3", 14},
+	},
 }
 
 // hidProfile do co --profile dat; la ten khong co thi roi ve "ps".

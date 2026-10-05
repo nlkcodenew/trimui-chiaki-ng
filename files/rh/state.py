@@ -80,8 +80,8 @@ def _load():
     update_channel = (loaded_channel if loaded_channel in ("stable", "beta")
                       else "stable")
     loaded_profile = str(cfg.get("gamepad_profile", gamepad_profile) or "ps")
-    gamepad_profile = (loaded_profile if loaded_profile in ("ps", "labels")
-                       else "ps")
+    gamepad_profile = (loaded_profile
+                       if loaded_profile in ("ps", "labels", "ds4") else "ps")
     loaded_theme = str(cfg.get("theme", theme) or "dark")
     theme = loaded_theme if loaded_theme in ("dark", "light") else "dark"
     enable_logging = bool(cfg.get("enable_logging", enable_logging))
