@@ -371,6 +371,21 @@ Hướng làm (workstream riêng, vài vòng beta, cần iPhone test từng vòn
 Rủi ro đã thấy trước: iOS có thể kiểm tra sâu hơn descriptor (hành vi bắt tay,
 thứ tự query), nên vòng đầu có thể vẫn chưa hiện. Không đưa vào bản stable.
 
+### Vòng 1 trên iPhone thật (2026-10-05): nối rồi im lặng
+
+iPhone ghép nối, mở cả hai kênh HID, giữ 2 phút rồi 40 giây, nhưng **không gửi
+một giao dịch control nào** (không GET_REPORT, không SET_REPORT) và không app
+nào thấy controller. Thêm bằng chứng: D-Bus từ chối đổi tên adapter
+(`Property 'Name' is not writable`).
+
+Kết luận: iOS loại thiết bị từ vòng nhận diện, chưa bao giờ xét đến report.
+Nghi phạm là **thiếu bản ghi PnP Device ID** — host Bluetooth chỉ biết VID/PID
+qua bản ghi này, không có thì vendor = 0 và driver DualShock không bao giờ
+được gắn. `v0.3.38-beta1` thêm bản ghi PnP (VID 054C/PID 09CC, layout theo
+`lib/bluetooth/sdp.h` của BlueZ) đăng ký best-effort qua profile UUID
+`0x1200`, và đổi tên adapter bằng `hciconfig` (có lưu/khôi phục). Report và
+descriptor giữ nguyên vì chưa có bằng chứng nào chê chúng.
+
 ## 5. Cách dùng màn hình GHI NÚT
 
 Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng

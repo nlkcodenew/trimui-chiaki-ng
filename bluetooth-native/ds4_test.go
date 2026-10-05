@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/binary"
+	"encoding/xml"
+	"strings"
 	"testing"
 )
 
@@ -183,5 +185,30 @@ func TestDS4FeatureReplies(t *testing.T) {
 	}
 	if _, ok := ds4FeatureReply(0x77); ok {
 		t.Fatal("unknown feature 0x77 answered")
+	}
+}
+
+// The PnP Device ID record is how a Bluetooth host learns VID/PID. iOS
+// paired and connected without it but never bound its DualShock driver
+// (zero control traffic), so the ds4 profile publishes Sony's IDs.
+func TestDS4PnpRecordCarriesSonyIDs(t *testing.T) {
+	record := ds4PnpRecord()
+	decoder := xml.NewDecoder(strings.NewReader(record))
+	for {
+		_, err := decoder.Token()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			t.Fatalf("PnP record is not well-formed XML: %v", err)
+		}
+	}
+	for _, want := range []string{
+		`id="0x0001"`, `value="0x1200"`, `value="0x054C"`, `value="0x09CC"`,
+		`id="0x0201"`, `id="0x0202"`, `id="0x0205"`,
+	} {
+		if !strings.Contains(record, want) {
+			t.Fatalf("PnP record is missing %s", want)
+		}
 	}
 }

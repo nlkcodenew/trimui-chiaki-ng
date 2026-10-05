@@ -14,6 +14,7 @@ const properties = "org.freedesktop.DBus.Properties"
 const adapterInterface = "org.bluez.Adapter1"
 const profilePath dbus.ObjectPath = "/org/trimui/brick/hid"
 const agentPath dbus.ObjectPath = "/org/trimui/brick/agent"
+const pnpProfilePath dbus.ObjectPath = "/org/trimui/brick/pnp"
 
 type managedObjects map[dbus.ObjectPath]map[string]map[string]dbus.Variant
 
@@ -26,6 +27,7 @@ type bluez struct {
 	pairUntil                          time.Time
 	events                             chan string
 	profileRegistered, agentRegistered bool
+	pnpRegistered                      bool
 }
 
 func connectBus() (*bluez, error) {
@@ -226,6 +228,14 @@ func (b *bluez) register() error {
 		return e
 	}
 	b.profileRegistered = true
+	if hidProfile == "ds4" {
+		// Best effort: the session works without it, but without a PnP
+		// record the phone cannot learn Sony's VID/PID and will not bind
+		// its DualShock driver.
+		if e := b.registerPnp(); e != nil {
+			fmt.Println("Optional PnP record:", e)
+		}
+	}
 	if e := b.call("/org/bluez", "org.bluez.AgentManager1.RegisterAgent", agentPath, "NoInputNoOutput").Err; e != nil {
 		return e
 	}
@@ -246,10 +256,35 @@ func (b *bluez) register() error {
 	}
 	return nil
 }
+
+// registerPnp publishes a second SDP record with the PnP Device ID info.
+// A PnP record takes no connections (hosts only query it), so the same
+// profile object path pattern works; anything BlueZ dislikes surfaces as
+// an error here and never fails the session.
+func (b *bluez) registerPnp() error {
+	if e := b.conn.Export(&profileObject{b}, pnpProfilePath, "org.bluez.Profile1"); e != nil {
+		return e
+	}
+	opts := map[string]dbus.Variant{
+		"Name": dbus.MakeVariant("PnP Information"), "Role": dbus.MakeVariant("server"),
+		"ServiceRecord": dbus.MakeVariant(ds4PnpRecord()), "AutoConnect": dbus.MakeVariant(false),
+		"RequireAuthentication": dbus.MakeVariant(false), "RequireAuthorization": dbus.MakeVariant(false),
+	}
+	if e := b.call("/org/bluez", "org.bluez.ProfileManager1.RegisterProfile", pnpProfilePath, pnpUUID, opts).Err; e != nil {
+		return e
+	}
+	b.pnpRegistered = true
+	fmt.Println("PnP Device ID record registered: VID 054C PID 09CC")
+	return nil
+}
 func (b *bluez) unregister() {
 	if b.agentRegistered {
 		b.call("/org/bluez", "org.bluez.AgentManager1.UnregisterAgent", agentPath)
 		b.agentRegistered = false
+	}
+	if b.pnpRegistered {
+		b.call("/org/bluez", "org.bluez.ProfileManager1.UnregisterProfile", pnpProfilePath)
+		b.pnpRegistered = false
 	}
 	if b.profileRegistered {
 		b.call("/org/bluez", "org.bluez.ProfileManager1.UnregisterProfile", profilePath)

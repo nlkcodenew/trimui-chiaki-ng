@@ -77,6 +77,34 @@ const ds4AdapterName = "Wireless Controller"
 const ds4ServiceName = "Wireless Controller"
 const ds4ServiceDesc = "Sony Wireless Controller compatible gamepad"
 
+// pnpUUID is the Bluetooth PnPInformation service class. iOS learns a
+// Bluetooth HID device's VID/PID from this record; without it the phone
+// sees vendor 0 and never binds its DualShock driver (observed: paired,
+// connected, zero control traffic, no controller).
+const pnpUUID = "00001200-0000-1000-8000-00805f9b34fb"
+
+// ds4PnpRecord publishes Sony's VID/PID for the ds4 profile. Attribute IDs
+// follow BlueZ lib/bluetooth/sdp.h (Device ID assignments): 0x0200 spec,
+// 0x0201 vendor, 0x0202 product, 0x0203 version, 0x0204 primary, 0x0205
+// source. Source 0x0002 (USB IF) because Sony's VID lives in the USB
+// namespace even over Bluetooth. Version is informational (0x0001).
+func ds4PnpRecord() string {
+	return `<record>
+<attribute id="0x0001"><sequence><uuid value="0x1200"/></sequence></attribute>
+<attribute id="0x0004"><sequence><sequence><uuid value="0x0100"/></sequence></sequence></attribute>
+<attribute id="0x0005"><sequence><uuid value="0x1002"/></sequence></attribute>
+<attribute id="0x0006"><sequence><uint16 value="0x656e"/><uint16 value="0x006a"/><uint16 value="0x0100"/></sequence></attribute>
+<attribute id="0x0009"><sequence><sequence><uuid value="0x1200"/><uint16 value="0x0103"/></sequence></sequence></attribute>
+<attribute id="0x0100"><text value="PnP Information"/></attribute>
+<attribute id="0x0200"><uint16 value="0x0103"/></attribute>
+<attribute id="0x0201"><uint16 value="0x054C"/></attribute>
+<attribute id="0x0202"><uint16 value="0x09CC"/></attribute>
+<attribute id="0x0203"><uint16 value="0x0001"/></attribute>
+<attribute id="0x0204"><boolean value="true"/></attribute>
+<attribute id="0x0205"><uint16 value="0x0002"/></attribute>
+</record>`
+}
+
 // ds4CRC returns the IEEE CRC32 over seed followed by data, as the kernel's
 // ps_check_crc32 does (crc32_le(0xFFFFFFFF, seed) continued over data,
 // inverted at the end — identical to zlib over the concatenation).

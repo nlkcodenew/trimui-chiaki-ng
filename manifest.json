@@ -1,14 +1,14 @@
 {
-  "version": "0.3.37-beta1",
+  "version": "0.3.38-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-05T09:34:12+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.37-beta1/files",
-  "release_tag": "v0.3.37-beta1/files",
+  "built": "2026-10-05T10:17:14+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.38-beta1/files",
+  "release_tag": "v0.3.38-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.37-beta1: them profile DualShock 4 thu nghiem cho iPhone (descriptor + report CRC theo kernel). Stable giu nguyen.",
-    "en": "v0.3.37-beta1: experimental DualShock 4 profile for iPhone (kernel-matched descriptor and CRC reports). Stable untouched."
+    "vi": "v0.3.38-beta1: profile ds4 them ban ghi PnP VID/PID Sony va doi ten adapter; iPhone im lang khong hoi gi la bang chung thieu nhan dien.",
+    "en": "v0.3.38-beta1: ds4 profile adds the Sony VID/PID PnP record and renames the adapter; a silent iPhone means missing identity."
   },
   "files": [
     {
@@ -48,7 +48,7 @@
     },
     {
       "path": "bin/brick-pro-bt",
-      "sha256": "d6934b86f3ebf6997bf85df2c77892f0b5a10b4a8228ea4eafdbf1586f186437",
+      "sha256": "8ca6686a8acc880e535cd9e6dedce239f9c8903bd49cf3dfecad70621bf01019",
       "size": 3932312
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "path": "docs/bluetooth-native-build.json",
-      "sha256": "309448be79c53d3a1abd6f5c8218fd8fe46f9ee4bc35c3af0d101b3a2ec8a472",
+      "sha256": "c08049ecfdbdaef29b7592df525fa9a75122ef9f238a294df054a4b82a53d103",
       "size": 954
     },
     {
@@ -243,7 +243,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "0da1331ba5149ff83797efe291c0e993840377cf80c752a902ab5a7b40c6c8b1",
+      "sha256": "73c9bcda516d3d12ef4b3dff47117db5fdc7d7f1e0a1954b9dbf3fb0cea86091",
       "size": 1570
     },
     {
@@ -699,8 +699,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.37-beta1.zip",
-    "sha256": "2cfc9394dbb05ce2284d59860be8101457ea287a435257b6e20c58274dcd1968",
-    "size": 12865621
+    "name": "trimui-chiaki-ng-v0.3.38-beta1.zip",
+    "sha256": "d981504f52077bff738827b4e9d62d5eb11c2264aa204c896f225389f01a9db3",
+    "size": 12866219
   }
 }

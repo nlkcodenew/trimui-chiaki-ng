@@ -82,6 +82,8 @@ func runSession(ctx context.Context, status func(string), heartbeat func(), mark
 	var server *hidServer
 	var originalClass uint32
 	classChanged := false
+	originalName := ""
+	nameChanged := false
 	hciTool := commandPath("hciconfig")
 	defer func() {
 		status("restoring")
@@ -92,6 +94,11 @@ func runSession(ctx context.Context, status func(string), heartbeat func(), mark
 		if classChanged {
 			if e := runCommand(context.Background(), 2*time.Second, hciTool, "hci0", "class", fmt.Sprintf("0x%06x", originalClass)); e != nil {
 				fmt.Println("Restore class:", e)
+			}
+		}
+		if nameChanged {
+			if e := runCommand(context.Background(), 2*time.Second, hciTool, "hci0", "name", originalName); e != nil {
+				fmt.Println("Restore adapter name:", e)
 			}
 		}
 		b.restore()
@@ -154,14 +161,18 @@ func runSession(ctx context.Context, status func(string), heartbeat func(), mark
 			fmt.Println("Optional gamepad device class:", e)
 		}
 	}
-	if hidProfile == "ds4" {
+	if hidProfile == "ds4" && hciTool != "" {
 		// An iPhone lists Bluetooth devices by adapter name, so a DS4
-		// profile must not advertise the Brick's name. b.restore() in the
-		// deferred cleanup puts the original name back.
+		// profile must not advertise the Brick's name. D-Bus Set("Name")
+		// is rejected on this BlueZ ("not writable", seen on device), so
+		// write it straight through HCI and put it back on the way out,
+		// mirroring the class handling above.
 		if name, ok := originalProperties["Name"].Value().(string); ok && name != ds4AdapterName {
-			if e = b.set("Name", ds4AdapterName); e != nil {
+			if e = runCommand(ctx, 2*time.Second, hciTool, "hci0", "name", ds4AdapterName); e != nil {
 				fmt.Println("Optional DS4 adapter name:", e)
 			} else {
+				originalName = name
+				nameChanged = true
 				fmt.Println("Adapter name for DS4 session:", ds4AdapterName)
 			}
 		}

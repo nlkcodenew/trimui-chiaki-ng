@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: them profile DualShock 4 thu nghiem cho iPhone (descriptor + report CRC theo kernel). Stable giu nguyen." % version,
-            "en": "v%s: experimental DualShock 4 profile for iPhone (kernel-matched descriptor and CRC reports). Stable untouched." % version,
+            "vi": "v%s: profile ds4 them ban ghi PnP VID/PID Sony va doi ten adapter; iPhone im lang khong hoi gi la bang chung thieu nhan dien." % version,
+            "en": "v%s: ds4 profile adds the Sony VID/PID PnP record and renames the adapter; a silent iPhone means missing identity." % version,
         },
         "files": files,
         "remove": [],
