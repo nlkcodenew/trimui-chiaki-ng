@@ -403,6 +403,31 @@ hỏi theo trình tự của nó. Việc còn lại:
    **Quên thiết bị này** rồi ghép lại từ đầu, nếu không mọi sửa nhận diện đều
    vô hình với nó.
 
+### Vòng 3 trên iPhone thật (2026-10-05): HIỆN CONTROLLER, ĐỦ NÚT
+
+Sau khi Quên thiết bị cũ và ghép lại từ đầu:
+
+- iPhone hiện **"DUALSHOCK 4 wireless controller"**, ghép nối thành công
+  (lần 2 mới xong — Bluetooth pairing重试 lần đầu thất bại là chuyện thường,
+  chỉ lo khi thất bại lặp lại có mẫu).
+- App tester **hiện controller, tất cả nút khớp**: B→cross, A→circle,
+  Y→square, X→triangle, L1/R1/L2/R2, Select/Start, L3/R3, stick, cò.
+- Bấm MENU: tester mở `games.apple.com` — đây là hành vi của app tester với
+  nút PS (hệ thống iOS bắt nút Home), chứng tỏ **sự kiện PS đã tới nơi**.
+  Giả thiết "PS = bit 12" nay thành **xác nhận**.
+- Log chứng minh iOS gắn driver và hỏi đúng trình tự:
+  `43a3 => a3a3...` (firmware info đã trả lời, vòng trước bị từ chối),
+  `4302 => a302...` (calibration đã trả lời). Không hỏi thêm gì nữa.
+
+Hai điểm cần theo dõi thêm, chưa phải lỗi:
+
+1. **Brick tự khởi động lại một lần** giữa buổi test, pair lại sau đó vẫn
+   xong. Chưa rõ nguyên nhân (Stock OS, pin, hay phiên Bluetooth) — nếu lặp
+   lại, ghi giúp thời điểm chính xác (đang nối/khi bấm gì) và giữ lại
+   `Chiaki-loi.txt` ngay sau đó.
+2. Pair lần đầu thất bại, lần 2 xong — bình thường với Bluetooth, chỉ điều
+   tra khi có mẫu lặp.
+
 ## 5. Cách dùng màn hình GHI NÚT
 
 Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng
