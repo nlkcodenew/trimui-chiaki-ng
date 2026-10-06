@@ -12,7 +12,7 @@ log = get_logger()
 
 # Profile bit nut cho backend (co --profile). "ps" theo vi tri, da do tren
 # Android; "labels" theo ten in tren vo, cach cu truoc v0.3.33; "ds4" gia
-# lap DualShock 4 cho iPhone (thu nghiem, can may that kiem chung).
+# lap DualShock 4 cho iOS, da kiem chung tren iPhone.
 PROFILES = ("ps", "labels", "ds4")
 
 

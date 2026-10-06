@@ -86,6 +86,7 @@ def main():
     from rh.engine import ChiakiEngine
     from rh.screens.home import HomeScreen
     from rh.screens.guide import GuideScreen
+    from rh.screens.info import InfoScreen
     from rh.screens.settings import SettingsScreen
     from rh.screens.pair import PairScreen
     from rh.screens.bluetooth import BluetoothScreen
@@ -107,6 +108,7 @@ def main():
     bluetooth_screen = BluetoothScreen(engine)
     engine.register_screen("home", HomeScreen(engine))
     engine.register_screen("guide", GuideScreen(engine))
+    engine.register_screen("info", InfoScreen(engine))
     engine.register_screen("settings", SettingsScreen(engine))
     engine.register_screen("pair", PairScreen(engine))
     engine.register_screen("bluetooth", bluetooth_screen)

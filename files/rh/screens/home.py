@@ -23,7 +23,8 @@ class HomeScreen(BaseScreen):
         3. HUONG DAN         (guide)
         4. CAI DAT           (settings)
         5. CAP NHAT          (update)
-        6. THOAT             (exit)
+        6. INFO              (info)
+        7. THOAT             (exit)
     """
 
     ITEMS = [
@@ -32,6 +33,7 @@ class HomeScreen(BaseScreen):
         ("guide", "guide"),
         ("settings", "settings"),
         ("update", "update"),
+        ("info", "info"),
         ("exit", "exit"),
     ]
 
@@ -216,6 +218,8 @@ class HomeScreen(BaseScreen):
         elif key == "update":
             from ..updater import check_for_update
             threading.Thread(target=self._force_update_check, daemon=True).start()
+        elif key == "info":
+            self.engine.push_screen("info")
         elif key == "exit":
             log.info("home: user selected exit menu")
             self.engine.quit("user_exit")
@@ -276,9 +280,10 @@ class HomeScreen(BaseScreen):
 
     def _render_menu(self, engine):
         c = theme(state.theme)
-        y = 165
-        item_height = 72 if len(self.ITEMS) > 5 else 82
-        item_step = 80 if len(self.ITEMS) > 5 else 90
+        compact = len(self.ITEMS) > 6
+        y = 155 if compact else 165
+        item_height = 64 if compact else (72 if len(self.ITEMS) > 5 else 82)
+        item_step = 70 if compact else (80 if len(self.ITEMS) > 5 else 90)
         for i, (key, label) in enumerate(self.ITEMS):
             selected = (i == self.selected)
             engine.fill_rect(40, y, engine.screen_w - 80, item_height,

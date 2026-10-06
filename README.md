@@ -86,13 +86,15 @@ quét, pair PIN, stream, thoát an toàn, cài đè và trường hợp phải p
 
 1. Chọn **TAY CẦM BLUETOOTH** trong menu Chiaki-ng.
 2. Chờ kiểm tra input/BlueZ, sau đó bấm **A**.
-3. Trên Android, ghép với `TrimUI Brick Pro Gamepad`.
+3. Trên Android, dùng profile PlayStation; trên iOS, chọn profile DualShock 4
+   rồi ghép với `Wireless Controller`.
 4. Thử D-pad, ABXY, L/R, L2/R2, L3/R3 và cả hai joystick.
 5. Giữ **MENU** 2 giây để dừng (START + SELECT 2 giây là dự phòng). B là nút test.
 
 Log chẩn đoán được ghi ở `Apps/Chiaki/BrickBluetooth.log`. Chế độ này yêu cầu
-Stock OS có BlueZ, system D-Bus và quyền đọc `/dev/input/event*`; chưa hỗ trợ
-iPhone và không giả lập XInput/Microsoft Xbox protocol.
+Stock OS có BlueZ, system D-Bus và quyền đọc `/dev/input/event*`. Profile
+DualShock 4 đã được kiểm chứng trên iPhone; app không giả lập XInput/Microsoft
+Xbox protocol.
 
 ## Dữ liệu và chẩn đoán
 

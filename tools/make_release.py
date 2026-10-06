@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: gui lai report 4 giay/lan chong rot link luc roi; ghi ly do moi lan mat kenh de doan ben nao cat." % version,
-            "en": "v%s: resend report every 4s against idle drops; log the reason of every channel loss." % version,
+            "vi": "v%s stable: profile DualShock 4 cho iOS da kiem chung; them man INFO voi ma QR ung ho tac gia." % version,
+            "en": "v%s stable: verified DualShock 4 profile for iOS; add an INFO screen with the author's donation QR." % version,
         },
         "files": files,
         "remove": [],

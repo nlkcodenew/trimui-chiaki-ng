@@ -34,6 +34,7 @@ class LogUploaderTests(unittest.TestCase):
         cls.common_modals = importlib.import_module("rh.modals.common")
         cls.home_module = importlib.import_module("rh.screens.home")
         cls.guide_module = importlib.import_module("rh.screens.guide")
+        cls.info_module = importlib.import_module("rh.screens.info")
         cls.settings_module = importlib.import_module("rh.screens.settings")
         cls.pair_module = importlib.import_module("rh.screens.pair")
         cls.update_modal_module = importlib.import_module("rh.modals.update")
@@ -1140,6 +1141,56 @@ class LogUploaderTests(unittest.TestCase):
         )
         screen._activate()
         engine.push_screen.assert_called_once_with("guide")
+
+    def test_home_info_is_immediately_before_exit_and_opens(self):
+        engine = mock.Mock()
+        screen = self.home_module.HomeScreen(engine)
+        keys = [row[0] for row in screen.ITEMS]
+        self.assertEqual(keys[-2:], ["info", "exit"])
+        screen.selected = keys.index("info")
+        screen._activate()
+        engine.push_screen.assert_called_once_with("info")
+
+    def test_info_screen_matches_lottoforecast_donate_content(self):
+        i18n = importlib.import_module("rh.i18n")
+        vietnamese = i18n.TEXTS["VI"]
+        self.assertEqual(vietnamese["info_donate_title"], "Ủng hộ tác giả")
+        self.assertEqual(vietnamese["info_donate_scan"], "Quét mã MoMo để donate.")
+        self.assertEqual(vietnamese["info_donate_owner"], "Chủ TK: PHAM NGOC LINH")
+        self.assertIn("Tiền server cào số 0h", vietnamese["info_donate_note"])
+        self.assertTrue(os.path.isfile(self.info_module.InfoScreen.QR_PATH))
+
+    def test_info_screen_renders_qr_and_b_returns(self):
+        engine = mock.Mock()
+        screen = self.info_module.InfoScreen(engine)
+        self.assertTrue(screen.handle_input({"edges": ["btn_b"]}))
+        engine.pop_screen.assert_called_once_with()
+
+        class FakeEngine:
+            screen_w = 1280
+            screen_h = 720
+            font_title = object()
+            font_sub = object()
+
+            def __init__(self):
+                self.qr_paths = []
+
+            def fill_rect(self, *args, **kwargs):
+                return None
+
+            def draw_text(self, *args, **kwargs):
+                return None
+
+            def draw_bmp(self, path, *args, **kwargs):
+                self.qr_paths.append(path)
+                return True
+
+            def measure_text(self, text, font):
+                return len(text) * 12
+
+        fake_engine = FakeEngine()
+        screen.render(fake_engine)
+        self.assertEqual(fake_engine.qr_paths, [screen.QR_PATH])
 
     def test_guide_has_complete_ps4_flow_and_ps5_beta(self):
         i18n = importlib.import_module("rh.i18n")

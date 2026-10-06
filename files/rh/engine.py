@@ -59,6 +59,7 @@ class ChiakiEngine:
         self.font_intro = None
         self.controllers = []
         self.joysticks = []
+        self.texture_cache = {}
         self.exit_reason = "not_started"
 
     # ----- SDL init --------------------------------------------------------
@@ -224,6 +225,38 @@ class ChiakiEngine:
         w = self.measure_text(text, font)
         self.draw_text(text, font, int(x - w), int(y), r, g, b, a,
                        center_y=center_y)
+
+    def draw_bmp(self, path, x, y, width=None, height=None):
+        """Load a BMP once and draw it at the requested size."""
+        if not self.renderer or not path:
+            return False
+        cached = self.texture_cache.get(path)
+        if cached is None:
+            try:
+                surf = sdl2.SDL_LoadBMP(os.fsencode(path))
+                if not surf:
+                    self.texture_cache[path] = False
+                    return False
+                texture = sdl2.SDL_CreateTextureFromSurface(self.renderer, surf)
+                source_w = int(surf.contents.w)
+                source_h = int(surf.contents.h)
+                sdl2.SDL_FreeSurface(surf)
+                if not texture:
+                    self.texture_cache[path] = False
+                    return False
+                cached = (texture, source_w, source_h)
+                self.texture_cache[path] = cached
+            except Exception as exc:
+                log.warning("cannot load BMP %s: %s", path, exc)
+                self.texture_cache[path] = False
+                return False
+        if cached is False:
+            return False
+        texture, source_w, source_h = cached
+        draw_w = int(width or source_w)
+        draw_h = int(height or source_h)
+        dst = sdl2.SDL_Rect(int(x), int(y), draw_w, draw_h)
+        return sdl2.SDL_RenderCopy(self.renderer, texture, None, dst) == 0
 
     # ----- NLK boot logo (intro 2.2s, port tu Music-Player) -------------------
 
@@ -560,6 +593,10 @@ class ChiakiEngine:
                 sdl2.SDL_GameControllerClose(controller)
             for joystick in self.joysticks:
                 sdl2.SDL_JoystickClose(joystick)
+            for cached in getattr(self, "texture_cache", {}).values():
+                if cached:
+                    sdl2.SDL_DestroyTexture(cached[0])
+            self.texture_cache = {}
             if self.renderer:
                 sdl2.SDL_DestroyRenderer(self.renderer)
             if self.window:

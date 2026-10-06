@@ -274,6 +274,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.38-beta1` | iPhone nối rồi im lặng (0 giao dịch control) = thiếu nhận diện: profile `ds4` thêm bản ghi PnP VID 054C/PID 09CC và đổi tên adapter qua `hciconfig` (D-Bus từ chối trên máy này). Report giữ nguyên vì chưa có bằng chứng sai |
 | `v0.3.39-beta1` | iPhone đã hỏi feature `0xA3` (firmware info) nhưng bị từ chối + `0x02` đã trả lời: nay trả lời `0xA3` đủ 48 byte + CRC. Tên cũ trên iPhone là do cache từ lần pair trước — phải Quên thiết bị rồi ghép lại |
 | `v0.3.40-beta1` | Chơi game iPhone rớt link đều 1.5–3 phút/lần ở cự ly 20cm, phía mình không lỗi: gửi lại report mỗi 4s như DS4 thật (loại trừ link chết vì im lặng), và mỗi lần mất kênh ghi rõ lý do (peer đóng / lỗi đọc / lỗi gửi) để vòng sau biết bên nào cắt |
+| `v0.3.40` | **Stable**: profile DualShock 4 cho iOS đã kiểm chứng trên iPhone; bỏ nhãn thử nghiệm và thêm menu INFO với QR ủng hộ tác giả |
 | iPhone vòng 3 (2026-10-05) | **Hiện DUALSHOCK 4 + đủ nút trên `v0.3.39-beta1`**: MENU tới nơi (tester mở games.apple.com), PS=bit12 xác nhận. Theo dõi: Brick tự reboot 1 lần, pair lần 1 thất bại lần 2 xong |
 
 ## 10. Kiểm thử và build gate

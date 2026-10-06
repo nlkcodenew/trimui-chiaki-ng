@@ -340,7 +340,7 @@ Menu `TAY CẦM BLUETOOTH` có mục chọn (Trái/Phải khi chưa kết nối)
 |---|---|---|
 | `ps` (mặc định) | B→0, A→1, Y→3, X→4 (theo vị trí) | Tester PS-mode, game — đã đo trên Oppo Reno5 |
 | `labels` | A→0, B→1, X→3, Y→4 (theo tên vỏ) | Công cụ đặt tên theo thứ tự label; cách cũ trước v0.3.33 |
-| `ds4` (thử nghiệm, từ `v0.3.37-beta1`) | DS4 thật: B→cross, A→circle, Y→square, X→triangle, MENU→PS; stick 0–255; cò analog | iPhone — cần máy thật kiểm chứng |
+| `ds4` (stable từ `v0.3.40`) | DS4 thật: B→cross, A→circle, Y→square, X→triangle, MENU→PS; stick 0–255; cò analog | iOS — đã kiểm chứng trên iPhone thật |
 
 Các bit còn lại giống nhau ở cả hai profile: L1→6, R1→7, L2→8, R2→9,
 Select→10, Start→11, PS(MENU)→12, L3→13, R3→14. Tên lạ rơi về `ps`.

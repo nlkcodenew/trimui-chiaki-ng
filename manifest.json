@@ -1,20 +1,20 @@
 {
-  "version": "0.3.40-beta1",
+  "version": "0.3.40",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-05T12:08:08+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.40-beta1/files",
-  "release_tag": "v0.3.40-beta1/files",
-  "prerelease": true,
+  "built": "2026-10-06T21:17:36+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.40/files",
+  "release_tag": "v0.3.40/files",
+  "prerelease": false,
   "note": {
-    "vi": "v0.3.40-beta1: gui lai report 4 giay/lan chong rot link luc roi; ghi ly do moi lan mat kenh de doan ben nao cat.",
-    "en": "v0.3.40-beta1: resend report every 4s against idle drops; log the reason of every channel loss."
+    "vi": "v0.3.40 stable: profile DualShock 4 cho iOS da kiem chung; them man INFO voi ma QR ung ho tac gia.",
+    "en": "v0.3.40 stable: verified DualShock 4 profile for iOS; add an INFO screen with the author's donation QR."
   },
   "files": [
     {
       "path": "app.py",
-      "sha256": "08d1cbcafc6f8b93cd07eda658dbd0146959d86e5945a184c31807d8dce0ac45",
-      "size": 5230
+      "sha256": "82184e383ed8531ae1e4406b52d8f1f4e1d45b9c91cb941f9cd0b1fdf15b956f",
+      "size": 5328
     },
     {
       "path": "bluetooth-session.sh",
@@ -40,6 +40,11 @@
       "path": "reporting.json",
       "sha256": "a4ee7f4b8ac68f6e54a97ef1c837528a8283a7fb1a59536b94a54d8d79e97444",
       "size": 92
+    },
+    {
+      "path": "assets/donate-qr.bmp",
+      "sha256": "d9991a1821a88b5ec8b142c814ebe358b668cd335d6fa4c1084457cec82db681",
+      "size": 230418
     },
     {
       "path": "assets/fallback.ttf",
@@ -173,8 +178,8 @@
     },
     {
       "path": "rh/engine.py",
-      "sha256": "83a80c265bc0bc1cd225a20138dd288ae491d9386aa00550dad0cb3c382bc104",
-      "size": 23039
+      "sha256": "e614b15a9ed6468ec598949916317cacfd8a9055a3c77dc2f701f348a7301ef4",
+      "size": 24655
     },
     {
       "path": "rh/fonts.py",
@@ -188,8 +193,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "ee913fcb9734947f2ef8b8409d165021f2b27cc4525bb8f789b818d044bbccc9",
-      "size": 26901
+      "sha256": "0f9e59d18ecf15edda262eeee5367c9ab253573f34343b1231046ba0520d296a",
+      "size": 27756
     },
     {
       "path": "rh/inputs.py",
@@ -243,8 +248,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "09c8df99bb660ffe4079ac6bd259114c17a5548ba8b49725baf76e993813d5f2",
-      "size": 1570
+      "sha256": "83573a6823606202c66ea4cf5cd9b89aad6e980f7ba11ed7ecca5b547378097d",
+      "size": 1564
     },
     {
       "path": "rh/modals/__init__.py",
@@ -268,8 +273,8 @@
     },
     {
       "path": "rh/screens/__init__.py",
-      "sha256": "90846a717e53132c10c217d0a65ad1e9be0037658e4511debdfa54bd22769f18",
-      "size": 150
+      "sha256": "ba83e2a60f7f16f1915e6949720d84db92b0f46d9515eca07b4105c0180ee514",
+      "size": 179
     },
     {
       "path": "rh/screens/base.py",
@@ -278,8 +283,8 @@
     },
     {
       "path": "rh/screens/bluetooth.py",
-      "sha256": "8fae12731b6df3ea664f5bbd5746fc4fd4381a0a35ec2811899b7e1ca7dfd679",
-      "size": 6910
+      "sha256": "8d2235294c8cd1024d987beceff582f00c5a30dbd4de301da916ede09af2ccf1",
+      "size": 6896
     },
     {
       "path": "rh/screens/button_test.py",
@@ -293,8 +298,13 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "d07c5ccad9d82ae09e5b5de258942ae91e20d1078b2d5059f2d559513e661f93",
-      "size": 12357
+      "sha256": "74c60e4e5961ab79425685bb819572d606cbf238b5ecdedcdff8bcbd7532acc0",
+      "size": 12591
+    },
+    {
+      "path": "rh/screens/info.py",
+      "sha256": "73d0732216be458980ac52b8bc7b84620d70f1c6408f8842d17dd693840a435d",
+      "size": 2491
     },
     {
       "path": "rh/screens/pair.py",
@@ -699,8 +709,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.40-beta1.zip",
-    "sha256": "67c5aed0a868edbbd62bc209a4913c9644dafbbd914f41815738958434d0145f",
-    "size": 12867280
+    "name": "trimui-chiaki-ng-v0.3.40.zip",
+    "sha256": "cd67ee68d95564c51525d45e5264b8a09d12b3e903ea926cdadd23be464739d8",
+    "size": 12924640
   }
 }
