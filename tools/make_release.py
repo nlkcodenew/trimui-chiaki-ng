@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: sua Wi-Fi restore (up + reassociate + USR1 renew + doi IP that)." % version,
-            "en": "v%s: fix Wi-Fi restore (up + reassociate + USR1 renew + wait for real IP)." % version,
+            "vi": "v%s: tac tam thay vi cat phien khi tac nhe; nhan profile theo may (Android/iPhone)." % version,
+            "en": "v%s: shed-then-keep-link on hiccups instead of instant drop; profiles labeled by phone." % version,
         },
         "files": files,
         "remove": [],

@@ -338,9 +338,12 @@ Menu `TAY CẦM BLUETOOTH` có mục chọn (Trái/Phải khi chưa kết nối)
 
 | Profile | Bit nút mặt | Khi nào dùng |
 |---|---|---|
-| `ps` (mặc định) | B→0, A→1, Y→3, X→4 (theo vị trí) | Tester PS-mode, game — đã đo trên Oppo Reno5 |
+| `ps` (mặc định) | B→0, A→1, Y→3, X→4 (theo vị trí) | **Android** — generic HID, đã đo trên Oppo Reno5 |
 | `labels` | A→0, B→1, X→3, Y→4 (theo tên vỏ) | Công cụ đặt tên theo thứ tự label; cách cũ trước v0.3.33 |
-| `ds4` (stable từ `v0.3.40`) | DS4 thật: B→cross, A→circle, Y→square, X→triangle, MENU→PS; stick 0–255; cò analog | iOS — đã kiểm chứng trên iPhone thật |
+| `ds4` (stable từ `v0.3.40`) | DS4 thật: B→cross, A→circle, Y→square, X→triangle, MENU→PS; stick 0–255; cò analog | **iPhone** — đã kiểm chứng trên iPhone thật |
+
+Ba profile không gộp được: `ps`/`labels` nói generic HID (iOS làm ngơ),
+`ds4` nói protocol DualShock (descriptor + report CRC + SDP + PnP khác hẳn).
 
 Các bit còn lại giống nhau ở cả hai profile: L1→6, R1→7, L2→8, R2→9,
 Select→10, Start→11, PS(MENU)→12, L3→13, R3→14. Tên lạ rơi về `ps`.
@@ -483,6 +486,14 @@ không tự renew nên **không bao giờ có lại IP** — tunnel-loop retry m
 Ghi nhận thêm vòng này: dù Wi-Fi đã tắt trong phiên (log có dòng disabled),
 rớt `poll error` vẫn xảy ra → xung đột sóng phía Brick không phải nguyên nhân
 duy nhất. Vòng sau thử thêm phía iPhone (Wi-Fi 5GHz hoặc cellular).
+
+### Vòng 6: tắc tạm bị cắt oan + nhãn profile theo máy (2026-10-07)
+
+Log GRID cho thấy rớt với lý do `send stalled`: iPhone ngừng đọc >250ms là
+phiên cũ **cắt luôn**. Trong game nặng, tắc 250ms chỉ là nấc cụt — cắt phiên
+biến nó thành vòng rớt-nối lại. `v0.3.45-beta1` đổi luật: tắc thì shedding
+báo cũ và giữ link (trạng thái mới vẫn tới đều + resend 4s), chỉ cắt khi tắc
+liền quá 15 giây (`trackStall`, test `TestTrackStallBudget` + shedding).
 
 ## 5. Cách dùng màn hình GHI NÚT
 

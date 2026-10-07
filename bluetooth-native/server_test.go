@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
+	"golang.org/x/sys/unix"
 )
 
 // Discovery radio shares 2.4 GHz with the HID link, so the server turns it
@@ -73,6 +74,62 @@ func TestDisconnectRecordsReason(t *testing.T) {
 	}
 	if s.channels != [2]int{-1, -1} {
 		t.Fatalf("channels = %v, want closed", s.channels)
+	}
+}
+
+// A stalled peer must shed stale reports but keep the link: dropping the
+// session on the first hiccup is what turned GRID races into reconnect
+// cycles. Only a stall longer than the whole budget kills the link.
+func TestFlushShedsStaleKeepsLink(t *testing.T) {
+	old := time.Now().Add(-time.Second)
+	q := packetQueue{
+		{data: []byte{1, 2, 3}, created: old},
+		{data: []byte{4, 5, 6}, created: time.Now()},
+	}
+	eagain := unix.EAGAIN
+	stalled, err := q.flush(time.Now(), func([]byte) (int, error) {
+		return 0, eagain
+	})
+	if err != nil {
+		t.Fatalf("shed must not error: %v", err)
+	}
+	if !stalled {
+		t.Fatal("shed stale packet must report stalled")
+	}
+	if len(q) != 1 {
+		t.Fatalf("queue has %d packets, want 1 fresh left", len(q))
+	}
+	sent := 0
+	stalled, err = q.flush(time.Now(), func(data []byte) (int, error) {
+		sent++
+		return len(data), nil
+	})
+	if err != nil || stalled || sent != 1 || len(q) != 0 {
+		t.Fatalf("fresh flush: err=%v stalled=%v sent=%d left=%d",
+			err, stalled, sent, len(q))
+	}
+}
+
+func TestTrackStallBudget(t *testing.T) {
+	s := &hidServer{}
+	now := time.Now()
+	if s.trackStall(false, now) {
+		t.Fatal("healthy link must not disconnect")
+	}
+	if s.trackStall(true, now) {
+		t.Fatal("first stall must not disconnect")
+	}
+	if s.trackStall(true, now.Add(stallBudget-time.Second)) {
+		t.Fatal("stall inside budget must not disconnect")
+	}
+	if !s.trackStall(true, now.Add(stallBudget+time.Second)) {
+		t.Fatal("stall past budget must disconnect")
+	}
+	if s.trackStall(false, now.Add(stallBudget+2*time.Second)) {
+		t.Fatal("recovered link must not disconnect")
+	}
+	if !s.stallStart.IsZero() {
+		t.Fatal("recovery must clear the stall clock")
 	}
 }
 

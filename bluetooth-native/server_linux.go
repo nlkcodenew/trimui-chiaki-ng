@@ -72,6 +72,14 @@ type queuedPacket struct {
 }
 type packetQueue []queuedPacket
 
+// stallBudget is how long the peer may leave reports unread before the link
+// is declared dead. Short stalls happen on a busy phone (a game hiccup
+// while racing); killing the session on the first one turns a hiccup into
+// a full disconnect-reconnect cycle. Anything older than stalePacket is
+// shed so a recovering link never replays ancient button states.
+const stallBudget = 15 * time.Second
+const stalePacket = 250 * time.Millisecond
+
 func (q *packetQueue) push(data []byte, now time.Time) error {
 	if len(*q) >= 64 {
 		return errors.New("HID queue overflow")
@@ -79,28 +87,34 @@ func (q *packetQueue) push(data []byte, now time.Time) error {
 	*q = append(*q, queuedPacket{append([]byte(nil), data...), now})
 	return nil
 }
-func (q *packetQueue) flush(now time.Time, send func([]byte) (int, error)) error {
+func (q *packetQueue) flush(now time.Time, send func([]byte) (int, error)) (bool, error) {
+	stalled := false
 	for len(*q) > 0 {
 		item := (*q)[0]
-		if now.Sub(item.created) > 250*time.Millisecond {
-			return errors.New("HID output stalled")
+		if now.Sub(item.created) > stalePacket {
+			// The peer stopped reading: shed the stale report and keep
+			// the link. Fresh state keeps arriving (plus the resend
+			// timer), so nothing the phone shows goes stale for long.
+			*q = (*q)[1:]
+			stalled = true
+			continue
 		}
 		n, e := send(item.data)
 		if errors.Is(e, unix.EAGAIN) {
-			return nil
+			return stalled, nil
 		}
 		if errors.Is(e, unix.EINTR) {
 			continue
 		}
 		if e != nil {
-			return e
+			return stalled, e
 		}
 		if n != len(item.data) {
-			return errors.New("short L2CAP packet")
+			return stalled, errors.New("short L2CAP packet")
 		}
 		*q = (*q)[1:]
 	}
-	return nil
+	return stalled, nil
 }
 
 type hidServer struct {
@@ -122,7 +136,9 @@ type hidServer struct {
 	// lastReport remembers when the current report last went out, so the
 	// server can resend it on a timer. lastDropReason names the last
 	// channel loss for the log; the phone never explains itself.
+	// stallStart marks when the current unread episode began.
 	lastReport     time.Time
+	stallStart     time.Time
 	lastDropReason string
 }
 
@@ -278,19 +294,39 @@ func (s *hidServer) receive(which int) {
 	}
 }
 func (s *hidServer) flush() {
+	stalled := false
 	for i := range s.channels {
 		fd := s.channels[i]
 		if fd < 0 {
 			continue
 		}
-		e := s.queues[i].flush(time.Now(), func(data []byte) (int, error) {
+		stuck, e := s.queues[i].flush(time.Now(), func(data []byte) (int, error) {
 			return unix.SendmsgN(fd, data, nil, nil, unix.MSG_DONTWAIT|unix.MSG_NOSIGNAL)
 		})
 		if e != nil {
 			s.disconnect(fmt.Sprintf("HID channel send: %v", e))
 			return
 		}
+		stalled = stalled || stuck
 	}
+	if s.trackStall(stalled, time.Now()) {
+		s.disconnect("HID link stalled")
+	}
+}
+
+// trackStall budgets stalled sending: ride out hiccups, give up only if the
+// peer reads nothing for the whole budget. Returns true to disconnect.
+func (s *hidServer) trackStall(stalled bool, now time.Time) bool {
+	if !stalled {
+		s.stallStart = time.Time{}
+		return false
+	}
+	if s.stallStart.IsZero() {
+		s.stallStart = now
+		fmt.Println("HID link stalling: shedding stale reports, keeping the link")
+		return false
+	}
+	return now.Sub(s.stallStart) > stallBudget
 }
 func (s *hidServer) loop(ctx context.Context) error {
 	// Do not exclusively grab evdev: the Chiaki UI and independent exit guard
