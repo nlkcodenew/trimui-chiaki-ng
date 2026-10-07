@@ -4,7 +4,7 @@
 TEXTS = {
     "VI": {
         "app_title": "CHIAKI-NG",
-        "app_subtitle": "Điều khiển PS4 / PS5 từ xa trên TrimUI Smart Pro S",
+        "app_subtitle": "Điều khiển PS4 từ xa trên %s",
         "host": "Máy PS4/PS5",
         "host_addr": "IP PlayStation",
         "psn_account_id": "PSN Account-ID (base64)",
@@ -208,7 +208,7 @@ TEXTS = {
     },
     "EN": {
         "app_title": "CHIAKI-NG",
-        "app_subtitle": "PS4 / PS5 Remote Play for TrimUI Smart Pro S",
+        "app_subtitle": "PS4 Remote Play on %s",
         "host": "PS4/PS5 host",
         "host_addr": "PlayStation IP",
         "psn_account_id": "PSN Account-ID (base64)",

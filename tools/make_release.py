@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s stable: profile DualShock 4 cho iOS da kiem chung; them man INFO voi ma QR ung ho tac gia." % version,
-            "en": "v%s stable: verified DualShock 4 profile for iOS; add an INFO screen with the author's donation QR." % version,
+            "vi": "v%s: tieu de theo ten may that (Brick Pro/Smart Pro S), bo chu PS5 thua." % version,
+            "en": "v%s: subtitle follows the detected device model, drops the stray PS5." % version,
         },
         "files": files,
         "remove": [],

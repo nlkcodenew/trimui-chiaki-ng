@@ -1,14 +1,14 @@
 {
-  "version": "0.3.40",
+  "version": "0.3.41-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-06T21:17:36+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.40/files",
-  "release_tag": "v0.3.40/files",
-  "prerelease": false,
+  "built": "2026-10-07T08:28:30+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.41-beta1/files",
+  "release_tag": "v0.3.41-beta1/files",
+  "prerelease": true,
   "note": {
-    "vi": "v0.3.40 stable: profile DualShock 4 cho iOS da kiem chung; them man INFO voi ma QR ung ho tac gia.",
-    "en": "v0.3.40 stable: verified DualShock 4 profile for iOS; add an INFO screen with the author's donation QR."
+    "vi": "v0.3.41-beta1: tieu de theo ten may that (Brick Pro/Smart Pro S), bo chu PS5 thua.",
+    "en": "v0.3.41-beta1: subtitle follows the detected device model, drops the stray PS5."
   },
   "files": [
     {
@@ -173,8 +173,8 @@
     },
     {
       "path": "rh/device_identity.py",
-      "sha256": "29ec897f41010c573c7206dd2a26194d9ec8283adfdf76454c84193d53fff1a2",
-      "size": 3084
+      "sha256": "9d02123092f160da45868196e001d9540c75255ea4921c415b944365f16cbb6a",
+      "size": 3614
     },
     {
       "path": "rh/engine.py",
@@ -193,8 +193,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "0f9e59d18ecf15edda262eeee5367c9ab253573f34343b1231046ba0520d296a",
-      "size": 27756
+      "sha256": "241ca6ee2d81e0e4ae4d484c1c5ca8ae14fb326ae208ca471acd8546820dadb9",
+      "size": 27711
     },
     {
       "path": "rh/inputs.py",
@@ -248,8 +248,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "83573a6823606202c66ea4cf5cd9b89aad6e980f7ba11ed7ecca5b547378097d",
-      "size": 1564
+      "sha256": "3ab4f26c633a9df2f1e6187d39c8ccad2c434e4484fcebb3d0d82ff9f6bbc04a",
+      "size": 1570
     },
     {
       "path": "rh/modals/__init__.py",
@@ -298,8 +298,8 @@
     },
     {
       "path": "rh/screens/home.py",
-      "sha256": "74c60e4e5961ab79425685bb819572d606cbf238b5ecdedcdff8bcbd7532acc0",
-      "size": 12591
+      "sha256": "1ec0fa305f4cdb30598f72507b17d3a287219fefee5c883252b1727da893da4f",
+      "size": 12636
     },
     {
       "path": "rh/screens/info.py",
@@ -709,8 +709,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.40.zip",
-    "sha256": "cd67ee68d95564c51525d45e5264b8a09d12b3e903ea926cdadd23be464739d8",
-    "size": 12924640
+    "name": "trimui-chiaki-ng-v0.3.41-beta1.zip",
+    "sha256": "65e6a7bfa99f9012424321f4e38b79348fee60be51a77d5160ad3af0a532082d",
+    "size": 12924878
   }
 }

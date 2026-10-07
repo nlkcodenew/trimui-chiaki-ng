@@ -65,6 +65,22 @@ def install_id():
     return _safe_label(getattr(state, "device_id", ""), "CHI-UNKNOWN")
 
 
+def device_display_name(model=None):
+    """Ten hien thi cua may cho UI, suy tu device_model().
+
+    App chay tren ca Brick Pro va Smart Pro S nen subtitle khong duoc ghi
+    cung ten mot may. Model la thi roi ve "TrimUI" chung chung chu khong
+    doan bua.
+    """
+    name = str(model if model is not None else device_model() or "")
+    name = name.strip().lower()
+    if "brick" in name or name == "sun50iw10":
+        return "TrimUI Brick Pro"
+    if "smart" in name:
+        return "TrimUI Smart Pro S"
+    return "TrimUI"
+
+
 def _first_identity(paths, invalid_values=()):
     invalid = {str(value).lower() for value in invalid_values}
     for path in paths:

@@ -1132,6 +1132,29 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn(identity["hardware_id"], title)
         self.assertEqual(identity["install_id"], "CHI-E2E1")
 
+    def test_device_display_name_covers_both_models(self):
+        identity = importlib.import_module("rh.device_identity")
+        self.assertEqual(identity.device_display_name("sun50iw10"),
+                         "TrimUI Brick Pro")
+        self.assertEqual(identity.device_display_name("TRIMUI Brick Pro"),
+                         "TrimUI Brick Pro")
+        self.assertEqual(identity.device_display_name("Smart Pro S"),
+                         "TrimUI Smart Pro S")
+        self.assertEqual(identity.device_display_name("something-unknown"),
+                         "TrimUI")
+        self.assertEqual(identity.device_display_name(""), "TrimUI")
+
+    def test_home_subtitle_names_ps4_and_detected_model(self):
+        identity = importlib.import_module("rh.device_identity")
+        i18n = importlib.import_module("rh.i18n")
+        for lang, model, want in (
+                ("VI", "sun50iw10", "Điều khiển PS4 từ xa trên TrimUI Brick Pro"),
+                ("VI", "Smart Pro S", "Điều khiển PS4 từ xa trên TrimUI Smart Pro S"),
+                ("EN", "sun50iw10", "PS4 Remote Play on TrimUI Brick Pro")):
+            subtitle = i18n.TEXTS[lang]["app_subtitle"] % identity.device_display_name(model)
+            self.assertEqual(subtitle, want)
+            self.assertNotIn("PS5", subtitle)
+
     def test_home_menu_opens_user_guide(self):
         engine = mock.Mock()
         screen = self.home_module.HomeScreen(engine)

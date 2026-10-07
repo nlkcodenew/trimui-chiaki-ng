@@ -7,7 +7,7 @@ import time
 from .. import state, chiaki
 from ..i18n import tr
 from ..version import APP_VERSION
-from ..device_identity import hardware_id
+from ..device_identity import device_display_name, hardware_id
 from ..logger import get_logger
 from ..ui.primitives import ellipsis_text, safe_measure, theme
 from .base import BaseScreen
@@ -260,7 +260,7 @@ class HomeScreen(BaseScreen):
     def render(self, engine):
         c = theme(state.theme)
         engine.fill_rect(0, 64, engine.screen_w, engine.screen_h - 120, *c["bg"], 255)
-        engine.draw_text(tr("app_subtitle"), engine.font_sub, 40, 90, *c["muted"])
+        engine.draw_text(tr("app_subtitle") % device_display_name(), engine.font_sub, 40, 90, *c["muted"])
         engine.draw_text(tr("stream_exit_guide"), engine.font_sub, 40, 125, *c["accent"])
         if self.hosts:
             self._render_hosts(engine)
