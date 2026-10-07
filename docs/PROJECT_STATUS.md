@@ -277,6 +277,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.40` | **Stable**: profile DualShock 4 cho iOS đã kiểm chứng trên iPhone; bỏ nhãn thử nghiệm và thêm menu INFO với QR ủng hộ tác giả |
 | `v0.3.41-beta1` | Tiêu đề theo tên máy thật (Brick Pro/Smart Pro S, lạ thì "TrimUI"), bỏ chữ PS5 thừa ở subtitle |
 | `v0.3.42-beta1` | Tắt luồng PS5 bằng cờ `PS5_ENABLED=False`: không quét cổng 9302, pair/guide/wakeup/stream từ chối PS5, code và test PS5 giữ nguyên để bật lại sau |
+| `v0.3.43-beta1` | Quản lý sóng theo đề xuất người dùng: tắt Wi-Fi khi mở tay cầm (mở lại đúng trạng thái cũ khi dừng mọi kiểu), tắt discovery ngay khi đã nối. Crash tự phục hồi qua trap/recovery, reboot càng sạch (Stock OS tự dựng Wi-Fi/BT) |
 | iPhone vòng 3 (2026-10-05) | **Hiện DUALSHOCK 4 + đủ nút trên `v0.3.39-beta1`**: MENU tới nơi (tester mở games.apple.com), PS=bit12 xác nhận. Theo dõi: Brick tự reboot 1 lần, pair lần 1 thất bại lần 2 xong |
 
 ## 10. Kiểm thử và build gate

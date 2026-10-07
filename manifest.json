@@ -1,14 +1,14 @@
 {
-  "version": "0.3.42-beta1",
+  "version": "0.3.43-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-07T09:00:47+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.42-beta1/files",
-  "release_tag": "v0.3.42-beta1/files",
+  "built": "2026-10-07T09:51:38+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.43-beta1/files",
+  "release_tag": "v0.3.43-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.42-beta1: tat luong PS5 (quet, pair, guide, wakeup, stream), giu code de bat lai sau.",
-    "en": "v0.3.42-beta1: PS5 flow disabled (scan, pair, guide, wakeup, stream), code kept for later."
+    "vi": "v0.3.43-beta1: tat Wi-Fi khi mo tay cam, tat discovery khi da noi; crash van tu phuc hoi, reboot cang sach.",
+    "en": "v0.3.43-beta1: Wi-Fi off during gamepad sessions, discovery off once connected; crash-safe with reboot fallback."
   },
   "files": [
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "bluetooth-session.sh",
-      "sha256": "dd8f9595df5b573c0fedf8fb0e8362abfcef96c52f09cea5d8b7c30af0518daf",
-      "size": 5006
+      "sha256": "9892a78029f583d9cccb318006992cdd6e51e487b717c9640c63de3028053bda",
+      "size": 6532
     },
     {
       "path": "config.json",
@@ -53,7 +53,7 @@
     },
     {
       "path": "bin/brick-pro-bt",
-      "sha256": "b96bc3eaaddca05dc151326af1cb5171370df9a8f05a0036c34914431f3ab501",
+      "sha256": "15e18b9bf0691de58aa5e54b49b508acb3e6e06897c8d8501b2ec13c9c0c19ba",
       "size": 3932312
     },
     {
@@ -83,7 +83,7 @@
     },
     {
       "path": "docs/bluetooth-native-build.json",
-      "sha256": "045756ec24973b077eba8289eb436e4e1d80b33b2f8f8100d4cc78cfdb5eb3f1",
+      "sha256": "b565317da29440ba5dbb3024dee4362c48b3f8511aac6026a1fdb13431240593",
       "size": 954
     },
     {
@@ -248,7 +248,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "61a20ffb24c4eb4da10eb79a0f61caf338d175091a0ae67ba0d4e2c789f5c811",
+      "sha256": "2d9a94e507d1c826305843514215ef6ddd4e3ae5fda5859dca6585c4e939f92c",
       "size": 1570
     },
     {
@@ -709,8 +709,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.42-beta1.zip",
-    "sha256": "8bfd5a58eb90047977218ebf246be1e09e9a5b568adf114db6fa8615e5ec10c7",
-    "size": 12925379
+    "name": "trimui-chiaki-ng-v0.3.43-beta1.zip",
+    "sha256": "365daf4e37f65e4763bea1bfc58795942d3a504331c251e89335a5ca8de05f4b",
+    "size": 12925964
   }
 }

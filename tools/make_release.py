@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: tat luong PS5 (quet, pair, guide, wakeup, stream), giu code de bat lai sau." % version,
-            "en": "v%s: PS5 flow disabled (scan, pair, guide, wakeup, stream), code kept for later." % version,
+            "vi": "v%s: tat Wi-Fi khi mo tay cam, tat discovery khi da noi; crash van tu phuc hoi, reboot cang sach." % version,
+            "en": "v%s: Wi-Fi off during gamepad sessions, discovery off once connected; crash-safe with reboot fallback." % version,
         },
         "files": files,
         "remove": [],

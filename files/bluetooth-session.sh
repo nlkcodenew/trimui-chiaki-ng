@@ -61,9 +61,47 @@ cleanup() {
     trap - 0 INT TERM HUP
     stop_child "$WORKER_PID"
     stop_child "$GUARD_PID"
+    wifi_restore
     if [ -f "$RECOVERY_FILE" ]; then
         "$BACKEND" --recover --recovery-file "$RECOVERY_FILE" >> "$LOG_FILE" 2>&1 || true
     fi
+}
+
+# Wi-Fi 2.4 GHz cua chip combo tranh song voi Bluetooth HID. Tat Wi-Fi khi
+# phien bat dau, mo lai dung trang thai cu khi phien ket thuc (kieu gi ket
+# thuc cung qua cleanup). Mat dien/reboot thi Stock OS tu dung Wi-Fi lai
+# (dmesg co dong assoc o giay 11), nen khong ket o trang thai tat.
+# Luu y: tat Wi-Fi la mat luon SSH/tunnel remote den khi phien dung.
+WIFI_STATES=""
+wifi_save() {
+    WIFI_STATES=""
+    if ! command -v ifconfig >/dev/null 2>&1; then
+        echo "Wi-Fi manage skipped: no ifconfig" >> "$LOG_FILE" 2>&1 || true
+        return 0
+    fi
+    for iface_path in /sys/class/net/wlan*; do
+        [ -e "$iface_path/operstate" ] || continue
+        iface=$(basename "$iface_path")
+        state=$(cat "$iface_path/operstate" 2>/dev/null || echo unknown)
+        WIFI_STATES="$WIFI_STATES $iface:$state"
+        if [ "$state" = "up" ]; then
+            ifconfig "$iface" down 2>/dev/null || true
+            after=$(cat "$iface_path/operstate" 2>/dev/null || echo unknown)
+            echo "Wi-Fi $iface was up, disabled for session (now $after)" >> "$LOG_FILE" 2>&1 || true
+        fi
+    done
+}
+wifi_restore() {
+    [ -n "$WIFI_STATES" ] || return 0
+    command -v ifconfig >/dev/null 2>&1 || return 0
+    for entry in $WIFI_STATES; do
+        iface=${entry%%:*}
+        state=${entry##*:}
+        if [ "$state" = "up" ]; then
+            ifconfig "$iface" up 2>/dev/null || true
+            echo "Wi-Fi $iface restored (was up)" >> "$LOG_FILE" 2>&1 || true
+        fi
+    done
 }
 
 trap cleanup 0
@@ -78,6 +116,8 @@ if [ ! -x "$BACKEND" ]; then
 fi
 
 rotate_log
+
+wifi_save
 
 {
     echo ""

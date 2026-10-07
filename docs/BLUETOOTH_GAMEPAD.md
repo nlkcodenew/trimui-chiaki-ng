@@ -445,6 +445,32 @@ hoặc xung đột Wi-Fi/BT trên chip combo của Brick), không phải lỗi r
    `TestDisconnectRecordsReason`): peer đóng / lỗi đọc / lỗi gửi / poll.
    Vòng sau chỉ cần nhìn dòng `HID channels dropped:` là biết bên nào cắt.
 
+### Vòng 5: rớt link do sóng, quản lý radio theo phiên (2026-10-07)
+
+SSH thẳng vào Brick đọc log vòng 4 cho hai bằng chứng mới:
+
+1. Hai lý do rớt ghi rõ trong log: `HID channel send: HID output stalled`
+   (iPhone ngừng đọc kênh >250ms) rồi `HID channel poll error` (rớt link).
+2. Wi-Fi dính AP **kênh 6 HT40 2.4GHz**, chip xradio chỉ có 2.4GHz, driver
+   Wi-Fi báo `drop=1771`. Bluetooth HID chung sóng này → tắc nghẽn là nghi
+   phạm số 1. (Chuyển Brick sang 5GHz bất khả thi: chip không có băng tần đó.)
+
+`v0.3.43-beta1` làm đúng cấu trúc người dùng đề xuất, gắn vào hạ tầng
+recovery sẵn có:
+
+- **Mở tay cầm (bấm A): tắt Wi-Fi** (`ifconfig wlanX down`, chỉ những cái
+  đang up), ghi trạng thái cũ vào log.
+- **Đã nối: tắt discovery** (`lockDownDiscovery` khi HID connected;
+  `b.restore()` tự mở lại khi phiên dừng). Hết timeout discovery 120s.
+- **Dừng (MENU 2s / crash / lỗi): mở Wi-Fi lại đúng trạng thái cũ** qua
+  `wifi_restore()` trong `cleanup()` — trap bắt mọi đường thoát.
+- **Crash không kẹt**: marker recovery ở `/tmp` + lần mở app sau tự `--recover`;
+  **reboot càng sạch**: Stock OS tự dựng Wi-Fi (assoc giây 11) và BT
+  (`bt_init.sh`), settings/khóa pair không bao giờ bị code radio đụng.
+
+Lưu ý vận hành: tắt Wi-Fi là mất luôn SSH/tunnel remote đến khi phiên dừng
+— đọc log sau phiên, không remote giữa phiên.
+
 ## 5. Cách dùng màn hình GHI NÚT
 
 Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng

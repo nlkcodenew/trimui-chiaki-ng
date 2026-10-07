@@ -162,6 +162,20 @@ class BluetoothGamepadIntegrationTests(unittest.TestCase):
         self.assertIn("--profile", text)
         self.assertIn("CHIAKI_BT_PROFILE", text)
 
+    def test_supervisor_manages_wifi_around_the_session(self):
+        """Wi-Fi 2.4GHz tranh song voi HID: tat khi phien chay, mo lai dung
+        trang thai cu khi phien dung kieu gi (ke ca crash nho trap)."""
+        script = os.path.join(FILES, "bluetooth-session.sh")
+        with open(script, encoding="utf-8") as handle:
+            text = handle.read()
+        for marker in ("wifi_save", "wifi_restore", "ifconfig",
+                       "operstate", "WIFI_STATES"):
+            self.assertIn(marker, text)
+        body = text[text.index("rotate_log"):]
+        self.assertIn("\nwifi_save\n", body)
+        cleanup = text.split("cleanup() {", 1)[1].split("\n}\n", 1)[0]
+        self.assertIn("wifi_restore", cleanup)
+
     def test_gamepad_profile_defaults_ps_persists_and_rejects_junk(self):
         state = self.manager.state
         original = state.gamepad_profile

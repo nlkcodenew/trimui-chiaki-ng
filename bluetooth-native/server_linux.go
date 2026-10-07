@@ -160,6 +160,13 @@ func (s *hidServer) disconnect(reason string) {
 	s.suspended = false
 	s.waiting()
 }
+
+// lockDownDiscovery turns adapter discovery off once a host is connected.
+// b.set records the change, so the deferred b.restore() puts it back when
+// the session ends, whatever way it ends.
+func (s *hidServer) lockDownDiscovery() error {
+	return s.b.set("Discoverable", false)
+}
 func (s *hidServer) queue(which int, data []byte) {
 	if s.channels[which] < 0 {
 		return
@@ -224,6 +231,12 @@ func (s *hidServer) accept(which int) {
 		s.queue(1, append([]byte{hidpData | hidpRtypeInput}, s.current...))
 		fmt.Println("HID connected:", address)
 		s.status("connected")
+		// The phone found us, so stop being findable: discovery radio
+		// traffic shares 2.4 GHz with the HID link itself. b.restore()
+		// in the session cleanup puts discoverability back afterwards.
+		if e := s.lockDownDiscovery(); e != nil {
+			fmt.Println("Optional discovery lockdown:", e)
+		}
 	}
 }
 func (s *hidServer) receive(which int) {
