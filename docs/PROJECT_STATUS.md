@@ -278,6 +278,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.41-beta1` | Tiêu đề theo tên máy thật (Brick Pro/Smart Pro S, lạ thì "TrimUI"), bỏ chữ PS5 thừa ở subtitle |
 | `v0.3.42-beta1` | Tắt luồng PS5 bằng cờ `PS5_ENABLED=False`: không quét cổng 9302, pair/guide/wakeup/stream từ chối PS5, code và test PS5 giữ nguyên để bật lại sau |
 | `v0.3.43-beta1` | Quản lý sóng theo đề xuất người dùng: tắt Wi-Fi khi mở tay cầm (mở lại đúng trạng thái cũ khi dừng mọi kiểu), tắt discovery ngay khi đã nối. Crash tự phục hồi qua trap/recovery, reboot càng sạch (Stock OS tự dựng Wi-Fi/BT) |
+| `v0.3.44-beta1` | SSH vào máy tìm ra `ifconfig up` không xin lại IP (udhcpc không tự renew) nên SSH chết sau phiên: restore giờ up + `wpa_cli reassociate` + `killall -USR1 udhcpc` + đợi IP thật, ghi kết quả vào log. Tunnel-loop tự nối lại khi có mạng |
 | iPhone vòng 3 (2026-10-05) | **Hiện DUALSHOCK 4 + đủ nút trên `v0.3.39-beta1`**: MENU tới nơi (tester mở games.apple.com), PS=bit12 xác nhận. Theo dõi: Brick tự reboot 1 lần, pair lần 1 thất bại lần 2 xong |
 
 ## 10. Kiểm thử và build gate

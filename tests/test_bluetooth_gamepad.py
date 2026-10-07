@@ -169,7 +169,8 @@ class BluetoothGamepadIntegrationTests(unittest.TestCase):
         with open(script, encoding="utf-8") as handle:
             text = handle.read()
         for marker in ("wifi_save", "wifi_restore", "ifconfig",
-                       "operstate", "WIFI_STATES"):
+                       "operstate", "WIFI_STATES", "reassociate",
+                       "USR1", "NO IP AFTER WAIT"):
             self.assertIn(marker, text)
         body = text[text.index("rotate_log"):]
         self.assertIn("\nwifi_save\n", body)

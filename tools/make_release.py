@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: tat Wi-Fi khi mo tay cam, tat discovery khi da noi; crash van tu phuc hoi, reboot cang sach." % version,
-            "en": "v%s: Wi-Fi off during gamepad sessions, discovery off once connected; crash-safe with reboot fallback." % version,
+            "vi": "v%s: sua Wi-Fi restore (up + reassociate + USR1 renew + doi IP that)." % version,
+            "en": "v%s: fix Wi-Fi restore (up + reassociate + USR1 renew + wait for real IP)." % version,
         },
         "files": files,
         "remove": [],

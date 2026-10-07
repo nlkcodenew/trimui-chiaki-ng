@@ -93,14 +93,34 @@ wifi_save() {
 }
 wifi_restore() {
     [ -n "$WIFI_STATES" ] || return 0
-    command -v ifconfig >/dev/null 2>&1 || return 0
     for entry in $WIFI_STATES; do
         iface=${entry%%:*}
         state=${entry##*:}
-        if [ "$state" = "up" ]; then
-            ifconfig "$iface" up 2>/dev/null || true
-            echo "Wi-Fi $iface restored (was up)" >> "$LOG_FILE" 2>&1 || true
-        fi
+        [ "$state" = "up" ] || continue
+        # 1. Dung link. ifconfig up mot minh KHONG xin lai IP (udhcpc khong
+        # tu renew) - day chinh la ly do cac ban truoc mat mang sau phien.
+        ifconfig "$iface" up 2>/dev/null || true
+        # 2. Doi operstate up (toi da ~10s).
+        count=0
+        while [ "$(cat /sys/class/net/$iface/operstate 2>/dev/null)" != "up" ] \
+                && [ "$count" -lt 20 ]; do
+            sleep 0.5
+            count=$((count + 1))
+        done
+        # 3. Bao supplicant noi lai AP cu.
+        wpa_cli -p /etc/wifi/sockets -i "$iface" reassociate >/dev/null 2>&1 || true
+        # 4. Bao udhcpc (dang chay san) renew IP ngay thay vi doi het lease.
+        killall -USR1 udhcpc 2>/dev/null || true
+        # 5. Doi co IP that (bo qua link-local 169.254), toi da ~20s.
+        count=0
+        ipaddr=""
+        while [ "$count" -lt 20 ]; do
+            ipaddr=$(ip addr show "$iface" 2>/dev/null | grep 'inet ' | grep -v 'inet 169.254.' | head -1)
+            [ -n "$ipaddr" ] && break
+            sleep 1
+            count=$((count + 1))
+        done
+        echo "Wi-Fi $iface restored (was up): ${ipaddr:-NO IP AFTER WAIT}" >> "$LOG_FILE" 2>&1 || true
     done
 }
 

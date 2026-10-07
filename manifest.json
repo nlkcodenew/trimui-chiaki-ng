@@ -1,14 +1,14 @@
 {
-  "version": "0.3.43-beta1",
+  "version": "0.3.44-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-07T09:51:38+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.43-beta1/files",
-  "release_tag": "v0.3.43-beta1/files",
+  "built": "2026-10-07T10:31:57+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.44-beta1/files",
+  "release_tag": "v0.3.44-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.43-beta1: tat Wi-Fi khi mo tay cam, tat discovery khi da noi; crash van tu phuc hoi, reboot cang sach.",
-    "en": "v0.3.43-beta1: Wi-Fi off during gamepad sessions, discovery off once connected; crash-safe with reboot fallback."
+    "vi": "v0.3.44-beta1: sua Wi-Fi restore (up + reassociate + USR1 renew + doi IP that).",
+    "en": "v0.3.44-beta1: fix Wi-Fi restore (up + reassociate + USR1 renew + wait for real IP)."
   },
   "files": [
     {
@@ -18,8 +18,8 @@
     },
     {
       "path": "bluetooth-session.sh",
-      "sha256": "9892a78029f583d9cccb318006992cdd6e51e487b717c9640c63de3028053bda",
-      "size": 6532
+      "sha256": "5be08d29b11c8e9989fbb546c466b03bced4d6a8ba4bc658a9e1945da9041fdd",
+      "size": 7504
     },
     {
       "path": "config.json",
@@ -248,7 +248,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "2d9a94e507d1c826305843514215ef6ddd4e3ae5fda5859dca6585c4e939f92c",
+      "sha256": "39ee35609316341e15eedd50ed1c4dc0ecd4df9f6312d3cce841b142fc6ba6d9",
       "size": 1570
     },
     {
@@ -709,8 +709,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.43-beta1.zip",
-    "sha256": "365daf4e37f65e4763bea1bfc58795942d3a504331c251e89335a5ca8de05f4b",
-    "size": 12925964
+    "name": "trimui-chiaki-ng-v0.3.44-beta1.zip",
+    "sha256": "fffc646d2a56a77192fd9fcd050f07d11de7ee085218a1cd4f8f7234698d6b29",
+    "size": 12926364
   }
 }

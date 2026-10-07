@@ -471,6 +471,19 @@ recovery sẵn có:
 Lưu ý vận hành: tắt Wi-Fi là mất luôn SSH/tunnel remote đến khi phiên dừng
 — đọc log sau phiên, không remote giữa phiên.
 
+### Vòng 6: Wi-Fi restore thiếu DHCP, SSH chết sau phiên (2026-10-07)
+
+Sau MENU-hold, SSH chết hẳn phải reboot mới vào lại được. SSH vào kiểm tra
+thấy `wifi_restore` cũ chỉ `ifconfig up`: dựng link nhưng udhcpc đang chạy
+không tự renew nên **không bao giờ có lại IP** — tunnel-loop retry mãi vô
+ích. `v0.3.44-beta1` sửa restore thành quy trình đủ: up → đợi operstate →
+`wpa_cli reassociate` → `killall -USR1 udhcpc` → đợi IP thật (trừ link-local)
+→ ghi kết quả vào log. Tunnel-loop của TrimuiRemote tự nối lại khi có mạng.
+
+Ghi nhận thêm vòng này: dù Wi-Fi đã tắt trong phiên (log có dòng disabled),
+rớt `poll error` vẫn xảy ra → xung đột sóng phía Brick không phải nguyên nhân
+duy nhất. Vòng sau thử thêm phía iPhone (Wi-Fi 5GHz hoặc cellular).
+
 ## 5. Cách dùng màn hình GHI NÚT
 
 Bản đồ ánh xạ nằm ở `bluetooth-map.json` trong thư mục app, backend nạp bằng
