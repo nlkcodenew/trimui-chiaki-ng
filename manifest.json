@@ -1,14 +1,14 @@
 {
-  "version": "0.3.41-beta1",
+  "version": "0.3.42-beta1",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-07T08:28:30+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.41-beta1/files",
-  "release_tag": "v0.3.41-beta1/files",
+  "built": "2026-10-07T09:00:47+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.42-beta1/files",
+  "release_tag": "v0.3.42-beta1/files",
   "prerelease": true,
   "note": {
-    "vi": "v0.3.41-beta1: tieu de theo ten may that (Brick Pro/Smart Pro S), bo chu PS5 thua.",
-    "en": "v0.3.41-beta1: subtitle follows the detected device model, drops the stray PS5."
+    "vi": "v0.3.42-beta1: tat luong PS5 (quet, pair, guide, wakeup, stream), giu code de bat lai sau.",
+    "en": "v0.3.42-beta1: PS5 flow disabled (scan, pair, guide, wakeup, stream), code kept for later."
   },
   "files": [
     {
@@ -168,8 +168,8 @@
     },
     {
       "path": "rh/chiaki.py",
-      "sha256": "dd85f66230f36c6da87bf42f69a0b7e411cac4a80c8264983b0c2fcc78a46310",
-      "size": 28463
+      "sha256": "7ec7a356f5a39fa9fd1180bfe771c87c05bd1afa9120c833553b295f35f33a4d",
+      "size": 29541
     },
     {
       "path": "rh/device_identity.py",
@@ -193,8 +193,8 @@
     },
     {
       "path": "rh/i18n.py",
-      "sha256": "241ca6ee2d81e0e4ae4d484c1c5ca8ae14fb326ae208ca471acd8546820dadb9",
-      "size": 27711
+      "sha256": "bff8c2dffbc1ce95966715cac319a4f516466da836136cca46dd3d0761ab35e6",
+      "size": 27838
     },
     {
       "path": "rh/inputs.py",
@@ -248,7 +248,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "3ab4f26c633a9df2f1e6187d39c8ccad2c434e4484fcebb3d0d82ff9f6bbc04a",
+      "sha256": "61a20ffb24c4eb4da10eb79a0f61caf338d175091a0ae67ba0d4e2c789f5c811",
       "size": 1570
     },
     {
@@ -293,8 +293,8 @@
     },
     {
       "path": "rh/screens/guide.py",
-      "sha256": "18579fc06336dca1574afd154848be98ef93c601a5be65ee561a4658463c90dc",
-      "size": 2679
+      "sha256": "28df02ca4ac548ed9b5907cc66bd361eded01715841563026def7588307e3b80",
+      "size": 2961
     },
     {
       "path": "rh/screens/home.py",
@@ -308,8 +308,8 @@
     },
     {
       "path": "rh/screens/pair.py",
-      "sha256": "bd580ddc1a31e9e276ca202e4445ca2591a400017da6b07e27355d9ab58e1373",
-      "size": 16003
+      "sha256": "eb3ff65336a618687b32b1817ab60c88ebf34238ca4d01e6dfd07cd72e7228d6",
+      "size": 16535
     },
     {
       "path": "rh/screens/settings.py",
@@ -709,8 +709,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.41-beta1.zip",
-    "sha256": "65e6a7bfa99f9012424321f4e38b79348fee60be51a77d5160ad3af0a532082d",
-    "size": 12924878
+    "name": "trimui-chiaki-ng-v0.3.42-beta1.zip",
+    "sha256": "8bfd5a58eb90047977218ebf246be1e09e9a5b568adf114db6fa8615e5ec10c7",
+    "size": 12925379
   }
 }

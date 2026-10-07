@@ -181,6 +181,8 @@ def paired_hosts_for_discovery(discovered=None):
             continue
         addr = str(entry.get("addr") or "")
         entry_is_ps5 = bool(entry.get("is_ps5", False))
+        if entry_is_ps5 and not PS5_ENABLED:
+            continue
         if (not addr or addr in seen
                 or not _paired_credentials(addr, entry_is_ps5)):
             continue
@@ -197,8 +199,12 @@ def paired_hosts_for_discovery(discovered=None):
 
 def wake_paired_host(host):
     """Wake a saved host using its private registration credential."""
+    is_ps5 = bool(getattr(host, "is_ps5", False))
+    if is_ps5 and not PS5_ENABLED:
+        log.warning("wakeup refused: PS5 is disabled in this build")
+        return False
     credentials = _paired_credentials(
-        getattr(host, "addr", ""), bool(getattr(host, "is_ps5", False)))
+        getattr(host, "addr", ""), is_ps5)
     if not credentials:
         return False
     return send_wakeup(
@@ -220,6 +226,10 @@ def prepare_stream_launch(host):
     """Chuẩn bị native stream rồi trả về (ok, thông báo)."""
     from .paths import APP_DIR
 
+    if bool(getattr(host, "is_ps5", False)) and not PS5_ENABLED:
+        log.warning("stream preparation refused: PS5 is disabled in this build")
+        _report_error("stream_ps5_disabled")
+        return False, "PS5 tạm tắt trong bản này"
     binary = find_chiaki_binary(APP_DIR)
     if not binary:
         return False, "Thiếu bin/chiaki-stream"
@@ -413,6 +423,12 @@ def write_chiaki_conf(hosts, path=None):
         return False
 
 
+# Cong tac PS5: False = tat han luong pair/guide PS5, giu code de bat lai sau
+# nay bang cach doi mot cho nay. Khi tat, discovery khong quet cong PS5,
+# man pair tu choi host PS5, guide an buoc PS5, wakeup/regist/stream tu choi
+# target PS5. PS4 khong anh huong.
+PS5_ENABLED = False
+
 # Cong discovery theo upstream chiaki (lib/include/chiaki/discovery.h).
 # DAY LA CONG DICH ma PS4/PS5 lang nghe goi SRCH. Truoc v0.2.11 code gui SRCH
 # toi chinh cong nguon 9303-9308 nen khong bao gio toi duoc may PS -> luon 0 host.
@@ -573,9 +589,11 @@ def discovery_broadcast(timeout=3.0):
     threads = [
         threading.Thread(target=worker, daemon=True,
                          args=(PS4_PROTOCOL_VERSION, False, PS4_DISCOVERY_PORT)),
-        threading.Thread(target=worker, daemon=True,
-                         args=(PS5_PROTOCOL_VERSION, True, PS5_DISCOVERY_PORT)),
     ]
+    if PS5_ENABLED:
+        threads.append(threading.Thread(
+            target=worker, daemon=True,
+            args=(PS5_PROTOCOL_VERSION, True, PS5_DISCOVERY_PORT)))
     for t in threads:
         t.start()
     for t in threads:
@@ -595,6 +613,9 @@ def regist_with_pin(host, pin, timeout=10.0):
     is_ps5 = bool(getattr(host, "is_ps5", False))
     target = int(getattr(host, "target", 0) or 0)
     log.info("registration start: host=%s ps5=%s target=%d", addr, is_ps5, target)
+    if is_ps5 and not PS5_ENABLED:
+        log.warning("registration refused: PS5 is disabled in this build")
+        return False, {"error": "PS5 tạm tắt trong bản này"}
     if is_ps5:
         try:
             from .ps5_regist import PS5RegistError, register
@@ -653,6 +674,9 @@ def send_wakeup(addr, regist_key, ps5=False, timeout=3.0):
         credential = int(regist_key, 16)
     except (TypeError, ValueError):
         log.error("wakeup credential is invalid")
+        return False
+    if ps5 and not PS5_ENABLED:
+        log.warning("wakeup refused: PS5 is disabled in this build")
         return False
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:

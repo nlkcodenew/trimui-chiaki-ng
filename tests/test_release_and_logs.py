@@ -1217,12 +1217,18 @@ class LogUploaderTests(unittest.TestCase):
 
     def test_guide_has_complete_ps4_flow_and_ps5_beta(self):
         i18n = importlib.import_module("rh.i18n")
-        screen = self.guide_module.GuideScreen(mock.Mock())
-        self.assertEqual(len(screen.STEPS), 8)
-        vietnamese = " ".join(
-            i18n.TEXTS["VI"][key]
-            for step in screen.STEPS for key in step
-        )
+        chiaki = importlib.import_module("rh.chiaki")
+        original = chiaki.PS5_ENABLED
+        chiaki.PS5_ENABLED = True
+        try:
+            screen = self.guide_module.GuideScreen(mock.Mock())
+            self.assertEqual(len(screen.STEPS), 8)
+            vietnamese = " ".join(
+                i18n.TEXTS["VI"][key]
+                for step in screen.STEPS for key in step
+            )
+        finally:
+            chiaki.PS5_ENABLED = original
         self.assertIn("đăng nhập tự động", vietnamese)
         self.assertIn("PIN 8 số", vietnamese)
         self.assertIn("START + SELECT", vietnamese)
@@ -1230,6 +1236,20 @@ class LogUploaderTests(unittest.TestCase):
         self.assertIn("Account-ID", vietnamese)
         self.assertIn("PS5-*", vietnamese)
         self.assertIn("ghi theo từng bước", vietnamese)
+
+    def test_guide_hides_ps5_step_while_ps5_disabled(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        self.assertFalse(chiaki.PS5_ENABLED)
+        i18n = importlib.import_module("rh.i18n")
+        screen = self.guide_module.GuideScreen(mock.Mock())
+        self.assertEqual(len(screen.STEPS), 7)
+        vietnamese = " ".join(
+            i18n.TEXTS["VI"][key]
+            for step in screen.STEPS for key in step
+        )
+        self.assertIn("đăng nhập tự động", vietnamese)
+        self.assertIn("PIN 8 số", vietnamese)
+        self.assertNotIn("PS5 đang ở mức thử nghiệm", vietnamese)
 
     def test_guide_navigation_stays_in_bounds_and_b_returns(self):
         engine = mock.Mock()
@@ -1244,31 +1264,37 @@ class LogUploaderTests(unittest.TestCase):
         engine.pop_screen.assert_called_once_with()
 
     def test_guide_renders_every_step_on_target_heights(self):
-        class FakeEngine:
-            screen_w = 1280
-            font_title = object()
-            font_sub = object()
+        chiaki = importlib.import_module("rh.chiaki")
+        original = chiaki.PS5_ENABLED
+        chiaki.PS5_ENABLED = True
+        try:
+            class FakeEngine:
+                screen_w = 1280
+                font_title = object()
+                font_sub = object()
 
-            def __init__(self, screen_h):
-                self.screen_h = screen_h
-                self.drawn = []
+                def __init__(self, screen_h):
+                    self.screen_h = screen_h
+                    self.drawn = []
 
-            def fill_rect(self, *args, **kwargs):
-                return None
+                def fill_rect(self, *args, **kwargs):
+                    return None
 
-            def measure_text(self, text, _font):
-                return len(str(text)) * 13
+                def measure_text(self, text, _font):
+                    return len(str(text)) * 13
 
-            def draw_text(self, text, *args, **kwargs):
-                self.drawn.append(str(text))
+                def draw_text(self, text, *args, **kwargs):
+                    self.drawn.append(str(text))
 
-        screen = self.guide_module.GuideScreen()
-        for height in (720, 768):
-            engine = FakeEngine(height)
-            for index in range(len(screen.STEPS)):
-                screen.selected = index
-                screen.render(engine)
-            self.assertTrue(any("8 / 8" in text for text in engine.drawn))
+            screen = self.guide_module.GuideScreen()
+            for height in (720, 768):
+                engine = FakeEngine(height)
+                for index in range(len(screen.STEPS)):
+                    screen.selected = index
+                    screen.render(engine)
+                self.assertTrue(any("8 / 8" in text for text in engine.drawn))
+        finally:
+            chiaki.PS5_ENABLED = original
 
     def test_home_shows_stream_exit_guide(self):
         i18n = importlib.import_module("rh.i18n")
@@ -1351,13 +1377,55 @@ class LogUploaderTests(unittest.TestCase):
             def close(self):
                 self._closed = True
 
+        original = chiaki.PS5_ENABLED
+        chiaki.PS5_ENABLED = True
+        try:
+            with mock.patch.object(chiaki.socket, "socket", FakeSocket), \
+                    mock.patch.object(chiaki.time, "sleep", lambda *_: None), \
+                    mock.patch.object(chiaki, "_report_error"):
+                chiaki.discovery_broadcast(timeout=0.1)
+        finally:
+            chiaki.PS5_ENABLED = original
+        self.assertIn(987, sent_dests)
+        self.assertIn(9302, sent_dests)
+        self.assertNotIn(9303, sent_dests)
+
+    def test_discovery_skips_ps5_port_while_ps5_disabled(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        self.assertFalse(chiaki.PS5_ENABLED)
+        sent_dests = []
+
+        class FakeSocket:
+            def __init__(self, *args, **kwargs):
+                self._closed = False
+
+            def setsockopt(self, *args, **kwargs):
+                return None
+
+            def settimeout(self, *args, **kwargs):
+                return None
+
+            def bind(self, addr):
+                return None
+
+            def getsockname(self):
+                return ("0.0.0.0", 9303)
+
+            def sendto(self, data, dest):
+                sent_dests.append(dest[1])
+
+            def recvfrom(self, size):
+                raise OSError("timeout")
+
+            def close(self):
+                self._closed = True
+
         with mock.patch.object(chiaki.socket, "socket", FakeSocket), \
                 mock.patch.object(chiaki.time, "sleep", lambda *_: None), \
                 mock.patch.object(chiaki, "_report_error"):
             chiaki.discovery_broadcast(timeout=0.1)
         self.assertIn(987, sent_dests)
-        self.assertIn(9302, sent_dests)
-        self.assertNotIn(9303, sent_dests)
+        self.assertNotIn(9302, sent_dests)
 
     def test_parse_srch_response_ready_and_standby(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1440,12 +1508,26 @@ class LogUploaderTests(unittest.TestCase):
             def close(self):
                 return None
 
-        with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()), \
-                mock.patch.object(chiaki.time, "sleep", return_value=None):
-            self.assertTrue(
+        original = chiaki.PS5_ENABLED
+        chiaki.PS5_ENABLED = True
+        try:
+            with mock.patch.object(chiaki.socket, "socket", return_value=FakeSocket()), \
+                    mock.patch.object(chiaki.time, "sleep", return_value=None):
+                self.assertTrue(
+                    chiaki.send_wakeup("192.168.1.60", "a49d08ed", ps5=True),
+                )
+        finally:
+            chiaki.PS5_ENABLED = original
+        self.assertEqual(sent, [("192.168.1.60", 9302)] * 2)
+
+    def test_ps5_wakeup_refused_while_ps5_disabled(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        self.assertFalse(chiaki.PS5_ENABLED)
+        with mock.patch.object(chiaki.socket, "socket") as sock:
+            self.assertFalse(
                 chiaki.send_wakeup("192.168.1.60", "a49d08ed", ps5=True),
             )
-        self.assertEqual(sent, [("192.168.1.60", 9302)] * 2)
+        sock.assert_not_called()
 
     def test_wakeup_diagnostic_is_queued_without_blocking(self):
         with mock.patch.object(self.uploader, "start_pending_upload", return_value="thread") as start:
@@ -1574,25 +1656,45 @@ class LogUploaderTests(unittest.TestCase):
             "server_mac": "001122334455",
         }
         original_account = chiaki.state.psn_account_id
+        original_flag = chiaki.PS5_ENABLED
         chiaki.state.psn_account_id = base64.b64encode(b"12345678").decode("ascii")
+        chiaki.PS5_ENABLED = True
         try:
             with mock.patch.object(ps5, "register", return_value=expected) as register:
                 ok, result = chiaki.regist_with_pin(host, "12345678")
         finally:
             chiaki.state.psn_account_id = original_account
+            chiaki.PS5_ENABLED = original_flag
         self.assertTrue(ok)
         self.assertTrue(result["is_ps5"])
         self.assertEqual(result["target"], 1000100)
         register.assert_called_once_with("192.168.1.60", "12345678",
                                          base64.b64encode(b"12345678").decode("ascii"), 10.0)
 
-        with mock.patch.object(chiaki, "_report_error") as report:
-            with mock.patch.object(ps5, "register",
-                                   side_effect=ps5.PS5RegistError("network", "timeout")):
-                ok, result = chiaki.regist_with_pin(host, "12345678")
+        chiaki.PS5_ENABLED = True
+        try:
+            with mock.patch.object(chiaki, "_report_error") as report:
+                with mock.patch.object(ps5, "register",
+                                       side_effect=ps5.PS5RegistError("network", "timeout")):
+                    ok, result = chiaki.regist_with_pin(host, "12345678")
+        finally:
+            chiaki.PS5_ENABLED = original_flag
         self.assertFalse(ok)
         self.assertIn("network", result["error"])
         report.assert_called_once_with("pair_ps5_network")
+
+    def test_ps5_registration_refused_while_ps5_disabled(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        self.assertFalse(chiaki.PS5_ENABLED)
+        host = chiaki.DiscoveredHost(
+            name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100,
+        )
+        ps5 = importlib.import_module("rh.ps5_regist")
+        with mock.patch.object(ps5, "register") as register:
+            ok, result = chiaki.regist_with_pin(host, "12345678")
+        self.assertFalse(ok)
+        self.assertIn("PS5", result["error"])
+        register.assert_not_called()
 
     def test_ps5_account_id_is_validated_without_leaking_value(self):
         ps5 = importlib.import_module("rh.ps5_regist")
@@ -1613,7 +1715,9 @@ class LogUploaderTests(unittest.TestCase):
         chiaki = importlib.import_module("rh.chiaki")
         state = importlib.import_module("rh.state")
         original_account = state.psn_account_id
+        original_flag = chiaki.PS5_ENABLED
         state.psn_account_id = ""
+        chiaki.PS5_ENABLED = True
         try:
             ps4 = chiaki.DiscoveredHost(
                 name="PS4", addr="192.168.1.45", is_ps5=False, target=1000)
@@ -1630,6 +1734,21 @@ class LogUploaderTests(unittest.TestCase):
             self.assertEqual(len(ps5_screen.account_id), 12)
         finally:
             state.psn_account_id = original_account
+            chiaki.PS5_ENABLED = original_flag
+
+    def test_pair_screen_blocks_ps5_while_ps5_disabled(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        self.assertFalse(chiaki.PS5_ENABLED)
+        host = chiaki.DiscoveredHost(
+            name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100)
+        screen = self.pair_module.PairScreen(mock.Mock())
+        screen.on_enter({"host": host})
+        self.assertEqual(screen.status,
+                         self.pair_module.tr("pair_ps5_disabled"))
+        self.assertEqual([key for key, _label in screen.get_footer_actions()],
+                         ["B"])
+        self.assertFalse(screen.handle_input({"edges": ["btn_a"]}))
+        self.assertFalse(screen.handle_input({"edges": ["btn_x"]}))
 
     def test_pair_screen_saves_valid_ps5_account_and_hides_invalid_value(self):
         chiaki = importlib.import_module("rh.chiaki")
@@ -1798,12 +1917,24 @@ class LogUploaderTests(unittest.TestCase):
             }], handle)
         host = chiaki.DiscoveredHost(
             name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100)
+        original = chiaki.PS5_ENABLED
+        chiaki.PS5_ENABLED = True
         try:
             ok, message = chiaki.prepare_stream_launch(host)
         finally:
+            chiaki.PS5_ENABLED = original
             os.remove(paired_path)
         self.assertFalse(ok)
         self.assertIn("ghép lại PS5", message)
+
+    def test_ps5_stream_refused_while_ps5_disabled(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        self.assertFalse(chiaki.PS5_ENABLED)
+        host = chiaki.DiscoveredHost(
+            name="PS5", addr="192.168.1.60", is_ps5=True, target=1000100)
+        ok, message = chiaki.prepare_stream_launch(host)
+        self.assertFalse(ok)
+        self.assertIn("PS5", message)
 
     def test_native_source_guards_ps5_target_pairing(self):
         root = os.path.dirname(os.path.dirname(__file__))
@@ -1877,6 +2008,31 @@ class LogUploaderTests(unittest.TestCase):
         finally:
             os.remove(paired_path)
         wake.assert_called_once_with("192.168.1.45", regist_key, False)
+
+    def test_ps5_hosts_hidden_and_unwakeable_while_ps5_disabled(self):
+        chiaki = importlib.import_module("rh.chiaki")
+        self.assertFalse(chiaki.PS5_ENABLED)
+        paired_path = os.path.join(self.app_dir, "paired_hosts.json")
+        with open(paired_path, "w", encoding="utf-8") as handle:
+            json.dump([{
+                "addr": "192.168.1.60",
+                "name": "PS5",
+                "is_ps5": True,
+                "target": 1000100,
+                "regist_key": "a49d08ed",
+                "rp_key": base64.b64encode(bytes(range(16))).decode("ascii"),
+            }], handle)
+        try:
+            hosts = chiaki.paired_hosts_for_discovery([])
+            self.assertEqual(hosts, [])
+            ps5 = chiaki.DiscoveredHost(
+                name="PS5", addr="192.168.1.60", is_ps5=True,
+                target=1000100)
+            with mock.patch.object(chiaki, "send_wakeup") as wake:
+                self.assertFalse(chiaki.wake_paired_host(ps5))
+            wake.assert_not_called()
+        finally:
+            os.remove(paired_path)
 
     def test_home_scan_does_not_show_saved_offline_host(self):
         chiaki = importlib.import_module("rh.chiaki")

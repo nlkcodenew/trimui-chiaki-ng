@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: tieu de theo ten may that (Brick Pro/Smart Pro S), bo chu PS5 thua." % version,
-            "en": "v%s: subtitle follows the detected device model, drops the stray PS5." % version,
+            "vi": "v%s: tat luong PS5 (quet, pair, guide, wakeup, stream), giu code de bat lai sau." % version,
+            "en": "v%s: PS5 flow disabled (scan, pair, guide, wakeup, stream), code kept for later." % version,
         },
         "files": files,
         "remove": [],

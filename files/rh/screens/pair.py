@@ -23,7 +23,11 @@ class PairScreen(BaseScreen):
     def on_enter(self, params=None):
         self.host = (params or {}).get("host")
         self.pin = ""
-        if self.host and getattr(self.host, "is_ps5", False):
+        if self._ps5_blocked():
+            self.mode = "pin"
+            self.account_id = ""
+            self.status = tr("pair_ps5_disabled")
+        elif self.host and getattr(self.host, "is_ps5", False):
             self.account_id = self._editable_account_id(
                 getattr(state, "psn_account_id", ""))
             if self._valid_account_id(getattr(state, "psn_account_id", "")):
@@ -42,6 +46,8 @@ class PairScreen(BaseScreen):
     def get_header_title(self):
         return tr("pair_title")
     def get_footer_actions(self):
+        if self._ps5_blocked():
+            return [("B", tr("back"))]
         if self._is_ps5() and self.mode == "account_id":
             return [("A", tr("pair_ps5_account_save")), ("B", tr("back"))]
         if self._is_ps5():
@@ -54,6 +60,8 @@ class PairScreen(BaseScreen):
         if "btn_b" in edges or "quit" in edges:
             self.engine.pop_screen()
             return True
+        if self._ps5_blocked():
+            return False
         if self._is_ps5() and self.mode == "account_id":
             if "btn_up" in edges: self._account_change(1); return True
             if "btn_down" in edges: self._account_change(-1); return True
@@ -83,6 +91,8 @@ class PairScreen(BaseScreen):
         return False
     def _is_ps5(self):
         return bool(self.host and getattr(self.host, "is_ps5", False))
+    def _ps5_blocked(self):
+        return self._is_ps5() and not chiaki.PS5_ENABLED
     @staticmethod
     def _valid_account_id(value):
         try:
@@ -146,6 +156,10 @@ class PairScreen(BaseScreen):
         self.pin = "".join(lst)
     def _start_pair(self):
         if not self.host: self.status = tr("pair_no_host"); return
+        if self._ps5_blocked():
+            self.status = tr("pair_ps5_disabled")
+            log.warning("pair refused: PS5 is disabled in this build")
+            return
         if self._is_ps5() and not self._valid_account_id(state.psn_account_id):
             self.mode = "account_id"
             self.account_id = self._editable_account_id(state.psn_account_id)

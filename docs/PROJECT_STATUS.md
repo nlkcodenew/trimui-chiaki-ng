@@ -276,6 +276,7 @@ OTA lại không tái hiện. Đây không được coi là updater tự tạo t
 | `v0.3.40-beta1` | Chơi game iPhone rớt link đều 1.5–3 phút/lần ở cự ly 20cm, phía mình không lỗi: gửi lại report mỗi 4s như DS4 thật (loại trừ link chết vì im lặng), và mỗi lần mất kênh ghi rõ lý do (peer đóng / lỗi đọc / lỗi gửi) để vòng sau biết bên nào cắt |
 | `v0.3.40` | **Stable**: profile DualShock 4 cho iOS đã kiểm chứng trên iPhone; bỏ nhãn thử nghiệm và thêm menu INFO với QR ủng hộ tác giả |
 | `v0.3.41-beta1` | Tiêu đề theo tên máy thật (Brick Pro/Smart Pro S, lạ thì "TrimUI"), bỏ chữ PS5 thừa ở subtitle |
+| `v0.3.42-beta1` | Tắt luồng PS5 bằng cờ `PS5_ENABLED=False`: không quét cổng 9302, pair/guide/wakeup/stream từ chối PS5, code và test PS5 giữ nguyên để bật lại sau |
 | iPhone vòng 3 (2026-10-05) | **Hiện DUALSHOCK 4 + đủ nút trên `v0.3.39-beta1`**: MENU tới nơi (tester mở games.apple.com), PS=bit12 xác nhận. Theo dõi: Brick tự reboot 1 lần, pair lần 1 thất bại lần 2 xong |
 
 ## 10. Kiểm thử và build gate

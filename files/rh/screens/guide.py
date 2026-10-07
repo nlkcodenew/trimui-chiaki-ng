@@ -1,17 +1,25 @@
 # -*- coding: utf-8 -*-
 """Huong dan su dung trong app theo tung buoc."""
 
-from .. import state
+from .. import chiaki, state
 from ..i18n import tr
 from ..ui.primitives import ellipsis_text, theme, wrap_lines
 from .base import BaseScreen
 
 
 class GuideScreen(BaseScreen):
-    STEPS = tuple(
+    BASE_STEPS = tuple(
         ("guide_%d_title" % index, "guide_%d_body" % index)
-        for index in range(1, 9)
+        for index in range(1, 8)
     )
+    # Buoc PS5 giu lai cho tuong lai, tam an khi PS5_ENABLED False.
+    PS5_STEP = ("guide_8_title", "guide_8_body")
+
+    @property
+    def STEPS(self):
+        if chiaki.PS5_ENABLED:
+            return self.BASE_STEPS + (self.PS5_STEP,)
+        return self.BASE_STEPS
 
     def __init__(self, engine=None):
         super().__init__(engine, "guide")
