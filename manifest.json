@@ -1,14 +1,14 @@
 {
-  "version": "0.3.45-beta1",
+  "version": "0.3.46",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-07T10:53:50+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.45-beta1/files",
-  "release_tag": "v0.3.45-beta1/files",
-  "prerelease": true,
+  "built": "2026-10-24T18:55:26+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.46/files",
+  "release_tag": "v0.3.46/files",
+  "prerelease": false,
   "note": {
-    "vi": "v0.3.45-beta1: tac tam thay vi cat phien khi tac nhe; nhan profile theo may (Android/iPhone).",
-    "en": "v0.3.45-beta1: shed-then-keep-link on hiccups instead of instant drop; profiles labeled by phone."
+    "vi": "v0.3.46: sua loi stream tren Knulli (chiaki-stream khong nap duoc libssl 1.1/ffmpeg); thu vien brick-stock lam du phong chung cho ca stock OS va Knulli.",
+    "en": "v0.3.46: fix Knulli streaming (chiaki-stream failed to load libssl 1.1/ffmpeg libs); brick-stock libs as fallback on both stock OS and Knulli."
   },
   "files": [
     {
@@ -33,8 +33,8 @@
     },
     {
       "path": "launch.sh",
-      "sha256": "f80b2db9fd8b97fa9b1df5e9e3d714fbe9898c9849cdce032162fb4ddbdf71f3",
-      "size": 5312
+      "sha256": "9f419dc5178c2f0b1db511b55d1d9586e619fb39b5a575b29302aaf846546ff4",
+      "size": 5334
     },
     {
       "path": "reporting.json",
@@ -248,8 +248,8 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "f692516caa3b627e2662726e5fe1c7e04dfe7325595cabf26804f2f3302abc5c",
-      "size": 1570
+      "sha256": "5c93d34b1486cad341b32caaf28ec1696a712f58a6f91a6489bf2ab7ebb2c996",
+      "size": 1564
     },
     {
       "path": "rh/modals/__init__.py",
@@ -709,8 +709,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.45-beta1.zip",
-    "sha256": "97c36ed94dc45bba9f9f691b529d912e53c546fccd1ce65ca74bf75cd756b6ec",
-    "size": 12927117
+    "name": "trimui-chiaki-ng-v0.3.46.zip",
+    "sha256": "1353c461186862293034517634fd39eb569e4a9577aa311b66f732af778f8e76",
+    "size": 12927127
   }
 }

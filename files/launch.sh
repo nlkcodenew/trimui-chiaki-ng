@@ -15,7 +15,7 @@ APP="$(pwd)"
 
 export SDCARD_PATH="${SDCARD_PATH:-/mnt/SDCARD}"
 export PATH="$SDCARD_PATH/System/bin:$PATH"
-export LD_LIBRARY_PATH="$APP/libs:$SDCARD_PATH/System/lib:/usr/trimui/lib:/usr/lib64:/usr/lib:/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$APP/libs:$SDCARD_PATH/System/lib:/usr/trimui/lib:/usr/lib64:/usr/lib:$APP/libs/brick-stock:/lib:$LD_LIBRARY_PATH"
 
 # TrimUI Smart Pro S dat thu vien SDL2 o /usr/lib64 hoac /usr/lib, canh than neu
 # sau nay muon them thu vien rieng (libplacebo, libav*, ...) hay dat vao $APP/libs.

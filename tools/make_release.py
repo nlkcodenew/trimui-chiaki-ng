@@ -157,8 +157,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: tac tam thay vi cat phien khi tac nhe; nhan profile theo may (Android/iPhone)." % version,
-            "en": "v%s: shed-then-keep-link on hiccups instead of instant drop; profiles labeled by phone." % version,
+            "vi": "v%s: sua loi stream tren Knulli (chiaki-stream khong nap duoc libssl 1.1/ffmpeg); thu vien brick-stock lam du phong chung cho ca stock OS va Knulli." % version,
+            "en": "v%s: fix Knulli streaming (chiaki-stream failed to load libssl 1.1/ffmpeg libs); brick-stock libs as fallback on both stock OS and Knulli." % version,
         },
         "files": files,
         "remove": [],
