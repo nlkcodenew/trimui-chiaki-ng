@@ -1,14 +1,14 @@
 {
-  "version": "0.3.47",
+  "version": "0.3.48",
   "app": "trimui-chiaki-ng",
   "python": "3.10+",
-  "built": "2026-10-25T20:05:29+07:00",
-  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.47/files",
-  "release_tag": "v0.3.47/files",
+  "built": "2026-10-26T11:12:58+07:00",
+  "base_url": "https://raw.githubusercontent.com/nlkcodenew/trimui-chiaki-ng/v0.3.48/files",
+  "release_tag": "v0.3.48/files",
   "prerelease": false,
   "note": {
-    "vi": "v0.3.47: sua loi stream tren Knulli (chiaki-stream khong nap duoc libssl 1.1/ffmpeg); thu vien brick-stock lam du phong chung cho ca stock OS va Knulli.",
-    "en": "v0.3.47: fix Knulli streaming (chiaki-stream failed to load libssl 1.1/ffmpeg libs); brick-stock libs as fallback on both stock OS and Knulli."
+    "vi": "v0.3.48: goi zip duy nhat (stock + Knulli + huong dan trong zip); app ve Tools tren Knulli; khong doi code.",
+    "en": "v0.3.48: single-zip package (stock + Knulli + guide in zip); app moved to Tools on Knulli; no code changes."
   },
   "files": [
     {
@@ -248,7 +248,7 @@
     },
     {
       "path": "rh/version.py",
-      "sha256": "7a18d91454f0992d5ab9698d707f2941c74c5b230c130b14b6bc97ce88fd70c6",
+      "sha256": "e6d2ab2d552e47d243e26662e339484a9eb6d59d711a71694619f1f374dc9783",
       "size": 1564
     },
     {
@@ -709,8 +709,8 @@
   ],
   "remove": [],
   "release_asset": {
-    "name": "trimui-chiaki-ng-v0.3.47.zip",
-    "sha256": "d86905369d6e2b64e8cd2b1776d5d2816c8b8ae2168108046bc2e8ba70854e0e",
-    "size": 12927127
+    "name": "trimui-chiaki-ng-v0.3.48.zip",
+    "sha256": "262228db0f8494e2c8055daf748dc238a7c75abd35b6771df29596d81bcbc1b6",
+    "size": 25877130
   }
 }

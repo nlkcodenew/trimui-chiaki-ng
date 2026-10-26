@@ -41,8 +41,11 @@ FORBIDDEN_MANIFEST = {
     ".pending_crash",
 }
 REQUIRED_ARCHIVE = {
-    "CAI_DAT.md",
+    "HUONG-DAN-CAI-DAT.txt",
     "LICENSE.txt",
+    "system/chiaki/launch.sh",
+    "roms/tools/Chiaki-ng.sh",
+    "roms/tools/images/chiaki.png",
     "App/Chiaki/app.py",
     "App/Chiaki/config.json",
     "App/Chiaki/icon.png",

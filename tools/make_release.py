@@ -96,13 +96,13 @@ def _archive_excluded(name):
 
 
 def build_release_zip(version):
-    """Tạo ZIP có cấu trúc App/Chiaki để giải nén vào gốc thẻ nhớ."""
+    """Tạo ZIP duy nhất: App/Chiaki (stock) + system/chiaki + roms/tools (Knulli) + hướng dẫn."""
     shutil.rmtree(DIST_DIR, ignore_errors=True)
     os.makedirs(DIST_DIR, exist_ok=True)
     archive_name = "trimui-chiaki-ng-v%s.zip" % version
     archive_path = os.path.join(DIST_DIR, archive_name)
     with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        _archive_file(archive, os.path.join(ROOT, "INSTALL.md"), "CAI_DAT.md")
+        _archive_file(archive, os.path.join(ROOT, "HUONG-DAN-CAI-DAT.txt"), "HUONG-DAN-CAI-DAT.txt")
         _archive_file(archive, os.path.join(ROOT, "LICENSE"), "LICENSE.txt")
         for root, dirs, names in os.walk(FILES_DIR):
             dirs[:] = sorted(d for d in dirs if d not in EXCLUDE_NAMES)
@@ -113,6 +113,11 @@ def build_release_zip(version):
                 rel = os.path.relpath(src, FILES_DIR).replace(os.sep, "/")
                 executable = rel.endswith(".sh") or rel.startswith("bin/")
                 _archive_file(archive, src, "App/Chiaki/%s" % rel, executable)
+                _archive_file(archive, src, "system/chiaki/%s" % rel, executable)
+        _archive_file(archive, os.path.join(ROOT, "knulli", "Chiaki-ng.sh"),
+                      "roms/tools/Chiaki-ng.sh", executable=True)
+        _archive_file(archive, os.path.join(FILES_DIR, "icon.png"),
+                      "roms/tools/images/chiaki.png")
     with open(archive_path, "rb") as handle:
         checksum = sha256(handle.read())
     checksum_path = archive_path + ".sha256"
@@ -157,8 +162,8 @@ def main():
         "release_tag": "v%s/files" % version,
         "prerelease": "-" in version,
         "note": {
-            "vi": "v%s: sua loi stream tren Knulli (chiaki-stream khong nap duoc libssl 1.1/ffmpeg); thu vien brick-stock lam du phong chung cho ca stock OS va Knulli." % version,
-            "en": "v%s: fix Knulli streaming (chiaki-stream failed to load libssl 1.1/ffmpeg libs); brick-stock libs as fallback on both stock OS and Knulli." % version,
+            "vi": "v%s: goi zip duy nhat (stock + Knulli + huong dan trong zip); app ve Tools tren Knulli; khong doi code." % version,
+            "en": "v%s: single-zip package (stock + Knulli + guide in zip); app moved to Tools on Knulli; no code changes." % version,
         },
         "files": files,
         "remove": [],
